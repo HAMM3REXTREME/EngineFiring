@@ -59,12 +59,12 @@ public:
 
     }
     EngineSoundGenerator(const std::vector<std::string>& files)
-        : firing_order{0, 1, 3, 4, 2}, interval_timer(0.0f), rpm(400.0f), phase(0) {
+        : firing_order{0,5,4,9,1,6,2,7,3,8}, interval_timer(0.0f), rpm(3400.0f), phase(0) {
         for (const auto& file : files) {
             pistons.push_back(load_wav(file));
         }
         interval = 60.0f / rpm * SAMPLE_RATE;
-        updateFiringIntervalFactors({144,144,144,144,144});
+        updateFiringIntervalFactors({90,54,90,54,90,54,90,54,90,54});
         
     }
 
@@ -80,7 +80,10 @@ public:
             int piston_index = firing_order[phase % firing_order.size()];
             active_firings.push_back({&pistons[piston_index], 0});
             phase++;
-            std::cout << "Interval timer -= " << intervals_factor[piston_index] * interval << "\n";
+            std::string firingVisual(firing_order.size(), '-');
+            firingVisual[piston_index] = 'O';
+            std::cout << firingVisual << "\n";
+            //std::cout << "Interval timer -= " << intervals_factor[piston_index] * interval << "\n";
             interval_timer -= intervals_factor[piston_index] * interval; // Larger number = slower, 0.1 etc. = faster
         }
     }
@@ -136,10 +139,28 @@ void handle_sigint(int) {
 int main() {
     signal(SIGINT, handle_sigint);
 
-    std::vector<std::string> files = {
-        "1_ V12 kicker.wav", "2_ V12 kicker.wav", "3_ V12 kicker.wav",
-        "4_ V12 kicker.wav", "5_ V12 kicker.wav"
-    };
+    // std::vector<std::string> files = {
+    //     "audi5/1_audi5cyl.wav",
+    //     "audi5/2_audi5cyl.wav",
+    //     "audi5/3_audi5cyl.wav",
+    //     "audi5/4_audi5cyl.wav",
+    //     "audi5/5_audi5cyl.wav"
+    // };
+
+       std::vector<std::string> files = {
+        "piano_keys/note_64.wav",
+        "piano_keys/note_65.wav",
+        "piano_keys/note_66.wav",
+        "piano_keys/note_67.wav",
+        "piano_keys/note_68.wav",
+        "piano_keys/note_69.wav",
+        "piano_keys/note_70.wav",
+        "piano_keys/note_71.wav",
+        "piano_keys/note_72.wav",
+        "piano_keys/note_73.wav",
+        "piano_keys/note_74.wav",
+        "piano_keys/note_75.wav"
+    }; 
 
     EngineSoundGenerator engine(files);
 
@@ -153,10 +174,10 @@ int main() {
     while (running.load()) {
         Pa_Sleep(10);
         // Test sweep
-        if(engine.getRPM()>= 17500){
-            engine.setRPM(14000.0f);
+        if(engine.getRPM()>= 35000){
+            engine.setRPM(24000.0f);
         }
-        engine.setRPM(engine.getRPM()+100000/engine.getRPM());
+        engine.setRPM(engine.getRPM()+1000000/engine.getRPM());
     }
 
     Pa_StopStream(stream);
