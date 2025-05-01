@@ -58,29 +58,30 @@ class EngineSoundGenerator {
    public:
 
    // TODO: Move to Engine class
-    void updateFiringIntervalFactors(std::vector<float> degrees) {
+    void updateFiringIntervalFactors(const std::vector<float>& degreesInterval) {
         // Must add up to 720 degrees or it won't sound right
-        if (std::accumulate(degrees.begin(), degrees.end(), 0.0f) != 720) {
+        if (std::accumulate(degreesInterval.begin(), degreesInterval.end(), 0.0f) != 720) {
             std::cerr << "Firing order doesn't make any sense\n";
         }
         cylinderCount = firing_order.size();
-        if (degrees.size() != cylinderCount) {
+        if (degreesInterval.size() != cylinderCount) {
             std::cerr << "Firing order list doesn't match cylinder count\n";
         }
         // Calculate relative interval for each cylinder
         float evenFireInterval = 720.0f / cylinderCount;
         intervals_factor.clear();
         std::cout << "Firing factors (" << cylinderCount << " cylinders): ";
-        for (float fireInterval : degrees) {
+        for (float fireInterval : degreesInterval) {
             intervals_factor.push_back(fireInterval / evenFireInterval);
             std::cout << "  " << fireInterval / evenFireInterval << "  ";
         }
         std::cout << "\n";
     }
-    EngineSoundGenerator(const std::vector<std::string>& files, const std::vector<int>& firing_order, const std::vector<float>& degrees) : firing_order(firing_order), interval_timer(0.0f), rpm(10.0f), phase(0) {
+    // (Engine& engine, float rpm)
+    EngineSoundGenerator(const std::vector<std::string>& files, const std::vector<int>& firing_order, const std::vector<float>& degrees) : firing_order(firing_order), interval_timer(0.0f), rpm(800.0f), phase(0) {
         for (const auto& file : files) {
             pistons.push_back(load_wav(file));
-        }
+        } // TODO: Engine class should hold the samples from the files.
         interval = 60.0f / rpm * sample_rate;
         updateFiringIntervalFactors(degrees); // TODO: Just get normalized factors from the Engine object's member
     }
@@ -162,8 +163,10 @@ int main() {
                                      "piano_keys/note_70.wav", "piano_keys/note_71.wav", "piano_keys/note_72.wav", "piano_keys/note_73.wav", "piano_keys/note_74.wav", "piano_keys/note_75.wav"};
 
     //EngineSoundGenerator engine(files, {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, evenFiring(12)); // Countach
-    EngineSoundGenerator engine(files, {0,5,4,9,1,6,2,7,3,8}, evenFiring(10)); // LFA
+    //EngineSoundGenerator engine(files, {0,5,4,9,1,6,2,7,3,8}, evenFiring(10)); // LFA
     //EngineSoundGenerator engine(files, {0,5,4,9,1,6,2,7,3,8}, {90,54,90,54,90,54,90,54,90,54}); // Audi R8
+    //EngineSoundGenerator engine(files, {0,2,3,1}, evenFiring(4)); // 4 Banger
+    EngineSoundGenerator engine(files, {0,4,3,7,2,6,1,5}, evenFiring(8)); // 5.2L Voodoo
 
 
     Pa_Initialize();
@@ -175,14 +178,14 @@ int main() {
     while (true) {
         Pa_Sleep(10);
         // Test sweep
-        if (engine.getRPM() >= 35000) {
+        if (engine.getRPM() >= 20000) {
             shifting = true;
         }
-        if (engine.getRPM() <= 20000) {
+        if (engine.getRPM() <= 15000) {
             shifting = false;
         }
         if (!shifting){
-        engine.setRPM(engine.getRPM() + 400000 / engine.getRPM());
+        engine.setRPM(engine.getRPM() + 300000 / engine.getRPM());
         }
         else{
             engine.setRPM(engine.getRPM() - 10000000 / engine.getRPM());
