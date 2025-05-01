@@ -77,7 +77,7 @@ class EngineSoundGenerator {
         }
         std::cout << "\n";
     }
-    EngineSoundGenerator(const std::vector<std::string>& files, const std::vector<int>& firing_order, const std::vector<float>& degrees) : firing_order(firing_order), interval_timer(0.0f), rpm(3400.0f), phase(0) {
+    EngineSoundGenerator(const std::vector<std::string>& files, const std::vector<int>& firing_order, const std::vector<float>& degrees) : firing_order(firing_order), interval_timer(0.0f), rpm(10.0f), phase(0) {
         for (const auto& file : files) {
             pistons.push_back(load_wav(file));
         }
@@ -163,6 +163,8 @@ int main() {
 
     //EngineSoundGenerator engine(files, {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, evenFiring(12)); // Countach
     EngineSoundGenerator engine(files, {0,5,4,9,1,6,2,7,3,8}, evenFiring(10)); // LFA
+    //EngineSoundGenerator engine(files, {0,5,4,9,1,6,2,7,3,8}, {90,54,90,54,90,54,90,54,90,54}); // Audi R8
+
 
     Pa_Initialize();
     PaStream* stream;
@@ -183,7 +185,7 @@ int main() {
         engine.setRPM(engine.getRPM() + 400000 / engine.getRPM());
         }
         else{
-            engine.setRPM(engine.getRPM() - 9000000 / engine.getRPM());
+            engine.setRPM(engine.getRPM() - 10000000 / engine.getRPM());
         }
     }
 
