@@ -9,6 +9,9 @@
 #include <numeric>
 #include <string>
 #include <vector>
+#include "AudioVector.h"
+
+// TODO: Cleanup everything into seperate classes.
 
 constexpr int sample_rate = 44100;
 constexpr int channels = 1;
@@ -26,37 +29,8 @@ std::vector<float> evenFiring(int cylinders){
     }
     return result;
 }
-
-
-// TODO: Move to AudioVector class constructor
-std::vector<float> load_wav(const std::string& filename) {
-    SF_INFO sfinfo;
-    SNDFILE* file = sf_open(filename.c_str(), SFM_READ, &sfinfo);
-    if (!file) {
-        std::cerr << "Failed to open " << filename << "\n";
-        exit(1);
-    }
-
-    std::vector<float> samples(sfinfo.frames * sfinfo.channels);
-    sf_readf_float(file, samples.data(), sfinfo.frames);
-    sf_close(file);
-
-    if (sfinfo.channels > 1) {
-        std::vector<float> mono(sfinfo.frames);
-        for (sf_count_t i = 0; i < sfinfo.frames; ++i) {
-            float sum = 0.0f;
-            for (int ch = 0; ch < sfinfo.channels; ++ch) sum += samples[i * sfinfo.channels + ch];
-            mono[i] = sum / sfinfo.channels;
-        }
-        return mono;
-    }
-
-    return samples;
-}
-
 class EngineSoundGenerator {
    public:
-
    // TODO: Move to Engine class
     void updateFiringIntervalFactors(const std::vector<float>& degreesInterval) {
         // Must add up to 720 degrees or it won't sound right
@@ -77,10 +51,10 @@ class EngineSoundGenerator {
         }
         std::cout << "\n";
     }
-    // (Engine& engine, float rpm)
-    EngineSoundGenerator(const std::vector<std::string>& files, const std::vector<int>& firing_order, const std::vector<float>& degrees) : firing_order(firing_order), interval_timer(0.0f), rpm(800.0f), phase(0) {
-        for (const auto& file : files) {
-            pistons.push_back(load_wav(file));
+    // (const Engine& engine, float rpm)
+    EngineSoundGenerator(const std::vector<AudioVector>& samples, const std::vector<int>& firing_order, const std::vector<float>& degrees) : firing_order(firing_order), interval_timer(0.0f), rpm(800.0f), phase(0) {
+        for (const auto& piston : samples) {
+            pistons.push_back(piston);
         } // TODO: Engine class should hold the samples from the files.
         interval = 60.0f / rpm * sample_rate;
         updateFiringIntervalFactors(degrees); // TODO: Just get normalized factors from the Engine object's member
@@ -96,7 +70,7 @@ class EngineSoundGenerator {
         if (interval_timer >= interval) {
             // Schedule new piston fire
             int piston_index = firing_order[phase % cylinderCount];
-            active_firings.push_back({&pistons[piston_index], 0});
+            active_firings.push_back({&pistons[piston_index].samples, 0});
             phase++;
             std::string firingVisual(cylinderCount, '-');
             firingVisual[piston_index] = (char)piston_index + '0';
@@ -121,7 +95,7 @@ class EngineSoundGenerator {
     }
 
    private:
-    std::vector<std::vector<float>> pistons;
+    std::vector<AudioVector> pistons;
     int cylinderCount;
     std::vector<int> firing_order;
     std::vector<std::pair<const std::vector<float>*, size_t>> active_firings;
@@ -131,7 +105,6 @@ class EngineSoundGenerator {
     float rpm;
     int phase;
 };
-
 // PortAudio stream callback
 int audio_callback(const void*, void* outputBuffer, unsigned long framesPerBuffer, const PaStreamCallbackTimeInfo*, PaStreamCallbackFlags, void* userData) {
     EngineSoundGenerator* engine = static_cast<EngineSoundGenerator*>(userData);
@@ -161,12 +134,16 @@ int main() {
 
    std::vector<std::string> files = {"piano_keys/note_64.wav", "piano_keys/note_65.wav", "piano_keys/note_66.wav", "piano_keys/note_67.wav", "piano_keys/note_68.wav", "piano_keys/note_69.wav",
                                      "piano_keys/note_70.wav", "piano_keys/note_71.wav", "piano_keys/note_72.wav", "piano_keys/note_73.wav", "piano_keys/note_74.wav", "piano_keys/note_75.wav"};
+    std::vector<AudioVector> pistonSamples;
+    for (std::string file: files){
+        pistonSamples.push_back(AudioVector(file));
+    }
 
-    //EngineSoundGenerator engine(files, {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, evenFiring(12)); // Countach
-    //EngineSoundGenerator engine(files, {0,5,4,9,1,6,2,7,3,8}, evenFiring(10)); // LFA
-    //EngineSoundGenerator engine(files, {0,5,4,9,1,6,2,7,3,8}, {90,54,90,54,90,54,90,54,90,54}); // Audi R8
-    //EngineSoundGenerator engine(files, {0,2,3,1}, evenFiring(4)); // 4 Banger
-    EngineSoundGenerator engine(files, {0,4,3,7,2,6,1,5}, evenFiring(8)); // 5.2L Voodoo
+    EngineSoundGenerator engine(pistonSamples, {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, evenFiring(12)); // Countach
+    EngineSoundGenerator engineLFA(pistonSamples, {0,5,4,9,1,6,2,7,3,8}, evenFiring(10)); // LFA
+    //EngineSoundGenerator engine(pistonSamples, {0,5,4,9,1,6,2,7,3,8}, {90,54,90,54,90,54,90,54,90,54}); // Audi R8
+    //EngineSoundGenerator engine(pistonSamples, {0,2,3,1}, evenFiring(4)); // 4 Banger
+    //EngineSoundGenerator engine(pistonSamples, {0,4,3,7,2,6,1,5}, evenFiring(8)); // 5.2L Voodoo
 
 
     Pa_Initialize();
@@ -174,7 +151,29 @@ int main() {
     Pa_OpenDefaultStream(&stream, 0, 1, paFloat32, sample_rate, 256, audio_callback, &engine);
     Pa_StartStream(stream);
 
+
+    AudioVector debugRecord = AudioVector();
     bool shifting = false;
+    while (debugRecord.samples.size() <= 175*sample_rate){
+        engineLFA.update();
+        if (engineLFA.getRPM() >= 35000) {
+            shifting = true;
+        }
+        if (engineLFA.getRPM() <= 25000) {
+            shifting = false;
+        }
+        if (!shifting){
+        engineLFA.setRPM(engineLFA.getRPM() + 900 / engineLFA.getRPM());
+        }
+        else{
+            engineLFA.setRPM(engineLFA.getRPM() - 10000 / engineLFA.getRPM());
+        }
+        debugRecord.samples.push_back(engineLFA.getSample());
+            
+    }
+    debugRecord.saveToWav("debug.wav");
+    std::cout << "Saved to debug.wav\n";
+    //return 0;
     while (true) {
         Pa_Sleep(10);
         // Test sweep
@@ -191,7 +190,6 @@ int main() {
             engine.setRPM(engine.getRPM() - 10000000 / engine.getRPM());
         }
     }
-
     Pa_StopStream(stream);
     Pa_CloseStream(stream);
     Pa_Terminate();
