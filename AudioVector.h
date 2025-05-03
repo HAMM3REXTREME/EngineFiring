@@ -1,11 +1,11 @@
 #ifndef AUDIOVECTOR_H
 #define AUDIOVECTOR_H
 
-#include <vector>
 #include <string>
+#include <vector>
 
 class AudioVector {
-public:
+   public:
     std::vector<float> samples;
 
     // Load audio from a file (converts to mono if needed)
@@ -20,4 +20,4 @@ public:
     int saveToWav(const std::string& filename);
 };
 
-#endif // AUDIOVECTOR_H
+#endif  // AUDIOVECTOR_H

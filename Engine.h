@@ -6,14 +6,14 @@
 #include <sstream>
 #include <string>
 #include <vector>
+
 #include "AudioVector.h"  // Assuming AudioVector is defined elsewhere
 
 class Engine {
-public:
+   public:
     // Constructor
-    Engine(std::string m_name, std::vector<AudioVector>& m_pistonClicks, 
-           const std::vector<int>& m_firingOrder, const std::vector<float>& m_degreesIntervals);
-           Engine(std::string m_name, std::vector<AudioVector>& m_pistonClicks, const std::vector<int>& m_firingOrder);
+    Engine(std::string m_name, std::vector<AudioVector>& m_pistonClicks, const std::vector<int>& m_firingOrder, const std::vector<float>& m_degreesIntervals, float m_rpmFactor);
+    Engine(std::string m_name, std::vector<AudioVector>& m_pistonClicks, const std::vector<int>& m_firingOrder, float m_rpmFactor);
 
     // Methods
     void setIntervalsFromDegrees(const std::vector<float>& degreesInterval);
@@ -24,10 +24,10 @@ public:
     std::vector<AudioVector> pistonClicks;
     std::vector<int> firingOrder;
     std::vector<float> firingIntervalFactors;
+    float audioRpmFactor;
 
     // Getter method for cylinder count
-    int getCylinderCount() {return firingOrder.size();};
-    // TODO: Add sound RPM factor here...
+    int getCylinderCount() const { return firingOrder.size(); };
 };
 
 #endif  // ENGINE_H
