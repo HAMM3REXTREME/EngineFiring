@@ -1,7 +1,6 @@
 #include <portaudio.h>
 #include <sndfile.h>
 
-#include <iostream>
 #include <string>
 #include <vector>
 
@@ -38,10 +37,9 @@ int main() {
         pistonSamples.push_back(AudioVector(file));
     }
 
-    Engine engineDefCountach("V12", pistonSamples, {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 1);
-    Engine engineDefAudi("V10", pistonSamples, {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {90, 54, 90, 54, 90, 54, 90, 54, 90, 54}, 1);
+    // Engine engineDefCountach("V12", pistonSamples, {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 1);
+    // Engine engineDefAudi("V10", pistonSamples, {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {90, 54, 90, 54, 90, 54, 90, 54, 90, 54}, 1);
     Engine engineDefLFA("V10", pistonSamples, {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, 1);
-
     EngineSoundGenerator engine(engineDefLFA, 1000.0f);
 
     int sample_rate = 44100;

@@ -39,8 +39,7 @@ Engine::Engine(std::string m_name, std::vector<AudioVector> &m_pistonClicks, con
     std::cout << "Generating new engine with" << getCylinderCount() << " cylinders (even firing)...\n";
     firingIntervalFactors.assign(getCylinderCount(), 1); // Even-firing
 }
-// Assuming we numbered the cylinders in each bank sequentially (Audi, Ford,
-// Porsche) - might sound sonically different for GM numbering
+// Assuming we numbered the cylinders in each bank sequentially (Audi, Ford, Porsche) - might sound sonically different for GM numbering
 std::vector<int> Engine::getFiringOrderFromString(const std::string &firingString) {
     std::vector<int> result;
     std::string cleanedInput = firingString;
