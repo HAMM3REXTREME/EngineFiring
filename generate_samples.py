@@ -8,7 +8,7 @@ import os
 sample_path = 'C6.wav'
 y, sr = librosa.load(sample_path, sr=None)
 
-# Create output directory
+# Output directory
 output_dir = 'sample_thumps'
 os.makedirs(output_dir, exist_ok=True)
 
@@ -19,4 +19,4 @@ for midi_note in range(21, 109):
     out_path = os.path.join(output_dir, f'note_{midi_note}.wav')
     sf.write(out_path, y_shifted, sr)
 
-print("Done generating piano key set.")
+print("Done generating notes.")

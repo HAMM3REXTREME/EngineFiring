@@ -1,7 +1,6 @@
-# Makefile for engine project with source files in src/
-
-CXX = g++
-CXXFLAGS = -O2 -Isrc
+# EngineFiring
+CXX = clang++
+CXXFLAGS = -O2 -Isrc -g
 LDFLAGS = -lsndfile -lportaudio
 SRC = src/main.cpp src/Engine.cpp src/AudioVector.cpp src/EngineSoundGenerator.cpp
 OBJ = $(SRC:.cpp=.o)
