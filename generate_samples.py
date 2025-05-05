@@ -1,3 +1,5 @@
+# Generate notes from a sample
+
 import librosa
 import soundfile as sf
 import os
@@ -7,7 +9,7 @@ sample_path = 'C6.wav'
 y, sr = librosa.load(sample_path, sr=None)
 
 # Create output directory
-output_dir = 'piano_keys'
+output_dir = 'sample_thumps'
 os.makedirs(output_dir, exist_ok=True)
 
 # MIDI note numbers for piano range (A0 = 21 to C8 = 108)
