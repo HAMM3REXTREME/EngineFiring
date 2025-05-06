@@ -21,22 +21,22 @@ void Engine::setIntervalsFromDegrees(const std::vector<float> &degreesInterval) 
     // Calculate relative interval for each cylinder
     float evenFireInterval = 720.0f / getCylinderCount();
     firingIntervalFactors.clear();
-    std::cout << name << " -> Firing factors (" << getCylinderCount() << " cylinders): ";
+    std::cout << "Firing factors: ";
     for (float fireInterval : degreesInterval) {
         firingIntervalFactors.push_back(fireInterval / evenFireInterval);
-        std::cout << "  " << fireInterval / evenFireInterval << "  ";
+        std::cout << fireInterval / evenFireInterval << "  ";
     }
     std::cout << "\n";
 }
 Engine::Engine(std::string m_name, std::vector<AudioVector> &m_pistonClicks, const std::vector<int> &m_firingOrder,
                const std::vector<float> &m_degreesIntervals, float m_rpmFactor)
     : name(m_name), pistonClicks(m_pistonClicks), firingOrder(m_firingOrder), audioRpmFactor(m_rpmFactor) {
-    std::cout << "Generating new engine with" << getCylinderCount() << " cylinders...\n";
+    std::cout << "New engine '" << name << "' with " << getCylinderCount() << " cylinders. ";
     setIntervalsFromDegrees(m_degreesIntervals);
 }
 Engine::Engine(std::string m_name, std::vector<AudioVector> &m_pistonClicks, const std::vector<int> &m_firingOrder, float m_rpmFactor)
     : name(m_name), pistonClicks(m_pistonClicks), firingOrder(m_firingOrder), audioRpmFactor(m_rpmFactor) {
-    std::cout << "Generating new engine with" << getCylinderCount() << " cylinders (even firing)...\n";
+    std::cout << "New engine '" << name << "' with " << getCylinderCount() << " cylinders (even firing).\n";
     firingIntervalFactors.assign(getCylinderCount(), 1); // Even-firing
 }
 // Assuming we numbered the cylinders in each bank sequentially (Audi, Ford, Porsche) - might sound sonically different for GM numbering
