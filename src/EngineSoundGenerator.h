@@ -6,10 +6,11 @@
 
 #include "AudioVector.h"
 #include "Engine.h"
+#include "SoundGenerator.h"
 
-class EngineSoundGenerator {
+class EngineSoundGenerator : public SoundGenerator {
   public:
-    EngineSoundGenerator(const Engine &m_engine, float m_rpm, float m_max_amplitude = 0.5f, int m_sample_rate = 44100, int m_channels = 1);
+    EngineSoundGenerator(const SoundBank &m_pistonClicks, const Engine &m_engine, float m_rpm, float m_max_amplitude = 0.5f, int m_sample_rate = 44100, int m_channels = 1);
 
     // RPM controls
     void setRPM(float newRPM);
@@ -21,11 +22,12 @@ class EngineSoundGenerator {
 
   private:
     const Engine &engine;
-    float audioRpm;
+    const SoundBank& pistonClicks;
+    float audioRpm; // Auditory rpm, refer to Engine.audioRpmFactor if it 'sounds' faster/slower than intended
     std::vector<std::pair<const std::vector<float> *, size_t>> active_firings;
     float interval;
     float interval_timer;
-    int phase;
+    int phase; // Decides which piston is next
     // Audio settings
     int sample_rate;
     int channels;

@@ -28,14 +28,14 @@ void Engine::setIntervalsFromDegrees(const std::vector<float> &degreesInterval) 
     }
     std::cout << "\n";
 }
-Engine::Engine(std::string m_name, std::vector<AudioVector> &m_pistonClicks, const std::vector<int> &m_firingOrder,
+Engine::Engine(std::string m_name, const std::vector<int> &m_firingOrder,
                const std::vector<float> &m_degreesIntervals, float m_rpmFactor)
-    : name(m_name), pistonClicks(m_pistonClicks), firingOrder(m_firingOrder), audioRpmFactor(m_rpmFactor) {
+    : name(m_name), firingOrder(m_firingOrder), audioRpmFactor(m_rpmFactor) {
     std::cout << "New engine '" << name << "' with " << getCylinderCount() << " cylinders. ";
     setIntervalsFromDegrees(m_degreesIntervals);
 }
-Engine::Engine(std::string m_name, std::vector<AudioVector> &m_pistonClicks, const std::vector<int> &m_firingOrder, float m_rpmFactor)
-    : name(m_name), pistonClicks(m_pistonClicks), firingOrder(m_firingOrder), audioRpmFactor(m_rpmFactor) {
+Engine::Engine(std::string m_name, const std::vector<int> &m_firingOrder, float m_rpmFactor)
+    : name(m_name), firingOrder(m_firingOrder), audioRpmFactor(m_rpmFactor) {
     std::cout << "New engine '" << name << "' with " << getCylinderCount() << " cylinders (even firing).\n";
     firingIntervalFactors.assign(getCylinderCount(), 1); // Even-firing
 }
