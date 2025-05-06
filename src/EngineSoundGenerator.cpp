@@ -2,7 +2,7 @@
 
 #include <algorithm>
 
-EngineSoundGenerator::EngineSoundGenerator(const Engine &m_engine, float m_rpm, int m_sample_rate, int m_channels, float m_max_amplitude)
+EngineSoundGenerator::EngineSoundGenerator(const Engine &m_engine, float m_rpm, float m_max_amplitude, int m_sample_rate, int m_channels)
     : engine(m_engine), interval_timer(0.0f), audioRpm(engine.audioRpmFactor * m_rpm), phase(0), sample_rate(m_sample_rate), channels(m_channels),
       max_amplitude(m_max_amplitude) {
     interval = 60.0f / audioRpm * sample_rate;

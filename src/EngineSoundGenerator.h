@@ -9,7 +9,7 @@
 
 class EngineSoundGenerator {
   public:
-    EngineSoundGenerator(const Engine &m_engine, float m_rpm, int m_sample_rate = 44100, int m_channels = 1, float m_max_amplitude = 0.5f);
+    EngineSoundGenerator(const Engine &m_engine, float m_rpm, float m_max_amplitude = 0.5f, int m_sample_rate = 44100, int m_channels = 1);
 
     // RPM controls
     void setRPM(float newRPM);
