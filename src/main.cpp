@@ -135,21 +135,24 @@ int main() {
                     car.linearWheelDrag = 0;
                 }
             }
-            if (const auto *joystickMove = event->getIf<sf::Event::JoystickMoved>()) {
-                if (joystickMove->axis == sf::Joystick::Axis::Z) {
-                    std::cout << "Moved: " << joystickMove->position << "\n";
-                    gas = 0.75 * (100 - joystickMove->position);
+                if (const auto *joystickMove = event->getIf<sf::Event::JoystickMoved>()){
+                if (joystickMove->axis == sf::Joystick::Axis::Z){
+                    std:: cout << "Moved: " << joystickMove->position << "\n";
+                    gas = 0.75*(100 - joystickMove->position);
                 }
-                if (const auto *joystickPress = event->getIf<sf::Event::JoystickButtonPressed>()) {
-                    if (joystickPress->button == 0) {
+                if (const auto *joystickPress = event->getIf<sf::Event::JoystickButtonPressed>()){
+                    if (joystickPress->button == 0){
                         std::cout << joystickPress->button << "\n";
-                    }
-                    std::cout << "Pressed: " << joystickPress->button << "\n";
+                    }std::cout <<  "Pressed: " << joystickPress->button << "\n";
                 }
             }
         }
-        backfire.setIntensity(1.0f - ((frame - lastLiftOff) / 200.0f));
-        std::cout << ((frame - lastLiftOff)) << "\n";
+        if (car.getGas() <= 10 && (lastLiftOff + 200 >= frame)) {
+            backfire.setIntensity(1.0f-((frame-lastLiftOff)/200.0f));
+        }
+        if (car.getRPM() <= 4000 || car.getGas() >= 25){
+            backfire.setIntensity(0);
+        }
         if (car.getBoost() <= 15 && blowoff == false) {
             blowoff = true;
             turboGen.startPlayback(3);
@@ -167,8 +170,8 @@ int main() {
         turboShaft.setAmplitude(car.getBoost() / 750);
         turboShaft.setRPM(10000 + car.getBoost() * 100);
         window.clear();
-        // std::cout << "RPM: " << (int)engine.getRPM() << "  boost: " << car.getBoost() << "\n";
-        //  Draw here
+        //std::cout << "RPM: " << (int)engine.getRPM() << "  boost: " << car.getBoost() << "\n";
+        // Draw here
         frame++;
         window.display();
         // // Test sweep
