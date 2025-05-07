@@ -29,6 +29,12 @@ void EngineSoundGenerator::update() {
     }
 }
 float EngineSoundGenerator::getRPM() { return audioRpm / engine.audioRpmFactor; }
+void EngineSoundGenerator::setAmplitude(float amp){
+    max_amplitude = amp;
+}
+float EngineSoundGenerator::getAmplitude() const {
+    return max_amplitude;
+}
 float EngineSoundGenerator::getSample() {
     float sample = 0.0f;
     // Mix active firings

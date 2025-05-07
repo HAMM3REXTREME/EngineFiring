@@ -20,6 +20,9 @@ class EngineSoundGenerator : public SoundGenerator {
     void update();
     float getSample();
 
+    void setAmplitude(float amp);
+    float getAmplitude() const;
+
   private:
     const Engine &engine;
     const SoundBank& pistonClicks;

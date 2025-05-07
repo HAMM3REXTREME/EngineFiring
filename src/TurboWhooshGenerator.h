@@ -54,12 +54,12 @@ public:
     }
 
     // Set the gain for overall volume control
-    void setGain(float newGain) {
+    void setAmplitude(float newGain) override{
         gain = std::fmax(0.0f, newGain); // Ensure gain is not negative
     }
 
     // Get the current gain value
-    float getGain() const {
+    float getAmplitude() const override{
         return gain;
     }
 
