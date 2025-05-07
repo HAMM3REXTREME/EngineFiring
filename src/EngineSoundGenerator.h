@@ -10,7 +10,8 @@
 
 class EngineSoundGenerator : public SoundGenerator {
   public:
-    EngineSoundGenerator(const SoundBank &m_pistonClicks, const Engine &m_engine, float m_rpm, float m_max_amplitude = 0.5f, int m_sample_rate = 44100, int m_channels = 1);
+    EngineSoundGenerator(const SoundBank &m_pistonClicks, const Engine &m_engine, float m_rpm, float m_max_amplitude = 0.5f, int m_sample_rate = 44100,
+                         int m_channels = 1);
 
     // RPM controls
     void setRPM(float newRPM);
@@ -25,7 +26,7 @@ class EngineSoundGenerator : public SoundGenerator {
 
   private:
     const Engine &engine;
-    const SoundBank& pistonClicks;
+    const SoundBank &pistonClicks;
     float audioRpm; // Auditory rpm, refer to Engine.audioRpmFactor if it 'sounds' faster/slower than intended
     std::vector<std::pair<const std::vector<float> *, size_t>> active_firings;
     float interval;

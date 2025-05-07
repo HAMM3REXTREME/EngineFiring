@@ -1,19 +1,15 @@
 #pragma once
 
 #include "SoundGenerator.h"
-#include <cstdlib>
-#include <cmath>
-#include <vector>
-#include <ctime>
 #include <algorithm>
+#include <cmath>
+#include <cstdlib>
+#include <ctime>
+#include <vector>
 
 class BackfireSoundGenerator : public SoundGenerator {
-public:
-    BackfireSoundGenerator(float sampleRate)
-        : sampleRate(sampleRate), gain(0.6f), intensity(0.0f)
-    {
-        srand(static_cast<unsigned>(time(nullptr)));
-    }
+  public:
+    BackfireSoundGenerator(float sampleRate) : sampleRate(sampleRate), gain(0.6f), intensity(0.0f) { srand(static_cast<unsigned>(time(nullptr))); }
 
     void update() override {
         // Random pop trigger based on intensity
@@ -22,18 +18,17 @@ public:
         }
 
         // Update active pops
-        for (auto& pop : popQueue) {
+        for (auto &pop : popQueue) {
             pop.envelope *= pop.decay;
         }
 
         // Remove finished pops
-        popQueue.erase(std::remove_if(popQueue.begin(), popQueue.end(),
-            [](const PopEvent& p) { return p.envelope < 0.001f; }), popQueue.end());
+        popQueue.erase(std::remove_if(popQueue.begin(), popQueue.end(), [](const PopEvent &p) { return p.envelope < 0.001f; }), popQueue.end());
     }
 
     float getSample() override {
         float sample = 0.0f;
-        for (auto& pop : popQueue) {
+        for (auto &pop : popQueue) {
             float noise = ((float)rand() / RAND_MAX) * 2.0f - 1.0f;
             float freq = pop.freq;
             sample += pop.envelope * bandpass(noise, freq, 0.9f);
@@ -41,27 +36,17 @@ public:
         return std::clamp(sample * gain, -1.0f, 1.0f);
     }
 
-    void setIntensity(float newIntensity) {
-        intensity = std::clamp(newIntensity, 0.0f, 1.0f);
-    }
+    void setIntensity(float newIntensity) { intensity = std::clamp(newIntensity, 0.0f, 1.0f); }
 
-    float getIntensity() const {
-        return intensity;
-    }
+    float getIntensity() const { return intensity; }
 
-    void setAmplitude(float g) override{
-        gain = std::max(0.0f, g);
-    }
+    void setAmplitude(float g) override { gain = std::max(0.0f, g); }
 
-    float getAmplitude() const override{
-        return gain;
-    }
+    float getAmplitude() const override { return gain; }
 
-    void triggerPop() {
-        triggerPopBurst();
-    }
+    void triggerPop() { triggerPopBurst(); }
 
-private:
+  private:
     float sampleRate;
     float gain;
     float intensity;

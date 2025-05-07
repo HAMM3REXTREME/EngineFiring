@@ -12,8 +12,7 @@
 
 class Engine {
   public:
-    Engine(std::string m_name, const std::vector<int> &m_firingOrder, const std::vector<float> &m_degreesIntervals,
-           float m_rpmFactor);
+    Engine(std::string m_name, const std::vector<int> &m_firingOrder, const std::vector<float> &m_degreesIntervals, float m_rpmFactor);
     Engine(std::string m_name, const std::vector<int> &m_firingOrder, float m_rpmFactor);
 
     void setIntervalsFromDegrees(const std::vector<float> &degreesInterval);

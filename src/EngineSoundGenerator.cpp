@@ -2,9 +2,10 @@
 
 #include <algorithm>
 
-EngineSoundGenerator::EngineSoundGenerator(const SoundBank &m_pistonClicks, const Engine &m_engine, float m_rpm, float m_max_amplitude, int m_sample_rate, int m_channels)
-    : pistonClicks(m_pistonClicks), engine(m_engine), interval_timer(0.0f), audioRpm(engine.audioRpmFactor * m_rpm), phase(0), sample_rate(m_sample_rate), channels(m_channels),
-      max_amplitude(m_max_amplitude) {
+EngineSoundGenerator::EngineSoundGenerator(const SoundBank &m_pistonClicks, const Engine &m_engine, float m_rpm, float m_max_amplitude, int m_sample_rate,
+                                           int m_channels)
+    : pistonClicks(m_pistonClicks), engine(m_engine), interval_timer(0.0f), audioRpm(engine.audioRpmFactor * m_rpm), phase(0), sample_rate(m_sample_rate),
+      channels(m_channels), max_amplitude(m_max_amplitude) {
     interval = 60.0f / audioRpm * sample_rate;
 }
 
@@ -29,12 +30,8 @@ void EngineSoundGenerator::update() {
     }
 }
 float EngineSoundGenerator::getRPM() { return audioRpm / engine.audioRpmFactor; }
-void EngineSoundGenerator::setAmplitude(float amp){
-    max_amplitude = amp;
-}
-float EngineSoundGenerator::getAmplitude() const {
-    return max_amplitude;
-}
+void EngineSoundGenerator::setAmplitude(float amp) { max_amplitude = amp; }
+float EngineSoundGenerator::getAmplitude() const { return max_amplitude; }
 float EngineSoundGenerator::getSample() {
     float sample = 0.0f;
     // Mix active firings

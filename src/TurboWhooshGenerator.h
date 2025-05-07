@@ -5,7 +5,7 @@
 #include <cstdlib>
 
 class TurboWhooshGenerator : public SoundGenerator {
-public:
+  public:
     TurboWhooshGenerator(float sampleRate)
         : sampleRate(sampleRate), intensity(0.0f), phase(0.0f), gain(0.5f) // Default gain set to 0.5f
     {
@@ -19,8 +19,8 @@ public:
 
     float getSample() override {
         // Base frequencies for high-pitched whistle and low rumble
-        float highFreq = 1200.0f + intensity * 3000.0f;  // Whistle pitch increases with boost
-        float lowFreq = 80.0f + intensity * 300.0f;    // Rumble pitch for the low end
+        float highFreq = 1200.0f + intensity * 3000.0f; // Whistle pitch increases with boost
+        float lowFreq = 80.0f + intensity * 300.0f;     // Rumble pitch for the low end
 
         // Filter sharpness based on intensity
         float highQ = 2.0f + intensity * 4.0f; // Whistle sharper at higher boost
@@ -46,40 +46,32 @@ public:
     void setIntensity(float newIntensity) {
         // Smooth intensity updates for no stepping
         float clamped = std::fmax(0.0f, std::fmin(1.0f, newIntensity));
-        intensity = 0.9f * intensity + 0.1f * clamped;  // Smooth intensity change
+        intensity = 0.9f * intensity + 0.1f * clamped; // Smooth intensity change
     }
 
-    float getIntensity() const {
-        return intensity;
-    }
+    float getIntensity() const { return intensity; }
 
     // Set the gain for overall volume control
-    void setAmplitude(float newGain) override{
+    void setAmplitude(float newGain) override {
         gain = std::fmax(0.0f, newGain); // Ensure gain is not negative
     }
 
     // Get the current gain value
-    float getAmplitude() const override{
-        return gain;
-    }
+    float getAmplitude() const override { return gain; }
 
-private:
+  private:
     float sampleRate;
     float intensity;
     float phase;
-    float gain;  // Gain adjustment for overall volume control
+    float gain; // Gain adjustment for overall volume control
 
     // Filter state
     float a0, a1, a2, b1, b2;
     float x1 = 0.0f, x2 = 0.0f, y1 = 0.0f, y2 = 0.0f;
 
-    void resetFilter() {
-        x1 = x2 = y1 = y2 = 0.0f;
-    }
+    void resetFilter() { x1 = x2 = y1 = y2 = 0.0f; }
 
-    float whiteNoise() {
-        return 2.0f * ((float)rand() / RAND_MAX) - 1.0f;
-    }
+    float whiteNoise() { return 2.0f * ((float)rand() / RAND_MAX) - 1.0f; }
 
     void computeBandpassCoeffs(float freq, float Q) {
         float omega = 2.0f * M_PI * freq / sampleRate;
