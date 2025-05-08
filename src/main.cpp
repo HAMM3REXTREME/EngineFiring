@@ -54,7 +54,7 @@ int main() {
     //     "audi5/4_audi5cyl.wav",
     //     "audi5/5_audi5cyl.wav"
     // };
-    sf::RenderWindow window(sf::VideoMode({800, 600}), "SFML window");
+    sf::RenderWindow window(sf::VideoMode({800, 600}), "Engine Firing Simulator");
     float sample_rate = 44100;
 
     SoundBank mainSamples;
@@ -81,7 +81,7 @@ int main() {
     TurboWhooshGenerator whoosh(sample_rate);
     SimpleSoundGenerator turboGen(turboSamples);
     BackfireSoundGenerator backfire(sample_rate);
-    turboGen.setAmplitude(0.1f);
+    turboGen.setAmplitude(0.01f);
     AudioContext context{.generators = {&engine, &turboGen, &turboShaft, &backfire, &whoosh}};
     // Sample sweep
     bool shifting = false;
@@ -100,11 +100,15 @@ int main() {
     bool blowoff = false;
     float boost = 0;
     float gas = 0;
-    long frame = 0;
-    long lastLiftOff = 0;
+    int frame = 0;
+    int lastGear = 1;
+    int upShiftFrame = 0;
+int downShiftFrame = 0;
+    int lastLiftOff = 0;
     Damper gasAvg(5);
     backfire.setAmplitude(0.3f);
     while (window.isOpen()) {
+        frame++;
         Pa_Sleep(10);
         // Process events
         while (const std::optional event = window.pollEvent()) {
@@ -137,18 +141,45 @@ int main() {
             }
                 if (const auto *joystickMove = event->getIf<sf::Event::JoystickMoved>()){
                 if (joystickMove->axis == sf::Joystick::Axis::Z){
-                    std:: cout << "Moved: " << joystickMove->position << "\n";
+                    //std:: cout << "Moved: " << joystickMove->position << "\n";
                     gas = 0.75*(100 - joystickMove->position);
                 }
-                if (const auto *joystickPress = event->getIf<sf::Event::JoystickButtonPressed>()){
-                    if (joystickPress->button == 0){
-                        std::cout << joystickPress->button << "\n";
-                    }std::cout <<  "Pressed: " << joystickPress->button << "\n";
+            }
+            else if (const auto* joystickButton = event->getIf<sf::Event::JoystickButtonPressed>()) {
+                // Handle button presses
+                if (joystickButton->button == 4) {  // LB button
+                    std::cout << "Upshift\n";
+                    lastGear = car.getGear();
+                    car.setGear(0);
+                    car.setGas(0);
+                    upShiftFrame = frame + 20;
+                }
+                else if (joystickButton->button == 5) {  // RB button
+                    std::cout << "Downshift\n";
+                    lastGear = car.getGear();
+                    car.setGear(0);
+                    car.setGas(150);
+                    downShiftFrame = frame + 30;
                 }
             }
         }
-        if (car.getGas() <= 10 && (lastLiftOff + 200 >= frame)) {
-            backfire.setIntensity(1.0f-((frame-lastLiftOff)/200.0f));
+        if (upShiftFrame == 0 && downShiftFrame == 0) {
+            gasAvg.addValue(gas);
+            car.setGas(gasAvg.getAverage());
+        }
+        
+        if (frame == upShiftFrame) {
+            car.setGear(lastGear+1);
+            upShiftFrame = 0;
+        }
+        
+        if (frame == downShiftFrame) {
+            car.setGear(lastGear-1);
+            downShiftFrame = 0;
+        }
+
+        if (car.getGas() <= 10 && (lastLiftOff + 100 >= frame)) {
+            backfire.setIntensity(1.0f-((frame-lastLiftOff)/100.0f));
         }
         if (car.getRPM() <= 4000 || car.getGas() >= 25){
             backfire.setIntensity(0);
@@ -161,46 +192,17 @@ int main() {
         if (car.getBoost() >= 50) {
             blowoff = false;
         }
-        gasAvg.addValue(gas);
-        car.setGas(gasAvg.getAverage());
+
         engine.setRPM(car.getRPM());
         engine.setAmplitude(car.getTorque() / 500 + 0.2f);
         whoosh.setIntensity(car.getBoost() / 150);
         whoosh.setAmplitude(car.getBoost() / 2500);
         turboShaft.setAmplitude(car.getBoost() / 750);
         turboShaft.setRPM(10000 + car.getBoost() * 100);
+
         window.clear();
-        //std::cout << "RPM: " << (int)engine.getRPM() << "  boost: " << car.getBoost() << "\n";
-        // Draw here
-        frame++;
+        //std::cout << "RPM: " << (int)engine.getRPM() << "  boost: " << car.getBoost() << " Gear:" << car.getGear() << "\n";
         window.display();
-        // // Test sweep
-        // if (engine.getRPM() >= 8000) {
-        //     shifting = true;
-        //     turboGen.startPlayback(3);
-        //     engine.setAmplitude(0.2f);
-        //     backfire.setIntensity(5);
-        // }
-        // if (engine.getRPM() >= 4500){
-        //     boost += 0.01;
-        // }
-        // if (engine.getRPM() <= 6000) {
-        //     shifting = false;
-        //     engine.setAmplitude(0.4f);
-        //     backfire.setIntensity(0);
-        // }
-        // if (!shifting) {
-        //     engine.setRPM(engine.getRPM() +  50000 / engine.getRPM());
-        //     //supercharger.setRPM(engine.getRPM());
-        // } else {
-        //     engine.setRPM(engine.getRPM() -  50000 / engine.getRPM());
-        //     //supercharger.setRPM(engine.getRPM());
-        //     boost = 0;
-        // }
-        // whoosh.setIntensity(boost/4);
-        // whoosh.setAmplitude(boost*0.01 + 0.2f);
-        // turboShaft.setRPM(10000 + boost*10000);
-        // std::cout << engine.getRPM() << " Boost: " << boost << "\n";
     }
     carRunning = false;
     carThread.join();
