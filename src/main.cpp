@@ -1,6 +1,7 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Window/Mouse.hpp>
 #include <algorithm>
+#include <map>
 #include <portaudio.h>
 #include <sndfile.h>
 
@@ -64,17 +65,24 @@ int main() {
     SoundBank turboSamples;
     turboSamples.loadFromWavs({"boom.wav", "backfireEXT_4.wav", "thump.wav", "flutter.wav"});
 
-    // Engine engineDef("Countach V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 4.5);
-    // Engine engineDef("Murcielago V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 7);
-    // Engine engineDef("Audi V10 FSI", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {90, 54, 90, 54, 90, 54, 90, 54, 90, 54}, 5);
-    // Engine engineDef("1LR-GUE V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, 5);
-    // Engine engineDef("F1 V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, 12.5);
-    // Engine engineDef("Audi V8", Engine::getFiringOrderFromString("1-5-4-8-6-3-7-2"), 4);
+    //Engine engineDef("L539 V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 6.5);
+    //Engine engineDef("Diablo/Murci V12", Engine::getFiringOrderFromString("1-7-4-10-2-8-6-12-3-9-5-11"), 6);
+    //Engine engineDef("F1 V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 16);
+    //Engine engineDef("Audi V10 FSI", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {90, 54, 90, 54, 90, 54, 90, 54, 90, 54}, 5);
+    //Engine engineDef("1LR-GUE V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, 5);
+    //Engine engineDef("F1 V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, 12.5);
+    //Engine engineDef("Audi V8 -", Engine::getFiringOrderFromString("1-5-4-8-6-3-7-2"), 4);
+    //Engine engineDef("Mercedes M120 V12", Engine::getFiringOrderFromString("1-12-5-8-3-10-6-7-2-11-4-9"),8);
+    //Engine engineDef("Murican V8 +", Engine::getFiringOrderFromString("1-8-7-2-6-5-4-3"),3);
     Engine engineDef("BMW N54", Engine::getFiringOrderFromString("1-5-3-6-2-4"), 3);
-    // Engine engineDef("Audi i5", Engine::getFiringOrderFromString("1-2-4-5-3"),3);
-    // Engine engineDef("4 Banger", Engine::getFiringOrderFromString("1-3-4-2"),2);
-    // Engine superchargerDef("Supercharger", {0},15);
-    Engine turboshaftDef("Turbo Shaft - BorgWarner", {0}, 15);
+    //Engine engineDef("Audi i5", Engine::getFiringOrderFromString("1-2-4-5-3"),3);
+    //Engine engineDef("4 Banger", Engine::getFiringOrderFromString("1-3-4-2"),2);
+    //Engine superchargerDef("Supercharger", {0},15);
+    //Engine engineDef("Nissan VQ", Engine::getFiringOrderFromString("1-2-3-4-5-6"),3);
+    //Engine engineDef("Ford 4.0L V6", Engine::getFiringOrderFromString("1-4-2-5-3-6"),3);
+    //Engine engineDef("Buick odd firing V6", Engine::getFiringOrderFromString("1-6-5-4-3-2"), {90,150,90,150,90,150},3);
+    //Engine engineDef("Porsche Flat 6",Engine::getFiringOrderFromString("1-6-2-4-3-5"),4);
+    Engine turboshaftDef("BorgWarner K04 - Shaft", {0}, 15);
     EngineSoundGenerator engine(mainSamples, engineDef, 1000.0f, 0.5f);
     // EngineSoundGenerator supercharger(mainSamples, superchargerDef, 1000.0f, 0.1f);
     EngineSoundGenerator turboShaft(mainSamples, turboshaftDef, 1000.0f, 0.05f);
@@ -107,6 +115,22 @@ int downShiftFrame = 0;
     int lastLiftOff = 0;
     Damper gasAvg(5);
     backfire.setAmplitude(0.3f);
+
+        // Map user keyboard input to differen levels of throttle
+        std::map<sf::Keyboard::Scancode, int> userThrottleMap;
+        userThrottleMap[sf::Keyboard::Scancode::Q] = 30;
+        userThrottleMap[sf::Keyboard::Scancode::W] = 50;
+        userThrottleMap[sf::Keyboard::Scancode::E] = 80;
+        userThrottleMap[sf::Keyboard::Scancode::R] = 130;
+        userThrottleMap[sf::Keyboard::Scancode::T] = 150;
+        
+    // Tachometer needle
+    sf::RectangleShape tach(sf::Vector2f(250.f, 6.f));  // Size of the tach
+    tach.setFillColor(sf::Color::Red);                  // Color of the tach
+    tach.setPosition({1024.f / 2.f, 768.f / 2.f});        // Position of the tach
+    tach.setOrigin({250.f, 3.f});                         // Center of rotation
+
+    float deltaTime = 10.0f; // Temp
     while (window.isOpen()) {
         frame++;
         Pa_Sleep(10);
@@ -116,27 +140,42 @@ int downShiftFrame = 0;
             if (event->is<sf::Event::Closed>()) {
                 window.close();
             } else if (const auto *keyPressed = event->getIf<sf::Event::KeyPressed>()) {
+                auto it = userThrottleMap.find(keyPressed->scancode);
+                if (it != userThrottleMap.end()) {
+                    //std::cout << "Accelerator at " << it->second << " \n";
+                    gas = it->second;
+                }
                 if (keyPressed->scancode == sf::Keyboard::Scancode::Escape) {
                     window.close();
                 }
-                if (keyPressed->scancode == sf::Keyboard::Scancode::T) {
-                    gas = 125;
-                }
                 if (keyPressed->scancode == sf::Keyboard::Scancode::Up) {
-                    car.setGear(car.getGear() + 1);
+                    std::cout << "Upshift\n";
+                    lastGear = car.getGear();
+                    car.setGear(0);
+                    car.setGas(0);
+                    upShiftFrame = frame + 1 * deltaTime;
                 }
                 if (keyPressed->scancode == sf::Keyboard::Scancode::Down) {
-                    car.setGear(car.getGear() - 1);
-                }
+                    std::cout << "Downshift\n";
+                    lastGear = car.getGear();
+                    car.setGear(0);
+                    car.setGas(150);
+                    downShiftFrame = frame + 3 * deltaTime;
+                }                
                 if (keyPressed->scancode == sf::Keyboard::Scancode::Period) {
-                    car.linearWheelDrag = 10;
+                    car.linearWheelDrag = 25;
                 }
-            } else if (const auto *keyPressed = event->getIf<sf::Event::KeyReleased>()) {
-                if (keyPressed->scancode == sf::Keyboard::Scancode::T) {
+            } else if (const auto *keyReleased = event->getIf<sf::Event::KeyReleased>()) {
+                if (keyReleased->scancode == sf::Keyboard::Scancode::T) {
                     gas = 0;
                 }
-                if (keyPressed->scancode == sf::Keyboard::Scancode::Period) {
+                if (keyReleased->scancode == sf::Keyboard::Scancode::Period) {
                     car.linearWheelDrag = 0;
+                }
+                auto it = userThrottleMap.find(keyReleased->scancode);
+                if (it != userThrottleMap.end()) {
+                    //std::cout << "Accelerator at " << it->second << " \n";
+                    gas = 0;
                 }
             }
                 if (const auto *joystickMove = event->getIf<sf::Event::JoystickMoved>()){
@@ -152,14 +191,14 @@ int downShiftFrame = 0;
                     lastGear = car.getGear();
                     car.setGear(0);
                     car.setGas(0);
-                    upShiftFrame = frame + 20;
+                    upShiftFrame = frame + 2 * deltaTime;
                 }
                 else if (joystickButton->button == 5) {  // RB button
                     std::cout << "Downshift\n";
                     lastGear = car.getGear();
                     car.setGear(0);
-                    car.setGas(150);
-                    downShiftFrame = frame + 30;
+                    car.setGas((0.2*car.getRPM()*car.gearRatios[lastGear+1])/car.gearRatios[lastGear]);
+                    downShiftFrame = frame + 3 * deltaTime;
                 }
             }
         }
@@ -177,7 +216,6 @@ int downShiftFrame = 0;
             car.setGear(lastGear-1);
             downShiftFrame = 0;
         }
-
         if (car.getGas() <= 10 && (lastLiftOff + 100 >= frame)) {
             backfire.setIntensity(1.0f-((frame-lastLiftOff)/100.0f));
         }
@@ -193,6 +231,7 @@ int downShiftFrame = 0;
             blowoff = false;
         }
 
+
         engine.setRPM(car.getRPM());
         engine.setAmplitude(car.getTorque() / 500 + 0.2f);
         whoosh.setIntensity(car.getBoost() / 150);
@@ -200,7 +239,10 @@ int downShiftFrame = 0;
         turboShaft.setAmplitude(car.getBoost() / 750);
         turboShaft.setRPM(10000 + car.getBoost() * 100);
 
+        tach.setRotation(sf::degrees(car.getRPM()/45));
+
         window.clear();
+        window.draw(tach);
         //std::cout << "RPM: " << (int)engine.getRPM() << "  boost: " << car.getBoost() << " Gear:" << car.getGear() << "\n";
         window.display();
     }
