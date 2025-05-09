@@ -77,11 +77,12 @@ int main() {
     Engine engineDef("BMW N54", Engine::getFiringOrderFromString("1-5-3-6-2-4"), 3);
     // Engine engineDef("Audi i5", Engine::getFiringOrderFromString("1-2-4-5-3"),3);
     // Engine engineDef("4 Banger", Engine::getFiringOrderFromString("1-3-4-2"),2);
-    // Engine superchargerDef("Supercharger", {0},15);
+    // Engine engineDef("Super Sport", Engine::getFiringOrderFromString("1-3-4-2"),4);
     // Engine engineDef("Nissan VQ", Engine::getFiringOrderFromString("1-2-3-4-5-6"),3);
     // Engine engineDef("Ford 4.0L V6", Engine::getFiringOrderFromString("1-4-2-5-3-6"),3);
     // Engine engineDef("Buick odd firing V6", Engine::getFiringOrderFromString("1-6-5-4-3-2"), {90,150,90,150,90,150},3);
-    // Engine engineDef("Porsche Flat 6",Engine::getFiringOrderFromString("1-6-2-4-3-5"),4);
+    //Engine engineDef("Porsche Flat 6",Engine::getFiringOrderFromString("1-6-2-4-3-5"),3.6);
+    // Engine superchargerDef("Supercharger", {0},15);
     Engine turboshaftDef("BorgWarner K04 - Shaft", {0}, 15);
     EngineSoundGenerator engine(mainSamples, engineDef, 1000.0f, 0.5f);
     // EngineSoundGenerator supercharger(mainSamples, superchargerDef, 1000.0f, 0.1f);
@@ -114,7 +115,7 @@ int main() {
     int downShiftFrame = 0;
     int lastLiftOff = 0;
     Damper gasAvg(5);
-    backfire.setAmplitude(0.3f);
+    backfire.setAmplitude(0.5f);
 
     // Map user keyboard input to differen levels of throttle
     std::map<sf::Keyboard::Scancode, int> userThrottleMap;

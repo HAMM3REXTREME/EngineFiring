@@ -48,7 +48,7 @@ void BackfireSoundGenerator::triggerPopBurst() {
     for (int i = 0; i < pops; ++i) {
         PopEvent pop;
         pop.envelope = 1.0f;
-        pop.decay = std::exp(-5.0f / sampleRate) - 0.0001f * (rand() % 100);
+        pop.decay = std::exp(-5.0f / sampleRate) - 0.0001f * (rand() % 100) - 0.001f;
         pop.freq = 300.0f + rand() % 200; // between 300 and 500 Hz
         popQueue.push_back(pop);
     }
