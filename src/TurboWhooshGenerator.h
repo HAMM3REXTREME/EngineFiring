@@ -3,11 +3,12 @@
 #include "SoundGenerator.h"
 #include <cmath>
 #include <cstdlib>
+#include <ctime>
 
 class TurboWhooshGenerator : public SoundGenerator {
   public:
     TurboWhooshGenerator(float sampleRate)
-        : sampleRate(sampleRate), intensity(0.0f), phase(0.0f), gain(0.5f) // Default gain set to 0.5f
+        : sampleRate(sampleRate), intensity(0.0f), phase(0.0f), amplitude(0.5f) // Default gain set to 0.5f
     {
         resetFilter();
         srand(static_cast<unsigned>(time(nullptr)));
@@ -27,7 +28,7 @@ class TurboWhooshGenerator : public SoundGenerator {
         float lowQ = 0.5f + intensity * 2.0f;  // Rumble smoother at low boost
 
         // Overall gain adjusted by the instance gain variable
-        float effectiveGain = gain * (0.2f + intensity * 0.8f);
+        float effectiveGain = amplitude * (0.2f + intensity * 0.8f);
 
         // High-frequency filter for the whistle
         computeBandpassCoeffs(highFreq, highQ);
@@ -53,17 +54,17 @@ class TurboWhooshGenerator : public SoundGenerator {
 
     // Set the gain for overall volume control
     void setAmplitude(float newGain) override {
-        gain = std::fmax(0.0f, newGain); // Ensure gain is not negative
+        amplitude = std::fmax(0.0f, newGain); // Ensure gain is not negative
     }
 
     // Get the current gain value
-    float getAmplitude() const override { return gain; }
+    float getAmplitude() const override { return amplitude; }
 
   private:
     float sampleRate;
     float intensity;
     float phase;
-    float gain; // Gain adjustment for overall volume control
+    float amplitude; // Gain adjustment for overall volume control
 
     // Filter state
     float a0, a1, a2, b1, b2;
