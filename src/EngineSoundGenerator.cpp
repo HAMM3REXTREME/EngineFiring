@@ -10,7 +10,7 @@ EngineSoundGenerator::EngineSoundGenerator(const SoundBank &m_pistonClicks, cons
 }
 
 void EngineSoundGenerator::setRPM(float newRPM) {
-    audioRpm = engine.audioRpmFactor * newRPM;
+    audioRpm = engine.audioRpmFactor * std::abs(newRPM);
     interval = 60.0f / audioRpm * sample_rate;
 }
 

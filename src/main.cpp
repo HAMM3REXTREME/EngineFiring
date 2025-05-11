@@ -81,7 +81,7 @@ int main() {
     // Engine engineDef("Nissan VQ", Engine::getFiringOrderFromString("1-2-3-4-5-6"),3);
     // Engine engineDef("Ford 4.0L V6", Engine::getFiringOrderFromString("1-4-2-5-3-6"),3);
     // Engine engineDef("Buick odd firing V6", Engine::getFiringOrderFromString("1-6-5-4-3-2"), {90,150,90,150,90,150},3);
-    //Engine engineDef("Porsche Flat 6",Engine::getFiringOrderFromString("1-6-2-4-3-5"),3.6);
+    // Engine engineDef("Porsche Flat 6",Engine::getFiringOrderFromString("1-6-2-4-3-5"),3.6);
     // Engine superchargerDef("Supercharger", {0},15);
     Engine turboshaftDef("BorgWarner K04 - Shaft", {0}, 15);
     EngineSoundGenerator engine(mainSamples, engineDef, 1000.0f, 0.5f);
@@ -114,6 +114,7 @@ int main() {
     int upShiftFrame = 0;
     int downShiftFrame = 0;
     int lastLiftOff = 0;
+    bool shiftLock = false;
     Damper gasAvg(5);
     backfire.setAmplitude(0.5f);
 
@@ -149,19 +150,21 @@ int main() {
                 if (keyPressed->scancode == sf::Keyboard::Scancode::Escape) {
                     window.close();
                 }
-                if (keyPressed->scancode == sf::Keyboard::Scancode::Up) {
+                if (keyPressed->scancode == sf::Keyboard::Scancode::Up && !shiftLock) {
                     std::cout << "Upshift\n";
                     lastGear = car.getGear();
                     car.setGear(0);
                     car.setGas(0);
                     upShiftFrame = frame + 1 * deltaTime;
+                    shiftLock = true;
                 }
-                if (keyPressed->scancode == sf::Keyboard::Scancode::Down) {
+                if (keyPressed->scancode == sf::Keyboard::Scancode::Down && !shiftLock) {
                     std::cout << "Downshift\n";
                     lastGear = car.getGear();
                     car.setGear(0);
                     car.setGas(150);
                     downShiftFrame = frame + 3 * deltaTime;
+                    shiftLock = true;
                 }
                 if (keyPressed->scancode == sf::Keyboard::Scancode::Period) {
                     car.linearWheelDrag = 25;
@@ -186,18 +189,20 @@ int main() {
                 }
             } else if (const auto *joystickButton = event->getIf<sf::Event::JoystickButtonPressed>()) {
                 // Handle button presses
-                if (joystickButton->button == 4) { // LB button
+                if (joystickButton->button == 4 && !shiftLock) { // LB button
                     std::cout << "Upshift\n";
                     lastGear = car.getGear();
                     car.setGear(0);
                     car.setGas(0);
                     upShiftFrame = frame + 2 * deltaTime;
-                } else if (joystickButton->button == 5) { // RB button
+                    shiftLock = true;
+                } else if (joystickButton->button == 5 && !shiftLock) { // RB button
                     std::cout << "Downshift\n";
                     lastGear = car.getGear();
                     car.setGear(0);
                     car.setGas((0.2 * car.getRPM() * car.gearRatios[lastGear + 1]) / car.gearRatios[lastGear]);
                     downShiftFrame = frame + 3 * deltaTime;
+                    shiftLock = true;
                 }
             }
         }
@@ -207,13 +212,15 @@ int main() {
         }
 
         if (frame == upShiftFrame) {
-            car.setGear(lastGear + 1);
+            car.setGear(std::clamp(lastGear + 1,0,7));
             upShiftFrame = 0;
+            shiftLock = false;
         }
 
         if (frame == downShiftFrame) {
-            car.setGear(lastGear - 1);
+            car.setGear(std::clamp(lastGear - 1,0,7));
             downShiftFrame = 0;
+            shiftLock = false;
         }
         if (car.getGas() <= 10 && (lastLiftOff + 100 >= frame)) {
             backfire.setIntensity(1.0f - ((frame - lastLiftOff) / 100.0f));
