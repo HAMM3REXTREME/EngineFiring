@@ -14,7 +14,7 @@ class Car {
     int revLimitTick = 0;         // no-gas ticks remaining
     int revLimit = 8000;          // Gas will be cut when rev limit is reached
 
-    float gearRatios[8] = {0, 0.8, 1.5, 2.2, 2.9, 3.6, 4.5, 5.4}; // Gearing ratios - Used to match engine rpm to wheel rpm
+    float gearRatios[8] = {0, 1, 1.4, 2, 2.75, 3.85, 5.4, 7.5}; // Gearing ratios - Used to match engine rpm to wheel rpm
     float gearLazyValues[8] = {0.99,   0.999,  0.9994, 0.9995, 0.9996,
                                0.9997, 0.9998, 0.9999}; // Engine time for revs to settle back - values closer to one need more time to go back to idle cause
                                                         // less resistance (exponential decay)
