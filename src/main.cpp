@@ -47,6 +47,16 @@ void manageCar(Car *car, std::atomic<bool> *run) {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 }
+void carStarter(Car* car, bool* m_isStarting) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(800));
+    std::cout << "Vroom!\n";
+    car->setRPM(800);
+    car->setGas(170);
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    car->setGas(0);
+    *m_isStarting = false;
+}
+
 constexpr int WINDOW_X = 1080;
 constexpr int WINDOW_Y = 720;
 int main() {
@@ -65,7 +75,11 @@ int main() {
                               "thump_library/note_92.wav", "thump_library/note_93.wav", "thump_library/note_94.wav", "thump_library/note_95.wav",
                               "thump_library/note_96.wav", "thump_library/note_97.wav", "thump_library/note_98.wav", "thump_library/note_99.wav"});
     SoundBank turboSamples;
-    turboSamples.loadFromWavs({"boom.wav", "backfireEXT_4.wav", "thump.wav", "flutter.wav"});
+    turboSamples.loadFromWavs({"thump.wav", "flutter.wav"});
+    SoundBank generalSamples;
+    generalSamples.loadFromWavs({"boom.wav", "starter.wav"});
+    SimpleSoundGenerator generalGen(generalSamples);
+    generalGen.setAmplitude(0.3f);
 
     // Engine engineDef("L539 V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 6.5);
     Engine engineDef("Diablo/Murci V12", Engine::getFiringOrderFromString("1-7-4-10-2-8-6-12-3-9-5-11"), 6);
@@ -93,15 +107,16 @@ int main() {
     SimpleSoundGenerator turboGen(turboSamples);
     BackfireSoundGenerator backfire(sample_rate);
     turboGen.setAmplitude(0.01f);
-    AudioContext context{.generators = {&engine, &turboGen, &backfire}};
+    AudioContext context{.generators = {&engine, &turboGen, &backfire, &generalGen}};
     // Sample sweep
     bool shifting = false;
+    bool isStarting = false;
 
     Car car;
     std::atomic<bool> carRunning = true;
     std::thread carThread{manageCar, &car, &carRunning};
-    car.ignition = true;
-    car.setRPM(800);
+    car.ignition = false;
+    car.setRPM(1);
 
     // Live audio
     Pa_Initialize();
@@ -112,7 +127,7 @@ int main() {
     float boost = 0;
     float gas = 0;
     int frame = 0;
-    int lastGear = 1;
+    int lastGear = 0;
     int upShiftFrame = 0;
     int downShiftFrame = 0;
     int lastLiftOff = 0;
@@ -191,6 +206,21 @@ int main() {
                     downShiftFrame = frame + 3 * deltaTime;
                     shiftLock = true;
                 }
+                    if (keyPressed->scancode == sf::Keyboard::Scancode::S) {
+                    // Only allow starting if not already in the process of being started, otherwise we can attempt to start.
+                    if (!isStarting) {
+                        generalGen.startPlayback(1);
+                        // Push to start.
+                        std::cout << "Starting car...\n";
+                        std::thread starterThread{carStarter, &car, &isStarting};
+                        starterThread.detach();
+                    }
+                    isStarting = true;
+                }
+                if (keyPressed->scancode == sf::Keyboard::Scancode::A) {
+                    car.ignition = !car.ignition;
+                    std::cout << "Set ignition to " << car.ignition << "\n";
+                }
                 if (keyPressed->scancode == sf::Keyboard::Scancode::Period) {
                     car.linearWheelDrag = 25;
                 }
@@ -231,7 +261,7 @@ int main() {
                 }
             }
         }
-        if (upShiftFrame == 0 && downShiftFrame == 0) {
+        if (upShiftFrame == 0 && downShiftFrame == 0 && !isStarting) {
             gasAvg.addValue(gas);
             car.setGas(gasAvg.getAverage());
         }
@@ -255,7 +285,7 @@ int main() {
         }
         if (car.getBoost() <= 15 && blowoff == false) {
             blowoff = true;
-            turboGen.startPlayback(3);
+            turboGen.startPlayback(1);
             lastLiftOff = frame;
         }
         if (car.getBoost() >= 50) {
