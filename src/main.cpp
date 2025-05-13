@@ -47,8 +47,8 @@ void manageCar(Car *car, std::atomic<bool> *run) {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 }
-constexpr int WINDOW_X = 800;
-constexpr int WINDOW_Y = 600;
+constexpr int WINDOW_X = 1080;
+constexpr int WINDOW_Y = 720;
 int main() {
     // std::vector<std::string> files = {
     //     "audi5/1_audi5cyl.wav",
@@ -61,14 +61,14 @@ int main() {
     float sample_rate = 44100;
 
     SoundBank mainSamples;
-    mainSamples.loadFromWavs({"thump_library/note_76.wav", "thump_library/note_77.wav", "thump_library/note_78.wav", "thump_library/note_79.wav",
-                              "thump_library/note_80.wav", "thump_library/note_81.wav", "thump_library/note_82.wav", "thump_library/note_83.wav",
-                              "thump_library/note_84.wav", "thump_library/note_85.wav", "thump_library/note_86.wav", "thump_library/note_87.wav"});
+    mainSamples.loadFromWavs({"thump_library/note_88.wav", "thump_library/note_89.wav", "thump_library/note_90.wav", "thump_library/note_91.wav",
+                              "thump_library/note_92.wav", "thump_library/note_93.wav", "thump_library/note_94.wav", "thump_library/note_95.wav",
+                              "thump_library/note_96.wav", "thump_library/note_97.wav", "thump_library/note_98.wav", "thump_library/note_99.wav"});
     SoundBank turboSamples;
     turboSamples.loadFromWavs({"boom.wav", "backfireEXT_4.wav", "thump.wav", "flutter.wav"});
 
     // Engine engineDef("L539 V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 6.5);
-    // Engine engineDef("Diablo/Murci V12", Engine::getFiringOrderFromString("1-7-4-10-2-8-6-12-3-9-5-11"), 6);
+    Engine engineDef("Diablo/Murci V12", Engine::getFiringOrderFromString("1-7-4-10-2-8-6-12-3-9-5-11"), 6);
     // Engine engineDef("F1 V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 16);
     // Engine engineDef("Audi V10 FSI", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {90, 54, 90, 54, 90, 54, 90, 54, 90, 54}, 5.4);
     // Engine engineDef("1LR-GUE V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, 5);
@@ -76,7 +76,7 @@ int main() {
     // Engine engineDef("Audi V8 -", Engine::getFiringOrderFromString("1-5-4-8-6-3-7-2"), 4);
     // Engine engineDef("Mercedes M120 V12", Engine::getFiringOrderFromString("1-12-5-8-3-10-6-7-2-11-4-9"),8);
     // Engine engineDef("Murican V8 +", Engine::getFiringOrderFromString("1-8-7-2-6-5-4-3"),3);
-    Engine engineDef("BMW N54", Engine::getFiringOrderFromString("1-5-3-6-2-4"), 3);
+    // Engine engineDef("BMW N54", Engine::getFiringOrderFromString("1-5-3-6-2-4"), 3);
     // Engine engineDef("Audi i5", Engine::getFiringOrderFromString("1-2-4-5-3"),3);
     // Engine engineDef("4 Banger", Engine::getFiringOrderFromString("1-3-4-2"),2);
     // Engine engineDef("Super Sport", Engine::getFiringOrderFromString("1-3-4-2"),4);
@@ -93,7 +93,7 @@ int main() {
     SimpleSoundGenerator turboGen(turboSamples);
     BackfireSoundGenerator backfire(sample_rate);
     turboGen.setAmplitude(0.01f);
-    AudioContext context{.generators = {&engine, &turboGen, &turboShaft, &backfire, &whoosh}};
+    AudioContext context{.generators = {&engine, &turboGen, &backfire}};
     // Sample sweep
     bool shifting = false;
 
@@ -138,6 +138,7 @@ int main() {
         std::cout << "Can't load texture\n";
         return -1;
     }
+    textureTach.setSmooth(true);
     sf::Sprite spriteTach(textureTach);
     spriteTach.setOrigin({500,500});
     spriteTach.setPosition({WINDOW_X / 2.f, WINDOW_Y / 2.f});
@@ -148,6 +149,7 @@ int main() {
         std::cout << "Can't load texture\n";
         return -1;
     }
+    textureMiddle.setSmooth(true);
     sf::Sprite spriteMiddle(textureMiddle);
     spriteMiddle.setOrigin({500,500});
     spriteMiddle.setPosition({WINDOW_X / 2.f, WINDOW_Y / 2.f});
