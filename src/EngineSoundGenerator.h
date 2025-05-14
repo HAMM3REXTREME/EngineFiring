@@ -10,7 +10,7 @@
 
 class EngineSoundGenerator : public SoundGenerator {
   public:
-    EngineSoundGenerator(const SoundBank &m_pistonClicks, const Engine &m_engine, float m_rpm, float m_max_amplitude = 0.5f, int m_sample_rate = 44100,
+    EngineSoundGenerator(const SoundBank &m_pistonClicks, const Engine &m_engine, float m_rpm, float m_max_amplitude = 0.5f, int m_sample_rate = 48000,
                          int m_channels = 1);
 
     // RPM controls

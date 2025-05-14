@@ -26,6 +26,7 @@ class Car {
     float linearWheelDrag = 0;         // Linear drag on wheels (and engine if in gear)
 
     float clutchKick = 0.6; // Clutch jerkiness (1 is smooth)
+    float boostThreshold = 1500;
 
     std::mutex m_tick;
 

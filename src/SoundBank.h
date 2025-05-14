@@ -5,9 +5,12 @@
 class SoundBank {
   public:
     std::vector<AudioVector> samples;
-    void loadFromWavs(const std::vector<std::string> &filenames) {
+    void addFromWavs(const std::vector<std::string> &filenames) {
         for (const std::string &file : filenames) {
             samples.push_back(AudioVector(file));
         }
+    }
+    void clearAll(){
+        samples.clear();
     }
 };

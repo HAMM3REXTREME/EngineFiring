@@ -95,10 +95,10 @@ void Car::addEnergy() {
             Torque = 0;
         }
     }
-    if (getRPM() >= 2000) {
+    if (getRPM() >= boostThreshold) {
         boostDamper.addValue(getTorque() * getRPM() / 8000);
     } else {
-        boostDamper.addValue(10);
+        boostDamper.addValue(0);
     }
 }
 

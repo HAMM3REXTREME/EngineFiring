@@ -18,6 +18,7 @@
 #include "Engine.h"
 #include "EngineSoundGenerator.h"
 #include "SimpleSoundGenerator.h"
+#include "SoundBank.h"
 #include "SoundGenerator.h"
 #include "TurboWhooshGenerator.h"
 
@@ -68,27 +69,27 @@ int main() {
     //     "audi5/5_audi5cyl.wav"
     // };
     sf::RenderWindow window(sf::VideoMode({WINDOW_X, WINDOW_Y}), "Engine Firing Simulator");
-    float sample_rate = 44100;
+    float sample_rate = 48000;
 
     SoundBank mainSamples;
-    mainSamples.loadFromWavs({"thump_library/note_88.wav", "thump_library/note_89.wav", "thump_library/note_90.wav", "thump_library/note_91.wav",
+    mainSamples.addFromWavs({"thump_library/note_88.wav", "thump_library/note_89.wav", "thump_library/note_90.wav", "thump_library/note_91.wav",
                               "thump_library/note_92.wav", "thump_library/note_93.wav", "thump_library/note_94.wav", "thump_library/note_95.wav",
                               "thump_library/note_96.wav", "thump_library/note_97.wav", "thump_library/note_98.wav", "thump_library/note_99.wav"});
     SoundBank turboSamples;
-    turboSamples.loadFromWavs({"thump.wav", "flutter.wav"});
+    turboSamples.addFromWavs({"thump.wav", "flutter.wav"});
     SoundBank generalSamples;
-    generalSamples.loadFromWavs({"boom.wav", "starter.wav"});
+    generalSamples.addFromWavs({"boom.wav", "starter.wav"});
     SimpleSoundGenerator generalGen(generalSamples);
-    generalGen.setAmplitude(0.3f);
+    generalGen.setAmplitude(0.4f);
 
     // Engine engineDef("L539 V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 6.5);
-    Engine engineDef("Diablo/Murci V12", Engine::getFiringOrderFromString("1-7-4-10-2-8-6-12-3-9-5-11"), 6);
+    // Engine engineDef("Diablo/Murci V12", Engine::getFiringOrderFromString("1-7-4-10-2-8-6-12-3-9-5-11"), 6);
     // Engine engineDef("F1 V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 16);
-    // Engine engineDef("Audi V10 FSI", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {90, 54, 90, 54, 90, 54, 90, 54, 90, 54}, 5.4);
+    Engine engineDef("Audi V10 FSI", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {90, 54, 90, 54, 90, 54, 90, 54, 90, 54}, 5.4);
     // Engine engineDef("1LR-GUE V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, 5);
     // Engine engineDef("F1 V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, 12.5);
     // Engine engineDef("Audi V8 -", Engine::getFiringOrderFromString("1-5-4-8-6-3-7-2"), 4);
-    // Engine engineDef("Mercedes M120 V12", Engine::getFiringOrderFromString("1-12-5-8-3-10-6-7-2-11-4-9"),8);
+    // Engine engineDef("Mercedes M120 V12", Engine::getFiringOrderFromString("1-12-5-8-3-10-6-7-2-11-4-9"),7.6);
     // Engine engineDef("Murican V8 +", Engine::getFiringOrderFromString("1-8-7-2-6-5-4-3"),3);
     // Engine engineDef("BMW N54", Engine::getFiringOrderFromString("1-5-3-6-2-4"), 3);
     // Engine engineDef("Audi i5", Engine::getFiringOrderFromString("1-2-4-5-3"),3);
@@ -98,10 +99,12 @@ int main() {
     // Engine engineDef("Ford 4.0L V6", Engine::getFiringOrderFromString("1-4-2-5-3-6"),3);
     // Engine engineDef("Buick odd firing V6", Engine::getFiringOrderFromString("1-6-5-4-3-2"), {90,150,90,150,90,150},3);
     // Engine engineDef("Porsche Flat 6",Engine::getFiringOrderFromString("1-6-2-4-3-5"),3.6);
-    // Engine superchargerDef("Supercharger", {0},15);
+    Engine superchargerDef("Supercharger", {0},15);
+    SoundBank chargeBank;
+    chargeBank.addFromWavs({"thump_library/note_58.wav"});
+    EngineSoundGenerator supercharger(chargeBank, superchargerDef, 1000.0f, 0.1f);
     Engine turboshaftDef("BorgWarner K04 - Shaft", {0}, 15);
     EngineSoundGenerator engine(mainSamples, engineDef, 1000.0f, 0.5f);
-    // EngineSoundGenerator supercharger(mainSamples, superchargerDef, 1000.0f, 0.1f);
     EngineSoundGenerator turboShaft(mainSamples, turboshaftDef, 1000.0f, 0.05f);
     TurboWhooshGenerator whoosh(sample_rate);
     SimpleSoundGenerator turboGen(turboSamples);
@@ -116,7 +119,7 @@ int main() {
     std::atomic<bool> carRunning = true;
     std::thread carThread{manageCar, &car, &carRunning};
     car.ignition = false;
-    car.setRPM(1);
+    car.setRPM(0);
 
     // Live audio
     Pa_Initialize();
@@ -133,7 +136,8 @@ int main() {
     int lastLiftOff = 0;
     bool shiftLock = false;
     Damper gasAvg(5);
-    backfire.setAmplitude(0.5f);
+    backfire.setAmplitude(0.8f);
+    supercharger.setAmplitude(0.5f);
 
     // Map user keyboard input to differen levels of throttle
     std::map<sf::Keyboard::Scancode, int> userThrottleMap;
@@ -295,6 +299,9 @@ int main() {
         engine.setRPM(car.getRPM());
         engine.setAmplitude(car.getTorque() / 500 + 0.2f);
         whoosh.setIntensity(car.getBoost() / 150);
+        // supercharger.setRPM(car.getRPM());
+        supercharger.setRPM(car.getRPM()*(car.gearRatios[car.getGear()]/5)+1000);
+        //supercharger.setAmplitude(0.2+car.getGear()/30);
         whoosh.setAmplitude(car.getBoost() / 2500);
         turboShaft.setAmplitude(car.getBoost() / 750);
         turboShaft.setRPM(10000 + car.getBoost() * 100);
@@ -305,7 +312,7 @@ int main() {
         window.draw(spriteTach);
         window.draw(tach);
         window.draw(spriteMiddle);
-        // std::cout << "RPM: " << (int)engine.getRPM() << "  boost: " << car.getBoost() << " Gear:" << car.getGear() << "\n";
+        std::cout << "RPM: " << (int)engine.getRPM() << "  boost: " << car.getBoost() << " Gear:" << car.getGear() << "\n";
         window.display();
     }
     carRunning = false;
