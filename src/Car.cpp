@@ -68,9 +68,9 @@ void Car::setGear(int newGear) {
 }
 
 void Car::controlIdle() {
-    if (rpm >= 800) { // Idle air control valve
+    if (rpm >= 801) { // Idle air control valve
         idleValve = 5;
-    } else if (rpm <= 700) {
+    } else if (rpm <= 795) {
         idleValve = 10;
     }
 }

@@ -10,7 +10,7 @@ class Car {
     bool ignition = false; // Ignition
 
     // Rev limiter
-    int defaultRevLimitTick = 10; // Cuts off gas for n ticks if rev limit is reached.
+    int defaultRevLimitTick = 2; // Cuts off gas for n ticks if rev limit is reached.
     int revLimitTick = 0;         // no-gas ticks remaining
     int revLimit = 8000;          // Gas will be cut when rev limit is reached
 
