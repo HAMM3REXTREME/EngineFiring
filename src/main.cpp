@@ -220,7 +220,7 @@ int main() {
                     lastGear = car.getGear();
                     car.setGear(0);
                     car.setGas(0);
-                    upShiftFrame = frame + 1 * deltaTime;
+                    upShiftFrame = frame + 100 / deltaTime;
                     shiftLock = true;
                 }
                 if (keyPressed->scancode == sf::Keyboard::Scancode::Down && !shiftLock) {
@@ -228,7 +228,7 @@ int main() {
                     lastGear = car.getGear();
                     car.setGear(0);
                     car.setGas((0.02 * car.getRPM()) + 30);
-                    downShiftFrame = frame + 3 * deltaTime;
+                    downShiftFrame = frame + 300 / deltaTime;
                     shiftLock = true;
                 }
                 if (keyPressed->scancode == sf::Keyboard::Scancode::S) {
@@ -274,14 +274,14 @@ int main() {
                     lastGear = car.getGear();
                     car.setGear(0);
                     car.setGas(0);
-                    upShiftFrame = frame + 2 * deltaTime;
+                    upShiftFrame = frame + 100 / deltaTime;
                     shiftLock = true;
                 } else if (joystickButton->button == 5 && !shiftLock) { // RB button
                     std::cout << "Downshift\n";
                     lastGear = car.getGear();
                     car.setGear(0);
                     car.setGas((0.02 * car.getRPM()) + 30);
-                    downShiftFrame = frame + 3 * deltaTime;
+                    downShiftFrame = frame + 300 / deltaTime;
                     shiftLock = true;
                 }
             }
