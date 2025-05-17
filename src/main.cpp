@@ -302,8 +302,8 @@ int main() {
             downShiftFrame = 0;
             shiftLock = false;
         }
-        if (car.getGas() <= 10 && (lastLiftOff + 100 >= frame)) {
-            backfire.setIntensity(1.0f - ((frame - lastLiftOff) / 100.0f));
+        if (car.getGas() <= 10 && (lastLiftOff + 1000/deltaTime >= frame)) {
+            backfire.setIntensity(1.0f - ((frame - lastLiftOff) / (1000/deltaTime)));
         }
         if (car.getRPM() <= 4000 || car.getGas() >= 25) {
             backfire.setIntensity(0);
