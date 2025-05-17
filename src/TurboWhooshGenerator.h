@@ -72,7 +72,7 @@ class TurboWhooshGenerator : public SoundGenerator {
 
     void resetFilter() { x1 = x2 = y1 = y2 = 0.0f; }
 
-    float whiteNoise() { return 2.0f * ((float)rand() / RAND_MAX) - 1.0f; }
+    float whiteNoise() { return 2.0f * ((float)rand() / (float) RAND_MAX) - 1.0f; }
 
     void computeBandpassCoeffs(float freq, float Q) {
         float omega = 2.0f * M_PI * freq / sampleRate;

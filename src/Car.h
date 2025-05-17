@@ -11,8 +11,8 @@ class Car {
 
     // Rev limiter
     int defaultRevLimitTick = 2; // Cuts off gas for n ticks if rev limit is reached.
-    int revLimitTick = 0;         // no-gas ticks remaining
-    int revLimit = 8000;          // Gas will be cut when rev limit is reached
+    int revLimitTick = 0;        // no-gas ticks remaining
+    int revLimit = 8000;         // Gas will be cut when rev limit is reached
 
     float gearRatios[8] = {0, 1, 1.4, 2, 2.75, 3.85, 5.4, 7.5}; // Gearing ratios - Used to match engine rpm to wheel rpm
     float gearLazyValues[8] = {0.99,   0.999,  0.9994, 0.9995, 0.9996,

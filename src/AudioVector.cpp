@@ -5,6 +5,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+
 // Stores an audio file as a large vector of floats.
 int AudioVector::loadfromWav(const std::string &filename) {
     SF_INFO sfinfo;

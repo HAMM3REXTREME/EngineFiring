@@ -10,7 +10,5 @@ class SoundBank {
             samples.push_back(AudioVector(file));
         }
     }
-    void clearAll(){
-        samples.clear();
-    }
+    void clearAll() { samples.clear(); }
 };
