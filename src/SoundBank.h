@@ -4,11 +4,8 @@
 #include "AudioVector.h"
 class SoundBank {
   public:
+    SoundBank();
     std::vector<AudioVector> samples;
-    void addFromWavs(const std::vector<std::string> &filenames) {
-        for (const std::string &file : filenames) {
-            samples.push_back(AudioVector(file));
-        }
-    }
-    void clearAll() { samples.clear(); }
+    void addFromWavs(const std::vector<std::string> &filenames);
+    void clearAll();
 };

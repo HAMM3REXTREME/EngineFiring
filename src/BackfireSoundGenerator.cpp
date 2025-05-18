@@ -21,7 +21,7 @@ float BackfireSoundGenerator::getIntensity() const { return intensity; }
 
 void BackfireSoundGenerator::update() {
     // Random pop trigger based on intensity
-    if (popQueue.empty() && ((float)rand() / (float) RAND_MAX) < intensity * 0.015f) {
+    if (popQueue.empty() && ((float)rand() / (float)RAND_MAX) < intensity * 0.015f) {
         triggerPopBurst();
     }
 
@@ -37,7 +37,7 @@ void BackfireSoundGenerator::update() {
 float BackfireSoundGenerator::getSample() {
     float sample = 0.0f;
     for (auto &pop : popQueue) {
-        float noise = ((float)rand() / (float) RAND_MAX) * 2.0f - 1.0f;
+        float noise = ((float)rand() / (float)RAND_MAX) * 2.0f - 1.0f;
         float freq = pop.freq;
         sample += pop.envelope * bandpass(noise, freq, 0.9f);
     }

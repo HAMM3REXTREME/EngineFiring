@@ -11,6 +11,7 @@
 #include <thread>
 #include <vector>
 
+#include "AudioContext.h"
 #include "AudioVector.h"
 #include "BackfireSoundGenerator.h"
 #include "Car.h"
@@ -25,20 +26,6 @@
 constexpr float SAMPLE_RATE = 48000;
 constexpr int WINDOW_X = 1080;
 constexpr int WINDOW_Y = 720;
-
-class AudioContext {
-    std::vector<SoundGenerator *> generators;
-    public:
-    AudioContext(std::vector<SoundGenerator *> generators) : generators(generators) {}
-    float getAllSamples(){
-            float sample = 0.0f;
-            for (auto *gen : generators) {
-                gen->update();
-                sample += gen->getSample();
-            }
-            return std::clamp(sample, -1.0f, 1.0f);
-    }
-};
 
 // Function for the PortAudio audio callback
 int audio_callback(const void *, void *outputBuffer, unsigned long framesPerBuffer, const PaStreamCallbackTimeInfo *, PaStreamCallbackFlags, void *userData) {
@@ -199,7 +186,7 @@ int main() {
     while (window.isOpen()) {
         frame++;
         // Time since last frame
-         float deltaTime = deltaClock.restart().asMilliseconds();
+        float deltaTime = deltaClock.restart().asMilliseconds();
         Pa_Sleep(10);
         // Process events
         while (const std::optional event = window.pollEvent()) {
@@ -302,8 +289,8 @@ int main() {
             downShiftFrame = 0;
             shiftLock = false;
         }
-        if (car.getGas() <= 10 && (lastLiftOff + 1000/deltaTime >= frame)) {
-            backfire.setIntensity(1.0f - ((frame - lastLiftOff) / (1000/deltaTime)));
+        if (car.getGas() <= 10 && (lastLiftOff + 1000 / deltaTime >= frame)) {
+            backfire.setIntensity(1.0f - ((frame - lastLiftOff) / (1000 / deltaTime)));
         }
         if (car.getRPM() <= 4000 || car.getGas() >= 25) {
             backfire.setIntensity(0);

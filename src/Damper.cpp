@@ -9,7 +9,7 @@ void Damper::addValue(double value) {
     }
 }
 
-double Damper::getAverage() const{
+double Damper::getAverage() const {
     if (values.empty()) {
         return 0.0; // Return 0 if queue is empty
     }

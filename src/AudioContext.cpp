@@ -2,7 +2,7 @@
 
 AudioContext::AudioContext(std::vector<SoundGenerator *> generators) : generators(generators) {}
 
-float AudioContext::getAllSamples(){
+float AudioContext::getAllSamples() {
     float sample = 0.0f;
     for (auto *gen : generators) {
         gen->update();

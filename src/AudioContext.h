@@ -25,7 +25,7 @@
 #include "TurboWhooshGenerator.h"
 
 class AudioContext {
-    public:
+  public:
     AudioContext(std::vector<SoundGenerator *> generators);
     float getAllSamples();
     std::vector<SoundGenerator *> generators;

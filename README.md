@@ -1,41 +1,13 @@
-# Engine Sound Generator
+# Engine Firing
 
-A simple C++ project that simulates and generates realistic engine sounds using audio synthesis techniques.
-This program uses **PortAudio** for real-time audio output and **libsndfile** for audio file handling.
-
-## Features
-
-- Real-time engine sound generation
-- Customizable engine parameters
-- Outputs sound via PortAudio
-
-## Requirements
-
-- C++ compiler (e.g., `g++`)
-- PortAudio
-- libsndfile
-- Make
+A Simple C++ program that generates realistic engine audio samples using simple but effective techniques.
 
 ## Building
 
-```bash
-make
-````
+**Make sure you have the following prerequisites:**
 
-## Running
+- libsndfile
+- SFML 3 (For C++ program)
+- PortAudio (For C++ program)
 
-```bash
-make run
-```
-
-Or run the binary directly:
-
-```bash
-./engine
-```
-
-## Cleaning
-
-```bash
-make clean
-```
+Simply run `./build.sh` to build the C++ program and the JNI shared library.

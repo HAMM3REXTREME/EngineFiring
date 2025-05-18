@@ -1,4 +1,4 @@
-// SoundGenerator.h
+// SoundGenerator.h - abstract class
 
 #pragma once
 

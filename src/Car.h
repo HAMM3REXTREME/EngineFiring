@@ -28,8 +28,6 @@ class Car {
     float clutchKick = 0.6; // Clutch jerkiness (1 is smooth)
     float boostThreshold = 1500;
 
-    std::mutex m_tick;
-
     void tick();
 
     void setGear(int newGear);
@@ -48,6 +46,7 @@ class Car {
     float getTorque();
 
   private:
+    std::mutex m_tick;
     float gas = 0;      // Throttle body
     float rpm = 0;      // Engine RPM
     float wheelRPM = 0; // Wheel RPM or speed does not really matter

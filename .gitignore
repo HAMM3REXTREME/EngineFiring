@@ -1,6 +1,5 @@
 a.out
-engine_live
 engine
 .ropeproject
 src/*.o
-debug.wav
+build
