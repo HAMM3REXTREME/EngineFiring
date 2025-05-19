@@ -1,3 +1,4 @@
+#!/bin/sh
 # Build the program
 mkdir -p build
 cd build

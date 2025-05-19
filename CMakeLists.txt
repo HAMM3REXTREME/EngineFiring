@@ -6,7 +6,6 @@ find_package(JNI REQUIRED)
 find_package(SWIG REQUIRED)
 
 find_package(PkgConfig REQUIRED)
-pkg_check_modules(SNDFILE REQUIRED sndfile)
 pkg_check_modules(SFML REQUIRED sfml-all)
 pkg_check_modules(PORTAUDIO REQUIRED portaudio-2.0)
 
@@ -30,31 +29,28 @@ set(SRC_FILES
     src/TurboWhooshGenerator.cpp
 )
 
-# === 1. Native executable target (main.cpp + libsndfile + sfml + portaudio) ===
+# === 1. Native executable target (main.cpp : sfml + portaudio) ===
 add_executable(engineaudio_native
     src/main.cpp
     ${SRC_FILES}
 )
 
 target_include_directories(engineaudio_native PRIVATE
-    ${SNDFILE_INCLUDE_DIRS}
     ${SFML_INCLUDE_DIRS}
     ${PORTAUDIO_INCLUDE_DIRS}
     src
 )
 
 target_link_libraries(engineaudio_native PRIVATE
-    ${SNDFILE_LIBRARIES}
     ${SFML_LIBRARIES}
     ${PORTAUDIO_LIBRARIES}
 )
 
-# === JNI shared lib (libsndfile only) ===
+# === JNI shared lib ===
 set(SWIG_INTERFACE_FILE src/bindings.i)
 
 include_directories(
     ${JNI_INCLUDE_DIRS}
-    ${SNDFILE_INCLUDE_DIRS}
     src
 )
 
@@ -62,7 +58,7 @@ include_directories(
 set_property(SOURCE ${SWIG_INTERFACE_FILE} PROPERTY CPLUSPLUS ON)
 
 # Set SWIG flags BEFORE swig_add_library
-set(CMAKE_SWIG_FLAGS -c++)
+set(CMAKE_SWIG_FLAGS -package org.engine.firing -c++)
 
 swig_add_library(engineaudio_jni
     LANGUAGE java
@@ -71,11 +67,9 @@ swig_add_library(engineaudio_jni
 
 swig_link_libraries(engineaudio_jni
     ${JNI_LIBRARIES}
-    ${SNDFILE_LIBRARIES}
 )
 
 set_target_properties(engineaudio_jni PROPERTIES PREFIX "lib")
-
 
 # === 3. Optional custom target to build all ===
 add_custom_target(all_build

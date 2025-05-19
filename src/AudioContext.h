@@ -1,12 +1,5 @@
 #pragma once
 
-#include <SFML/Graphics.hpp>
-#include <SFML/Window/Mouse.hpp>
-#include <algorithm>
-#include <map>
-#include <portaudio.h>
-#include <sndfile.h>
-
 #include <atomic>
 #include <chrono>
 #include <string>

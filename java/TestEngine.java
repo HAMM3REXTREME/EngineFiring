@@ -1,5 +1,7 @@
 import java.util.Arrays;
 
+package org.engine.firing;
+
 public class TestEngine {
     static {
         // Load the JNI shared library (name depends on your CMake PREFIX)

@@ -1,6 +1,8 @@
 import javax.sound.sampled.*;
 import java.util.Arrays;
 
+package org.engine.firing;
+
 public class TestEngineAudio {
     static {
         System.loadLibrary("engineaudio_jni");

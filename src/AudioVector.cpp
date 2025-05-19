@@ -1,56 +1,64 @@
 #include "AudioVector.h"
 
-#include <sndfile.h>
+#define DR_WAV_IMPLEMENTATION
+#include "dr_wav.h"
 
 #include <iostream>
-#include <string>
-#include <vector>
 
-// Stores an audio file as a large vector of floats.
+// Load from WAV (converts stereo/multichannel to mono)
 int AudioVector::loadfromWav(const std::string &filename) {
-    SF_INFO sfinfo;
-    SNDFILE *file = sf_open(filename.c_str(), SFM_READ, &sfinfo);
-    if (!file) {
-        std::cerr << "Failed to open " << filename << "\n";
-        exit(1);
-    }
+    unsigned int channels;
+    unsigned int sampleRate;
+    drwav_uint64 totalFrameCount;
 
-    std::vector<float> fileSamples(sfinfo.frames * sfinfo.channels);
-    sf_readf_float(file, fileSamples.data(), sfinfo.frames);
-    sf_close(file);
+    float *pSampleData = drwav_open_file_and_read_pcm_frames_f32(filename.c_str(), &channels, &sampleRate, &totalFrameCount, nullptr);
 
-    if (sfinfo.channels > 1) {
-        std::vector<float> mono(sfinfo.frames);
-        for (sf_count_t i = 0; i < sfinfo.frames; ++i) {
-            float sum = 0.0f;
-            for (int ch = 0; ch < sfinfo.channels; ++ch)
-                sum += fileSamples[i * sfinfo.channels + ch];
-            mono[i] = sum / sfinfo.channels;
-        }
-        samples = mono;
-        return 0;
-    }
-
-    samples = fileSamples;
-    return 0;
-}
-
-int AudioVector::saveToWav(const std::string &filename) {
-    SF_INFO sfinfo;
-    sfinfo.channels = 1;
-    sfinfo.samplerate = 44100; // default to CD quality
-    sfinfo.format = SF_FORMAT_WAV | SF_FORMAT_PCM_16;
-
-    SNDFILE *file = sf_open(filename.c_str(), SFM_WRITE, &sfinfo);
-    if (!file) {
-        std::cerr << "Failed to open " << filename << " for writing.\n";
+    if (pSampleData == nullptr) {
+        std::cerr << "Failed to load WAV: " << filename << std::endl;
         return 1;
     }
 
-    sf_writef_float(file, samples.data(), samples.size());
-    sf_close(file);
+    samples.resize(totalFrameCount);
+
+    // Downmix to mono if needed
+    if (channels == 1) {
+        std::copy(pSampleData, pSampleData + totalFrameCount, samples.begin());
+    } else {
+        for (drwav_uint64 i = 0; i < totalFrameCount; ++i) {
+            float sum = 0.0f;
+            for (unsigned int ch = 0; ch < channels; ++ch) {
+                sum += pSampleData[i * channels + ch];
+            }
+            samples[i] = sum / channels;
+        }
+    }
+
+    drwav_free(pSampleData, nullptr);
     return 0;
 }
+
+// Save to mono WAV
+int AudioVector::saveToWav(const std::string &filename) {
+    drwav_data_format format;
+    format.container = drwav_container_riff;
+    format.format = DR_WAVE_FORMAT_IEEE_FLOAT;
+    format.channels = 1;
+    format.sampleRate = 44100;
+    format.bitsPerSample = 32;
+
+    drwav wav;
+    if (!drwav_init_file_write(&wav, filename.c_str(), &format, nullptr)) {
+        std::cerr << "Failed to write WAV: " << filename << std::endl;
+        return 1;
+    }
+
+    drwav_uint64 written = drwav_write_pcm_frames(&wav, samples.size(), samples.data());
+    drwav_uninit(&wav);
+
+    return written == samples.size() ? 0 : 1;
+}
+
+// Constructors
 AudioVector::AudioVector() {}
-AudioVector::AudioVector(const std::string &filename) { loadfromWav(filename); };
-AudioVector::AudioVector(const std::vector<float> &m_samples) { samples = m_samples; };
+AudioVector::AudioVector(const std::string &filename) { loadfromWav(filename); }
+AudioVector::AudioVector(const std::vector<float> &m_samples) { samples = m_samples; }

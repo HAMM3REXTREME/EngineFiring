@@ -3,3 +3,4 @@ engine
 .ropeproject
 src/*.o
 build
+build-android
