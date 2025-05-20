@@ -2,7 +2,7 @@ package org.engine.firing;
 
 public class TestDamper {
     static {
-        // Load the JNI shared library (name depends on your CMake PREFIX)
+        // Load the JNI shared library
         System.loadLibrary("engineaudio_jni");
     }
 

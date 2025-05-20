@@ -20,6 +20,9 @@
 class AudioContext {
   public:
     AudioContext(std::vector<SoundGenerator *> generators);
+    AudioContext();
+    void addGenerator(SoundGenerator *generator);
     float getAllSamples();
+    void getAllSamples(float *buffer, int numFrames, int numChannels);
     std::vector<SoundGenerator *> generators;
 };

@@ -13,10 +13,10 @@ include(UseSWIG)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_ANDROID_STL_TYPE c++_static)
 
 # C++ source files (not including main.cpp)
 set(SRC_FILES
-    src/SoundGenerator.h
     src/AudioContext.cpp
     src/AudioVector.cpp
     src/BackfireSoundGenerator.cpp
@@ -29,6 +29,18 @@ set(SRC_FILES
     src/TurboWhooshGenerator.cpp
 )
 
+# Detect Android and add Oboe-specific sources + build Oboe
+if (ANDROID)
+    set(IS_ANDROID TRUE)
+    message(STATUS "Targeting Android")
+
+    list(APPEND SRC_FILES src/android/OboeSinePlayer.cpp)
+
+    add_subdirectory(oboe)
+
+    add_definitions(-DUSE_OBOE)
+endif()
+
 # === 1. Native executable target (main.cpp : sfml + portaudio) ===
 add_executable(engineaudio_native
     src/main.cpp
@@ -39,6 +51,7 @@ target_include_directories(engineaudio_native PRIVATE
     ${SFML_INCLUDE_DIRS}
     ${PORTAUDIO_INCLUDE_DIRS}
     src
+    src/android
 )
 
 target_link_libraries(engineaudio_native PRIVATE
@@ -47,7 +60,11 @@ target_link_libraries(engineaudio_native PRIVATE
 )
 
 # === JNI shared lib ===
-set(SWIG_INTERFACE_FILE src/bindings.i)
+if (ANDROID)
+    set(SWIG_INTERFACE_FILE src/bindings-android.i)
+else()
+    set(SWIG_INTERFACE_FILE src/bindings.i)
+endif()
 
 include_directories(
     ${JNI_INCLUDE_DIRS}
@@ -65,10 +82,27 @@ swig_add_library(engineaudio_jni
     SOURCES ${SWIG_INTERFACE_FILE} ${SRC_FILES}
 )
 
-swig_link_libraries(engineaudio_jni
-    ${JNI_LIBRARIES}
-)
-
+if (ANDROID)
+    target_include_directories(engineaudio_jni PRIVATE
+        oboe/include
+    )
+    swig_link_libraries(engineaudio_jni
+        oboe
+        ${JNI_LIBRARIES}
+        android
+        log
+    )
+else()
+    target_include_directories(engineaudio_jni PRIVATE
+        ${PORTAUDIO_INCLUDE_DIRS}
+        ${SFML_INCLUDE_DIRS}
+    )
+    swig_link_libraries(engineaudio_jni
+        ${PORTAUDIO_LIBRARIES}
+        ${SFML_LIBRARIES}
+        ${JNI_LIBRARIES}
+    )
+endif()
 set_target_properties(engineaudio_jni PROPERTIES PREFIX "lib")
 
 # === 3. Optional custom target to build all ===

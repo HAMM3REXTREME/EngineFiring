@@ -1,10 +1,11 @@
+package org.engine.firing;
+
 import javax.sound.sampled.*;
 import java.util.Arrays;
 
-package org.engine.firing;
-
 public class TestEngineAudio {
     static {
+        // Load the JNI shared library
         System.loadLibrary("engineaudio_jni");
     }
 
