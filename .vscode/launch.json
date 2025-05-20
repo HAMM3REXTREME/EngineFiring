@@ -8,7 +8,7 @@
             "type": "lldb",
             "request": "launch",
             "name": "Debug",
-            "program": "${workspaceFolder}/engine",
+            "program": "${workspaceFolder}/build/engineaudio_native",
             "args": [],
             "cwd": "${workspaceFolder}"
         }
