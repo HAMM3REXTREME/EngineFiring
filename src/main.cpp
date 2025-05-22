@@ -318,8 +318,8 @@ int main() {
         // TODO: Seperation of concerns (Boost logic, shift styles etc.)
         engine.setRPM(car.getRPM());
         engineAlt.setRPM(car.getRPM());
-        engine.setAmplitude(car.getTorque() / 250 + 0.2f);
-        engineAlt.setAmplitude((car.getRPM() * car.getTorque()) / 1500000);
+        engine.setAmplitude(car.getTorque() / 100 + 0.2f);
+        engineAlt.setAmplitude((car.getRPM() * car.getTorque()) / 8000000);
         whoosh.setIntensity(car.getBoost() / 150);
         whoosh.setAmplitude(car.getBoost() / 2500);
         turboShaft.setAmplitude(car.getBoost() / 750);
