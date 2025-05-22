@@ -24,10 +24,14 @@ class EngineSoundGenerator : public SoundGenerator {
     void setAmplitude(float amp);
     float getAmplitude() const;
 
+    void setNoteOffset(int offset); // VTEC kicked in, yo
+    int getNoteOffset() const;
+
   private:
     const Engine &engine;
     const SoundBank &pistonClicks;
     float audioRpm; // Auditory rpm, refer to Engine.audioRpmFactor if it 'sounds' faster/slower than intended
+    int noteOffset = 0;
     std::vector<std::pair<const std::vector<float> *, size_t>> active_firings;
     float interval;
     float interval_timer;

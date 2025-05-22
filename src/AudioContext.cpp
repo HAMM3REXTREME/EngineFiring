@@ -3,9 +3,7 @@
 AudioContext::AudioContext(std::vector<SoundGenerator *> generators) : generators(generators) {}
 AudioContext::AudioContext() {}
 
-void AudioContext::addGenerator(SoundGenerator *generator) {
-    generators.push_back(generator);
-}
+void AudioContext::addGenerator(SoundGenerator *generator) { generators.push_back(generator); }
 
 float AudioContext::getAllSamples() {
     float sample = 0.0f;
@@ -17,9 +15,9 @@ float AudioContext::getAllSamples() {
 }
 void AudioContext::getAllSamples(float *buffer, int numFrames, int numChannels) {
     for (int i = 0; i < numFrames; ++i) {
-        float sample = getAllSamples();  // mono
+        float sample = getAllSamples(); // mono
         for (int c = 0; c < numChannels; ++c) {
-            buffer[i * numChannels + c] = sample;  // duplicate for stereo
+            buffer[i * numChannels + c] = sample; // duplicate for stereo
         }
     }
 }

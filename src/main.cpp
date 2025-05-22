@@ -64,15 +64,24 @@ int main() {
 
     // ==== THE ENGINE
     SoundBank mainSamples;
-    mainSamples.addFromWavs({"assets/audio/thump_library/note_88.wav", "assets/audio/thump_library/note_89.wav", "assets/audio/thump_library/note_90.wav",
-                             "assets/audio/thump_library/note_91.wav", "assets/audio/thump_library/note_92.wav", "assets/audio/thump_library/note_93.wav",
-                             "assets/audio/thump_library/note_94.wav", "assets/audio/thump_library/note_95.wav", "assets/audio/thump_library/note_96.wav",
-                             "assets/audio/thump_library/note_97.wav", "assets/audio/thump_library/note_98.wav", "assets/audio/thump_library/note_99.wav"});
+    mainSamples.addFromWavs({"assets/audio/tick_library/note_64.wav",  "assets/audio/tick_library/note_65.wav",  "assets/audio/tick_library/note_66.wav",
+                             "assets/audio/tick_library/note_67.wav",  "assets/audio/tick_library/note_68.wav",  "assets/audio/tick_library/note_69.wav",
+                             "assets/audio/tick_library/note_70.wav",  "assets/audio/tick_library/note_71.wav",  "assets/audio/tick_library/note_72.wav",
+                             "assets/audio/tick_library/note_73.wav",  "assets/audio/tick_library/note_74.wav",  "assets/audio/tick_library/note_75.wav",
+                             "assets/audio/tick_library/note_76.wav",  "assets/audio/tick_library/note_77.wav",  "assets/audio/tick_library/note_78.wav",
+                             "assets/audio/tick_library/note_79.wav",  "assets/audio/tick_library/note_80.wav",  "assets/audio/tick_library/note_81.wav",
+                             "assets/audio/tick_library/note_82.wav",  "assets/audio/tick_library/note_83.wav",  "assets/audio/tick_library/note_84.wav",
+                             "assets/audio/tick_library/note_85.wav",  "assets/audio/tick_library/note_86.wav",  "assets/audio/tick_library/note_87.wav",
+                             "assets/audio/tick_library/note_88.wav",  "assets/audio/tick_library/note_89.wav",  "assets/audio/tick_library/note_90.wav",
+                             "assets/audio/tick_library/note_91.wav",  "assets/audio/tick_library/note_92.wav",  "assets/audio/tick_library/note_93.wav",
+                             "assets/audio/tick_library/note_94.wav",  "assets/audio/tick_library/note_95.wav",  "assets/audio/tick_library/note_96.wav",
+                             "assets/audio/tick_library/note_97.wav",  "assets/audio/tick_library/note_98.wav",  "assets/audio/tick_library/note_99.wav",
+                             "assets/audio/tick_library/note_100.wav", "assets/audio/tick_library/note_101.wav", "assets/audio/tick_library/note_102.wav"});
 
-    // Engine engineDef("L539 V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 6.5);
+    Engine engineDef("L539 V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 6.5);
     // Engine engineDef("Diablo/Murci V12", Engine::getFiringOrderFromString("1-7-4-10-2-8-6-12-3-9-5-11"), 6);
     // Engine engineDef("F1 V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 16);
-    Engine engineDef("Audi V10 FSI", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {90, 54, 90, 54, 90, 54, 90, 54, 90, 54}, 5.4);
+    // Engine engineDef("Audi V10 FSI", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {90, 54, 90, 54, 90, 54, 90, 54, 90, 54}, 5.4);
     // Engine engineDef("1LR-GUE V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, 5);
     // Engine engineDef("F1 V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, 12.5);
     // Engine engineDef("Audi V8 -", Engine::getFiringOrderFromString("1-5-4-8-6-3-7-2"), 4);
@@ -88,10 +97,12 @@ int main() {
     // Engine engineDef("Buick odd firing V6", Engine::getFiringOrderFromString("1-6-5-4-3-2"), {90,150,90,150,90,150},3);
     // Engine engineDef("Porsche Flat 6", Engine::getFiringOrderFromString("1-6-2-4-3-5"), 3.6);
     EngineSoundGenerator engine(mainSamples, engineDef, 1000.0f, 0.5f);
+    EngineSoundGenerator engineAlt(mainSamples, engineDef, 1000.0f, 0.5f);
+    engineAlt.setNoteOffset(12);
 
     // ==== SUPERCHARGER (Just a high revving 1 cylinder)
     // SoundBank chargeBank;
-    // chargeBank.addFromWavs({"assets/audio/thump_library/note_58.wav"});
+    // chargeBank.addFromWavs({"assets/audio/tick_library/note_58.wav"});
     // Engine superchargerDef("Supercharger", {0},15);
     // EngineSoundGenerator supercharger(chargeBank, superchargerDef, 1000.0f, 0.1f);
     // supercharger.setAmplitude(0.5f);
@@ -117,10 +128,10 @@ int main() {
 
     // ==== BACKFIRE NOISE GENERATOR
     BackfireSoundGenerator backfire(SAMPLE_RATE);
-    backfire.setAmplitude(0.8f);
+    backfire.setAmplitude(0.2f);
 
     // Audio sample generators that get summed up and played together
-    AudioContext context({&engine, &turboGen, &backfire, &generalGen});
+    AudioContext context({&engine, &turboGen, &backfire, &generalGen, &engineAlt});
     // PortAudio for live audio playback
     Pa_Initialize();
     PaStream *stream;
@@ -306,7 +317,9 @@ int main() {
 
         // TODO: Seperation of concerns (Boost logic, shift styles etc.)
         engine.setRPM(car.getRPM());
-        engine.setAmplitude(car.getTorque() / 500 + 0.2f);
+        engineAlt.setRPM(car.getRPM());
+        engine.setAmplitude(car.getTorque() / 250 + 0.2f);
+        engineAlt.setAmplitude((car.getRPM() * car.getTorque()) / 1500000);
         whoosh.setIntensity(car.getBoost() / 150);
         whoosh.setAmplitude(car.getBoost() / 2500);
         turboShaft.setAmplitude(car.getBoost() / 750);

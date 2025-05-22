@@ -19,7 +19,7 @@ void EngineSoundGenerator::update() {
     if (interval_timer >= interval) {
         // Schedule new piston fire
         int piston_index = engine.firingOrder[phase % engine.getCylinderCount()];
-        active_firings.push_back({&pistonClicks.samples[piston_index].samples, 0});
+        active_firings.push_back({&pistonClicks.samples[piston_index + noteOffset].samples, 0});
         phase++;
         // std::string firingVisual(engine.getCylinderCount(), '-');
         // firingVisual[piston_index] = 'O';
@@ -29,6 +29,8 @@ void EngineSoundGenerator::update() {
         interval_timer -= engine.firingIntervalFactors[piston_index] * interval; // Larger number = slower, 0.1 etc. = faster
     }
 }
+void EngineSoundGenerator::setNoteOffset(int offset) { noteOffset = offset; }
+int EngineSoundGenerator::getNoteOffset() const { return noteOffset; }
 float EngineSoundGenerator::getRPM() { return audioRpm / engine.audioRpmFactor; }
 void EngineSoundGenerator::setAmplitude(float amp) { max_amplitude = amp; }
 float EngineSoundGenerator::getAmplitude() const { return max_amplitude; }
