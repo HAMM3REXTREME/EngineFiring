@@ -16,6 +16,7 @@
 #include "SoundBank.h"
 #include "SoundGenerator.h"
 #include "TurboWhooshGenerator.h"
+#include "Biquad.h"
 
 class AudioContext {
   public:
@@ -25,4 +26,10 @@ class AudioContext {
     float getAllSamples();
     void getAllSamples(float *buffer, int numFrames, int numChannels);
     std::vector<SoundGenerator *> generators;
+    void configureEQ(float sampleRate);
+
+  private:
+    Biquad lowShelfFilter;
+    Biquad midBoostFilter;
+    Biquad highShelfFilter;
 };

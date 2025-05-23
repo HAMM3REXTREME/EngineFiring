@@ -27,6 +27,7 @@ set(SRC_FILES
     src/SimpleSoundGenerator.cpp
     src/SoundBank.cpp
     src/TurboWhooshGenerator.cpp
+    src/Biquad.cpp
 )
 
 # Detect Android and add Oboe-specific sources + build Oboe

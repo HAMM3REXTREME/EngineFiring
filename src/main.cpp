@@ -132,6 +132,7 @@ int main() {
 
     // Audio sample generators that get summed up and played together
     AudioContext context({&engine, &whoosh, &backfire, &turboShaft, &turboGen, &generalGen, &engineAlt});
+    context.configureEQ(SAMPLE_RATE);
     // PortAudio for live audio playback
     Pa_Initialize();
     PaStream *stream;
@@ -319,7 +320,7 @@ int main() {
         engine.setRPM(car.getRPM());
         engineAlt.setRPM(car.getRPM());
         engine.setAmplitude(car.getTorque() / 100 + 0.2f);
-        engineAlt.setAmplitude((car.getRPM() * car.getTorque()) / 8000000);
+        engineAlt.setAmplitude((car.getRPM() * car.getTorque()) / 6000000);
         whoosh.setIntensity(car.getBoost() / 150);
         whoosh.setAmplitude(car.getBoost() / 2500);
         turboShaft.setAmplitude(car.getBoost() / 750);
