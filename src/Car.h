@@ -25,7 +25,7 @@ class Car {
     double quadraticWheelDrag = 0.999; // Driving drag on wheels (and also engine if in gear)
     float linearWheelDrag = 0;         // Linear drag on wheels (and engine if in gear)
 
-    float clutchKick = 0.6; // Clutch jerkiness (1 is smooth)
+    float clutchKick = 0.1; // Clutch jerkiness (1 is smooth)
     float boostThreshold = 1500;
 
     void tick();
