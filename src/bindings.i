@@ -12,6 +12,7 @@
 #include "SimpleSoundGenerator.h"
 #include "SoundBank.h"
 #include "TurboWhooshGenerator.h"
+#include "Biquad.h"
 %}
 
 %include "std_string.i"
@@ -44,3 +45,4 @@ namespace std {
 %include "SimpleSoundGenerator.h"
 %include "SoundBank.h"
 %include "TurboWhooshGenerator.h"
+%include "Biquad.h"

@@ -27,9 +27,11 @@ class AudioContext {
     void getAllSamples(float *buffer, int numFrames, int numChannels);
     std::vector<SoundGenerator *> generators;
     void configureEQ(float sampleRate);
+    bool enableRumbleBoost = false;
 
   private:
     Biquad lowShelfFilter;
     Biquad midBoostFilter;
     Biquad highShelfFilter;
+    Biquad rumbleBoostFilter;
 };

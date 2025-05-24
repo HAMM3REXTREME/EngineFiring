@@ -12,6 +12,7 @@
 #include "SimpleSoundGenerator.h"
 #include "SoundBank.h"
 #include "TurboWhooshGenerator.h"
+#include "Biquad.h"
 #include "android/OboeSinePlayer.h"
 %}
 
@@ -45,4 +46,5 @@ namespace std {
 %include "SimpleSoundGenerator.h"
 %include "SoundBank.h"
 %include "TurboWhooshGenerator.h"
+%include "Biquad.h"
 %include "android/OboeSinePlayer.h"

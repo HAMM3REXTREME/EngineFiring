@@ -52,7 +52,11 @@ void carStarter(Car *car, bool *m_isStarting) {
     std::this_thread::sleep_for(std::chrono::milliseconds(800));
     std::cout << "Vroom!\n";
     car->setRPM(800);
-    car->setGas(170);
+    for (int i = 0; i < 10; i++){
+            car->setGas(17*i);
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+    }
     std::this_thread::sleep_for(std::chrono::milliseconds(200));
     car->setGas(0);
     *m_isStarting = false;
@@ -78,11 +82,11 @@ int main() {
                              "assets/audio/tick_library/note_97.wav",  "assets/audio/tick_library/note_98.wav",  "assets/audio/tick_library/note_99.wav",
                              "assets/audio/tick_library/note_100.wav", "assets/audio/tick_library/note_101.wav", "assets/audio/tick_library/note_102.wav"});
 
-    Engine engineDef("L539 V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 6.5);
+    // Engine engineDef("L539 V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 6.5);
     // Engine engineDef("Diablo/Murci V12", Engine::getFiringOrderFromString("1-7-4-10-2-8-6-12-3-9-5-11"), 6);
     // Engine engineDef("F1 V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 16);
     // Engine engineDef("Audi V10 FSI", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {90, 54, 90, 54, 90, 54, 90, 54, 90, 54}, 5.4);
-    // Engine engineDef("1LR-GUE V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, 5);
+    Engine engineDef("1LR-GUE V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, 5);
     // Engine engineDef("F1 V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, 12.5);
     // Engine engineDef("Audi V8 -", Engine::getFiringOrderFromString("1-5-4-8-6-3-7-2"), 4);
     // Engine engineDef("Mercedes M120 V12", Engine::getFiringOrderFromString("1-12-5-8-3-10-6-7-2-11-4-9"),7.6);
@@ -110,7 +114,7 @@ int main() {
     SoundBank generalSamples;
     generalSamples.addFromWavs({"assets/audio/extra/boom.wav", "assets/audio/extra/starter.wav"});
     SimpleSoundGenerator generalGen(generalSamples);
-    generalGen.setAmplitude(0.4f);
+    generalGen.setAmplitude(0.2f);
 
     // ==== TURBOCHARGER SHAFT (Sounds like a faint supercharger)
     Engine turboshaftDef("BorgWarner K04 - Shaft", {0}, 8);
@@ -218,8 +222,9 @@ int main() {
                     lastGear = car.getGear();
                     car.setGear(0);
                     car.setGas(0);
-                    upShiftFrame = frame + 100 / deltaTime;
+                    upShiftFrame = frame + 300 / deltaTime;
                     shiftLock = true;
+                    context.enableRumbleBoost = true;
                 }
                 if (keyPressed->scancode == sf::Keyboard::Scancode::Down && !shiftLock) {
                     std::cout << "Downshift\n";
@@ -293,6 +298,7 @@ int main() {
             car.setGear(std::clamp(lastGear + 1, 0, 7));
             upShiftFrame = 0;
             shiftLock = false;
+            context.enableRumbleBoost = false;
         }
 
         if (frame == downShiftFrame) {
