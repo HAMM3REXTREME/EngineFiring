@@ -35,8 +35,8 @@ void Car::setGear(int newGear) {
     if (gear <= 0) {
         return;
     }
-    if (wheelRPM/gearRatios[gear] <= 50 && rpm >= 700) { // 'Dumping' the clutch won't stall
-        wheelRPM = rpm / (8*gearRatios[gear]);
+    if (wheelRPM / gearRatios[gear] <= 50 && rpm >= 700) { // 'Dumping' the clutch won't stall
+        wheelRPM = rpm / (8 * gearRatios[gear]);
         clutchKick = 0.05;
     } else {
         clutchKick = 0.4;
@@ -48,7 +48,7 @@ void Car::controlIdle() {
     if (rpm >= 901) { // Idle air control valve
         idleValve = 5;
     } else if (rpm <= 895) {
-        idleValve = 0.02*(895-rpm) * gearRatios[gear] + 10;
+        idleValve = 0.02 * (895 - rpm) * gearRatios[gear] + 10;
     }
 }
 

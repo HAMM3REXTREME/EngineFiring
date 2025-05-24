@@ -52,10 +52,9 @@ void carStarter(Car *car, bool *m_isStarting) {
     std::this_thread::sleep_for(std::chrono::milliseconds(800));
     std::cout << "Vroom!\n";
     car->setRPM(800);
-    for (int i = 0; i < 10; i++){
-            car->setGas(17*i);
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
-
+    for (int i = 0; i < 10; i++) {
+        car->setGas(17 * i);
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(200));
     car->setGas(0);
@@ -105,7 +104,7 @@ int main() {
     engineAlt.setNoteOffset(12);
 
     // ==== SUPERCHARGER (Just a high revving 1 cylinder)
-    Engine superchargerDef("Supercharger", {0},8);
+    Engine superchargerDef("Supercharger", {0}, 8);
     EngineSoundGenerator supercharger(mainSamples, superchargerDef, 1000.0f, 0.7f);
     supercharger.setAmplitude(0.5f);
     supercharger.setNoteOffset(20);
@@ -135,7 +134,6 @@ int main() {
 
     // Audio sample generators that get summed up and played together
     AudioContext context({&engine, &whoosh, &backfire, &turboShaft, &turboGen, &generalGen, &engineAlt});
-    context.configureEQ(SAMPLE_RATE);
     // PortAudio for live audio playback
     Pa_Initialize();
     PaStream *stream;
@@ -197,6 +195,16 @@ int main() {
     spriteMiddle.setPosition({WINDOW_X / 2.f, WINDOW_Y / 2.f});
     spriteMiddle.setScale({0.07, 0.07});
 
+    // Biquad filters
+    Biquad lowShelfFilter(bq_type_lowshelf, 150.0f / SAMPLE_RATE, 0.707f, -12.0f);  // cut lows
+    Biquad midBoostFilter(bq_type_peak, 1500.0f / SAMPLE_RATE, 1.0f, 10.0f);        // boost mids
+    Biquad highShelfFilter(bq_type_highshelf, 8000.0f / SAMPLE_RATE, 0.707f, 4.0f); // boost highs
+    Biquad rumbleBoostFilter(bq_type_peak, 80.0f / SAMPLE_RATE, 0.5f, 9.0f);
+    context.fx.addFilter(lowShelfFilter);
+    context.fx.addFilter(midBoostFilter);
+    context.fx.addFilter(highShelfFilter);
+    context.fx.addFilter(rumbleBoostFilter);
+
     // ==== APPLICATION MAIN LOOP ====
     while (window.isOpen()) {
         frame++;
@@ -224,7 +232,12 @@ int main() {
                     car.setGas(0);
                     upShiftFrame = frame + 300 / deltaTime;
                     shiftLock = true;
-                    context.enableRumbleBoost = true;
+                    if (gasAvg.getAverage() > 100 && car.getRPM() >= 5) {
+                        context.fx.biquads[0].setPeakGain(0.0f);
+                        context.fx.biquads[1].setPeakGain(0.0f);
+                        context.fx.biquads[2].setPeakGain(0.0f);
+                        context.fx.biquads[3].setPeakGain(car.getRPM() / 900.0f);
+                    }
                 }
                 if (keyPressed->scancode == sf::Keyboard::Scancode::Down && !shiftLock) {
                     std::cout << "Downshift\n";
@@ -298,7 +311,10 @@ int main() {
             car.setGear(std::clamp(lastGear + 1, 0, 7));
             upShiftFrame = 0;
             shiftLock = false;
-            context.enableRumbleBoost = false;
+            context.fx.biquads[0].setPeakGain(-12.0f);
+            context.fx.biquads[1].setPeakGain(10.0f);
+            context.fx.biquads[2].setPeakGain(4.0f);
+            context.fx.biquads[3].setPeakGain(0.0f);
         }
 
         if (frame == downShiftFrame) {
@@ -331,10 +347,10 @@ int main() {
         turboShaft.setAmplitude(car.getBoost() / 750);
         turboShaft.setRPM(10000 + car.getBoost() * 100);
         supercharger.setRPM(car.getRPM()); // Supercharger example
-        supercharger.setAmplitude(car.getRPM()/100000+0.1f);
+        supercharger.setAmplitude(car.getRPM() / 100000 + 0.1f);
         // Gear whine example
-        //supercharger.setNoteOffset(25+car.getGear());
-        //supercharger.setRPM(car.getRPM()*(car.gearRatios[car.getGear()]/5)+1000);
+        // supercharger.setNoteOffset(25+car.getGear());
+        // supercharger.setRPM(car.getRPM()*(car.gearRatios[car.getGear()]/5)+1000);
 
         // Update tachometer needle rotation according to rpm.
         tach.setRotation(sf::degrees(car.getRPM() / 27.5 - 90));

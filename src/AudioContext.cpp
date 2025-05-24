@@ -1,8 +1,8 @@
 #include "AudioContext.h"
 #include "Biquad.h"
 
-AudioContext::AudioContext(std::vector<SoundGenerator *> generators) : generators(generators) {}
-AudioContext::AudioContext() {}
+AudioContext::AudioContext(std::vector<SoundGenerator *> generators) : generators(generators), ctxAmplitude(1.0f) {}
+AudioContext::AudioContext() : ctxAmplitude(1.0f) {}
 
 void AudioContext::addGenerator(SoundGenerator *generator) { generators.push_back(generator); }
 
@@ -10,15 +10,9 @@ float AudioContext::getAllSamples() {
     float sample = 0.0f;
     for (auto *gen : generators) {
         gen->update();
-        sample += gen->getSample();
+        sample += gen->getSample() * ctxAmplitude;
     }
-    if (!enableRumbleBoost){
-        sample = lowShelfFilter.process(sample);
-        sample = midBoostFilter.process(sample);
-        sample = highShelfFilter.process(sample);}
-    else {
-        sample = rumbleBoostFilter.process(sample);
-    }
+    sample = fx.process(sample);
     return std::clamp(sample, -1.0f, 1.0f);
 }
 void AudioContext::getAllSamples(float *buffer, int numFrames, int numChannels) {
@@ -30,9 +24,7 @@ void AudioContext::getAllSamples(float *buffer, int numFrames, int numChannels) 
     }
 }
 
-void AudioContext::configureEQ(float sampleRate) {
-    lowShelfFilter.setBiquad(bq_type_lowshelf, 150.0f / sampleRate, 0.707f, -12.0f); // cut lows
-    midBoostFilter.setBiquad(bq_type_peak, 1500.0f / sampleRate, 1.0f, 10.0f);       // boost mids
-    highShelfFilter.setBiquad(bq_type_highshelf, 8000.0f / sampleRate, 0.707f, 4.0f); // boost highs
-    rumbleBoostFilter.setBiquad(bq_type_peak, 80.0f / sampleRate, 0.5f, 9.0f);
-}
+float AudioContext::getSample() { return getAllSamples(); }
+
+void AudioContext::setAmplitude(float amp) { ctxAmplitude = amp; }
+float AudioContext::getAmplitude() const { return ctxAmplitude; }
