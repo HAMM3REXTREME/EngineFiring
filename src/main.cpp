@@ -84,8 +84,8 @@ int main() {
     // Engine engineDef("L539 V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 6.5);
     // Engine engineDef("Diablo/Murci V12", Engine::getFiringOrderFromString("1-7-4-10-2-8-6-12-3-9-5-11"), 6);
     // Engine engineDef("F1 V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 16);
-    // Engine engineDef("Audi V10 FSI", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {90, 54, 90, 54, 90, 54, 90, 54, 90, 54}, 5.4);
-    Engine engineDef("1LR-GUE V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, 5);
+    Engine engineDef("Audi V10 FSI", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {90, 54, 90, 54, 90, 54, 90, 54, 90, 54}, 5.4);
+    // Engine engineDef("1LR-GUE V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, 5);
     // Engine engineDef("F1 V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, 12.5);
     // Engine engineDef("Audi V8 -", Engine::getFiringOrderFromString("1-5-4-8-6-3-7-2"), 4);
     // Engine engineDef("Mercedes M120 V12", Engine::getFiringOrderFromString("1-12-5-8-3-10-6-7-2-11-4-9"),7.6);
@@ -113,7 +113,7 @@ int main() {
     SoundBank generalSamples;
     generalSamples.addFromWavs({"assets/audio/extra/boom.wav", "assets/audio/extra/starter.wav"});
     SimpleSoundGenerator generalGen(generalSamples);
-    generalGen.setAmplitude(0.2f);
+    generalGen.setAmplitude(0.3f);
 
     // ==== TURBOCHARGER SHAFT (Sounds like a faint supercharger)
     Engine turboshaftDef("BorgWarner K04 - Shaft", {0}, 8);
@@ -230,9 +230,9 @@ int main() {
                     lastGear = car.getGear();
                     car.setGear(0);
                     car.setGas(0);
-                    upShiftFrame = frame + 300 / deltaTime;
+                    upShiftFrame = frame + 90 / deltaTime;
                     shiftLock = true;
-                    if (gasAvg.getAverage() > 100 && car.getRPM() >= 5) {
+                    if (gasAvg.getAverage() > 100) {
                         context.fx.biquads[0].setPeakGain(0.0f);
                         context.fx.biquads[1].setPeakGain(0.0f);
                         context.fx.biquads[2].setPeakGain(0.0f);
@@ -244,7 +244,7 @@ int main() {
                     lastGear = car.getGear();
                     car.setGear(0);
                     car.setGas((0.02 * car.getRPM()) + 30);
-                    downShiftFrame = frame + 300 / deltaTime;
+                    downShiftFrame = frame + 250 / deltaTime;
                     shiftLock = true;
                 }
                 if (keyPressed->scancode == sf::Keyboard::Scancode::S) {
@@ -290,14 +290,20 @@ int main() {
                     lastGear = car.getGear();
                     car.setGear(0);
                     car.setGas(0);
-                    upShiftFrame = frame + 100 / deltaTime;
+                    upShiftFrame = frame + 90 / deltaTime;
                     shiftLock = true;
+                    if (gasAvg.getAverage() > 100) {
+                        context.fx.biquads[0].setPeakGain(0.0f);
+                        context.fx.biquads[1].setPeakGain(0.0f);
+                        context.fx.biquads[2].setPeakGain(0.0f);
+                        context.fx.biquads[3].setPeakGain(car.getRPM() / 900.0f);
+                    }
                 } else if (joystickButton->button == 5 && !shiftLock) { // RB button
                     std::cout << "Downshift\n";
                     lastGear = car.getGear();
                     car.setGear(0);
                     car.setGas((0.02 * car.getRPM()) + 30);
-                    downShiftFrame = frame + 300 / deltaTime;
+                    downShiftFrame = frame + 250 / deltaTime;
                     shiftLock = true;
                 }
             }
@@ -311,6 +317,7 @@ int main() {
             car.setGear(std::clamp(lastGear + 1, 0, 7));
             upShiftFrame = 0;
             shiftLock = false;
+            backfire.triggerPop();
             context.fx.biquads[0].setPeakGain(-12.0f);
             context.fx.biquads[1].setPeakGain(10.0f);
             context.fx.biquads[2].setPeakGain(4.0f);
