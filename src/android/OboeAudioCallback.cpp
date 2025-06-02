@@ -1,8 +1,8 @@
-#include "OboeSinePlayer.h"
+#include "OboeAudioCallback.h"
 
 using namespace oboe;
 
-int32_t OboeSinePlayer::startAudio() {
+int32_t OboeAudioCallback::startAudio() {
     std::lock_guard<std::mutex> lock(mLock);
 
     AudioStreamBuilder builder;
@@ -20,7 +20,7 @@ int32_t OboeSinePlayer::startAudio() {
     return static_cast<int32_t>(mStream->requestStart());
 }
 
-void OboeSinePlayer::stopAudio() {
+void OboeAudioCallback::stopAudio() {
     std::lock_guard<std::mutex> lock(mLock);
     if (mStream) {
         mStream->stop();
@@ -30,7 +30,12 @@ void OboeSinePlayer::stopAudio() {
     }
 }
 
-DataCallbackResult OboeSinePlayer::onAudioReady(AudioStream* oboeStream, void* audioData, int32_t numFrames) {
+void OboeAudioCallback::setAudioContext(AudioContext* context){
+    std::lock_guard<std::mutex> lock(mLock);
+    mAudioContext = context;
+}
+
+DataCallbackResult OboeAudioCallback::onAudioReady(AudioStream* oboeStream, void* audioData, int32_t numFrames) {
     float* floatData = static_cast<float*>(audioData);
 
     if (mAudioContext) {

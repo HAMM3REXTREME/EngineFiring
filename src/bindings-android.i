@@ -13,7 +13,7 @@
 #include "SoundBank.h"
 #include "TurboWhooshGenerator.h"
 #include "Biquad.h"
-#include "android/OboeSinePlayer.h"
+#include "android/OboeAudioCallback.h"
 %}
 
 %include "std_string.i"
@@ -47,4 +47,4 @@ namespace std {
 %include "SoundBank.h"
 %include "TurboWhooshGenerator.h"
 %include "Biquad.h"
-%include "android/OboeSinePlayer.h"
+%include "android/OboeAudioCallback.h"

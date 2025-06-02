@@ -4,12 +4,12 @@
 #include <oboe/Oboe.h>
 #include "AudioContext.h"
 
-class OboeSinePlayer : public oboe::AudioStreamDataCallback {
+class OboeAudioCallback : public oboe::AudioStreamDataCallback {
 public:
-    explicit OboeSinePlayer(AudioContext* context)
+    explicit OboeAudioCallback(AudioContext* context)
         : mAudioContext(context), mStream(nullptr) {}
 
-    virtual ~OboeSinePlayer() = default;
+    virtual ~OboeAudioCallback() = default;
 
     int32_t startAudio();
     void stopAudio();
@@ -18,12 +18,12 @@ public:
                                           void* audioData,
                                           int32_t numFrames) override;
 
-    //void setAudioContext(AudioContext* context);
+    void setAudioContext(AudioContext* context);
 
 private:
     std::mutex mLock;
-    oboe::AudioStream* mStream;  // raw pointer
-    AudioContext* mAudioContext; // raw pointer
+    oboe::AudioStream* mStream;
+    AudioContext* mAudioContext;
 
     static constexpr int kChannelCount = 2;
     static constexpr int kSampleRate = 48000;

@@ -12,7 +12,6 @@
 #include <vector>
 
 #include "AudioContext.h"
-#include "AudioVector.h"
 #include "BackfireSoundGenerator.h"
 #include "Car.h"
 #include "Damper.h"
@@ -20,7 +19,6 @@
 #include "EngineSoundGenerator.h"
 #include "SimpleSoundGenerator.h"
 #include "SoundBank.h"
-#include "SoundGenerator.h"
 #include "TurboWhooshGenerator.h"
 
 constexpr float SAMPLE_RATE = 48000;
@@ -101,7 +99,8 @@ int main() {
     // Engine engineDef("Porsche Flat 6", Engine::getFiringOrderFromString("1-6-2-4-3-5"), 3.6);
     EngineSoundGenerator engine(mainSamples, engineDef, 1000.0f, 0.5f);
     EngineSoundGenerator engineAlt(mainSamples, engineDef, 1000.0f, 0.5f);
-    engineAlt.setNoteOffset(12);
+    // engine.setNoteOffset(6);
+    engineAlt.setNoteOffset(8);
 
     // ==== SUPERCHARGER (Just a high revving 1 cylinder)
     Engine superchargerDef("Supercharger", {0}, 8);
@@ -348,7 +347,7 @@ int main() {
         engine.setRPM(car.getRPM());
         engineAlt.setRPM(car.getRPM());
         engine.setAmplitude(car.getTorque() / 100 + 0.2f);
-        engineAlt.setAmplitude((car.getRPM() * car.getTorque()) / 6000000);
+        engineAlt.setAmplitude((car.getRPM() * car.getTorque()) / 5000000);
         whoosh.setIntensity(car.getBoost() / 150);
         whoosh.setAmplitude(car.getBoost() / 2500);
         turboShaft.setAmplitude(car.getBoost() / 750);

@@ -35,7 +35,7 @@ if (ANDROID)
     set(IS_ANDROID TRUE)
     message(STATUS "Targeting Android")
 
-    list(APPEND SRC_FILES src/android/OboeSinePlayer.cpp)
+    list(APPEND SRC_FILES src/android/OboeAudioCallback.cpp)
 
     add_subdirectory(oboe)
 
@@ -76,7 +76,7 @@ include_directories(
 set_property(SOURCE ${SWIG_INTERFACE_FILE} PROPERTY CPLUSPLUS ON)
 
 # Set SWIG flags BEFORE swig_add_library
-set(CMAKE_SWIG_FLAGS -package org.engine.firing -c++)
+set(CMAKE_SWIG_FLAGS -package com.example.squeeze -c++)
 
 swig_add_library(engineaudio_jni
     LANGUAGE java

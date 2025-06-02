@@ -12,19 +12,23 @@ class SimpleSoundGenerator : public SoundGenerator {
     SimpleSoundGenerator(SoundBank &bank);
 
     // Call this to start playing a sample by its index in the SoundBank
-    void startPlayback(size_t sampleIndex);
+    void startPlayback(size_t sampleIndex, bool loop = false);
+    void stopPlayback();
+  
     void update() override;
-
     float getSample() override;
 
     void setAmplitude(float newGain) override;
-
     float getAmplitude() const override;
+
+    void setLooping(bool loop);
+    bool isLooping() const;
 
   private:
     SoundBank &soundBank;
     int currentSampleIndex;  // -1 means no sample playing
     size_t playbackPosition; // Position within the current sample
     float gain;
+    bool looping;
     bool isPlaying() const;
 };
