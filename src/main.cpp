@@ -20,6 +20,8 @@
 #include "SimpleSoundGenerator.h"
 #include "SoundBank.h"
 #include "TurboWhooshGenerator.h"
+#include "sol/sol.hpp"
+#include "LuaBindingHelper.h"
 
 constexpr float SAMPLE_RATE = 48000;
 constexpr int WINDOW_X = 1080;
@@ -204,6 +206,105 @@ int main() {
     context.fx.addFilter(highShelfFilter);
     context.fx.addFilter(rumbleBoostFilter);
 
+    sol::state lua;
+    lua.open_libraries(sol::lib::base);
+
+lua.new_usertype<Car>("Car",
+    // --- Public Fields ---
+    "ignition", &Car::ignition,
+    "defaultRevLimitTick", &Car::defaultRevLimitTick,
+    "revLimitTick", &Car::revLimitTick,
+    "revLimit", &Car::revLimit,
+    "gearRatios", &Car::gearRatios,
+    "gearLazyValues", &Car::gearLazyValues,
+    "gearThrottleResponses", &Car::gearThrottleResponses,
+    "quadraticWheelDrag", &Car::quadraticWheelDrag,
+    "linearWheelDrag", &Car::linearWheelDrag,
+    "clutchKick", &Car::clutchKick,
+    "boostThreshold", &Car::boostThreshold,
+
+    // --- Methods ---
+    "setGear", &Car::setGear,
+    "getGear", &Car::getGear,
+    "setGas", &Car::setGas,
+    "getGas", &Car::getGas,
+    "setRPM", &Car::setRPM,
+    "getRPM", &Car::getRPM,
+    "getBoost", &Car::getBoost,
+    "setWheelSpeed", &Car::setWheelSpeed,
+    "getWheelSpeed", &Car::getWheelSpeed,
+    "getTorque", &Car::getTorque
+);
+lua.new_usertype<SoundBank>("SoundBank",
+    sol::constructors<SoundBank()>(),
+
+        "addFromWav", [](SoundBank& sb, const std::string& s) {
+        sb.addFromWav(s); // wrap explicitly
+    },
+    "clearAll", &SoundBank::clearAll
+    // "samples", &SoundBank::samples
+);
+lua.new_usertype<Engine>("Engine",
+    // Constructors
+    sol::constructors<
+        Engine(std::string, const std::vector<int>&, const std::vector<float>&, float),
+        Engine(std::string, const std::vector<int>&, float)
+    >(),
+
+    // Fields
+    "name", &Engine::name,
+    "firingOrder", &Engine::firingOrder,
+    "firingIntervalFactors", &Engine::firingIntervalFactors,
+    "audioRpmFactor", &Engine::audioRpmFactor,
+
+    // Methods
+    "setIntervalsFromDegrees", &Engine::setIntervalsFromDegrees,
+    "getCylinderCount", &Engine::getCylinderCount,
+
+    // Static method exposed as free function (optional)
+    "getFiringOrderFromString", sol::var(&Engine::getFiringOrderFromString)
+);
+
+lua.new_usertype<EngineSoundGenerator>("EngineSoundGenerator",
+    sol::constructors<
+        EngineSoundGenerator(const SoundBank&, const Engine&, float, float, int, int)
+    >(),
+
+    // RPM control
+    "setRPM", &EngineSoundGenerator::setRPM,
+    "getRPM", &EngineSoundGenerator::getRPM,
+
+    // Amplitude control
+    "setAmplitude", &EngineSoundGenerator::setAmplitude,
+    "getAmplitude", &EngineSoundGenerator::getAmplitude,
+
+    // Note offset
+    "setNoteOffset", &EngineSoundGenerator::setNoteOffset,
+    "getNoteOffset", &EngineSoundGenerator::getNoteOffset
+);
+sol::load_result script = lua.load_file("assets/scripts/example.lua");
+if (!script.valid()) {
+    sol::error err = script;
+    std::cerr << "Failed to load Lua script: " << err.what() << std::endl;
+    return -1;
+}
+
+// Execute the script, returns the table with the objects
+sol::protected_function_result result = script();
+if (!result.valid()) {
+    sol::error err = result;
+    std::cerr << "Failed to execute Lua script: " << err.what() << std::endl;
+    return -1;
+}
+
+sol::table objects = result;
+
+// Extract C++ instances from Lua table
+SoundBank& mainSamplesLua = objects["mainSamples"];
+Engine& engineDefLua = objects["engineDef"];
+EngineSoundGenerator& engineSoundGenLua = objects["engineSoundGen"];
+
+//EngineSoundGenerator& generator = lua["generator"];
     // ==== APPLICATION MAIN LOOP ====
     while (window.isOpen()) {
         frame++;

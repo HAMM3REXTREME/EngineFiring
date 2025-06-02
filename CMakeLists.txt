@@ -8,6 +8,10 @@ find_package(SWIG REQUIRED)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(SFML REQUIRED sfml-all)
 pkg_check_modules(PORTAUDIO REQUIRED portaudio-2.0)
+pkg_search_module(LUA REQUIRED lua5.4)
+
+include_directories(${LUA_INCLUDE_DIRS})
+link_directories(${LUA_LIBRARY_DIRS})
 
 include(UseSWIG)
 
@@ -58,6 +62,7 @@ target_include_directories(engineaudio_native PRIVATE
 target_link_libraries(engineaudio_native PRIVATE
     ${SFML_LIBRARIES}
     ${PORTAUDIO_LIBRARIES}
+    ${LUA_LIBRARIES}
 )
 
 # === JNI shared lib ===
@@ -102,6 +107,7 @@ else()
         ${PORTAUDIO_LIBRARIES}
         ${SFML_LIBRARIES}
         ${JNI_LIBRARIES}
+        ${LUA_LIBRARIES}
     )
 endif()
 set_target_properties(engineaudio_jni PROPERTIES PREFIX "lib")

@@ -7,5 +7,6 @@ class SoundBank {
     SoundBank();
     std::vector<AudioVector> samples;
     void addFromWavs(const std::vector<std::string> &filenames);
+    void addFromWav(const std::string& filename);
     void clearAll();
 };
