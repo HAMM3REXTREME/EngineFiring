@@ -79,18 +79,22 @@ int main() {
                              "assets/audio/tick_library/note_97.wav",  "assets/audio/tick_library/note_98.wav",  "assets/audio/tick_library/note_99.wav",
                              "assets/audio/tick_library/note_100.wav", "assets/audio/tick_library/note_101.wav", "assets/audio/tick_library/note_102.wav"});
 
-    // Engine engineDef("L539 V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 6.5);
+    // Engine engineDef("Revuelto V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 6.5);
     // Engine engineDef("Diablo/Murci V12", Engine::getFiringOrderFromString("1-7-4-10-2-8-6-12-3-9-5-11"), 6);
+    // Engine engineDef("Countach V12", Engine::getFiringOrderFromString("1 7 5 11 3 9 6 12 2 8 4 10"), 4.5);
     // Engine engineDef("F1 V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 16);
     Engine engineDef("Audi V10 FSI", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {90, 54, 90, 54, 90, 54, 90, 54, 90, 54}, 5.4);
     // Engine engineDef("1LR-GUE V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, 5);
     // Engine engineDef("F1 V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, 12.5);
-    // Engine engineDef("Audi V8 -", Engine::getFiringOrderFromString("1-5-4-8-6-3-7-2"), 4);
+    // Engine engineDef("Bugatti W16", Engine::getFiringOrderFromString("1 14 9 4 7 12 15 6 13 8 3 16 11 2 5 10"), 8.2);
+    // Engine engineDef("Inline 9 - Experimental", Engine::getFiringOrderFromString("1 2 4 6 8 9 7 5 3"), 5);
+    // Engine engineDef("Flat plane V8", Engine::getFiringOrderFromString("1 5 3 7 4 8 2 6"), 4);
     // Engine engineDef("Mercedes M120 V12", Engine::getFiringOrderFromString("1-12-5-8-3-10-6-7-2-11-4-9"),7.6);
     // Engine engineDef("Murican V8 +", Engine::getFiringOrderFromString("1-8-7-2-6-5-4-3"),3);
     // Engine engineDef("2UR-GSE V8", Engine::getFiringOrderFromString("1-8-7-3-6-5-4-2"),3);
     // Engine engineDef("BMW N54", Engine::getFiringOrderFromString("1-5-3-6-2-4"), 3);
     // Engine engineDef("Audi i5", Engine::getFiringOrderFromString("1-2-4-5-3"),3);
+    // Engine engineDef("Perfect Fifth i5", Engine::getFiringOrderFromString("1 3 5 2 4"), {120, 180, 120, 180, 120},3);
     // Engine engineDef("4 Banger", Engine::getFiringOrderFromString("1-3-4-2"),2);
     // Engine engineDef("Super Sport", Engine::getFiringOrderFromString("1-3-4-2"),4);
     // Engine engineDef("Nissan VQ", Engine::getFiringOrderFromString("1-2-3-4-5-6"),3);
@@ -100,7 +104,7 @@ int main() {
     EngineSoundGenerator engine(mainSamples, engineDef, 1000.0f, 0.5f);
     EngineSoundGenerator engineAlt(mainSamples, engineDef, 1000.0f, 0.5f);
     // engine.setNoteOffset(6);
-    engineAlt.setNoteOffset(8);
+    engineAlt.setNoteOffset(12);
 
     // ==== SUPERCHARGER (Just a high revving 1 cylinder)
     Engine superchargerDef("Supercharger", {0}, 8);

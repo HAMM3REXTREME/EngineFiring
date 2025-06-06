@@ -14,7 +14,7 @@ class SimpleSoundGenerator : public SoundGenerator {
     // Call this to start playing a sample by its index in the SoundBank
     void startPlayback(size_t sampleIndex, bool loop = false);
     void stopPlayback();
-  
+
     void update() override;
     float getSample() override;
 

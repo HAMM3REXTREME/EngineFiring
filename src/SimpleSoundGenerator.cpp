@@ -20,9 +20,9 @@ void SimpleSoundGenerator::update() {
         ++playbackPosition;
         if (playbackPosition >= soundBank.samples[currentSampleIndex].samples.size()) {
             if (looping) {
-                playbackPosition = 0;  // Reset to start of sample for looping
+                playbackPosition = 0; // Reset to start of sample for looping
             } else {
-                currentSampleIndex = -1;  // Stop playback if not looping
+                currentSampleIndex = -1; // Stop playback if not looping
             }
         }
     }
