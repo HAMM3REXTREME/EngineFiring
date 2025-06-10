@@ -36,7 +36,7 @@ void Car::setGear(int newGear) {
     if (gear <= 0) {
         return;
     }
-    if (wheelRPM * gearRatios[gear] <= 50 && rpm >= 700) { // 'Dumping' the clutch won't stall
+    if (wheelRPM <= 5 && rpm >= 700) { // 'Dumping' the clutch won't stall
         wheelRPM = rpm * gearRatios[gear] / 8;
         clutchKick = 0.05;
     } else {

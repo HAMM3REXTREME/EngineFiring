@@ -208,7 +208,7 @@ int main() {
         std::cerr << "Failed to load font" << std::endl;
         return EXIT_FAILURE;
     }
-    sf::Text gaugeValue(font, "Text", 16);
+    sf::Text gaugeValue(font, "Text", 24);
     gaugeValue.setFillColor(sf::Color::White);
     gaugeValue.setPosition({WINDOW_X / 2.f + 25.f, WINDOW_Y / 2.f + 25.f});
 
