@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "AudioContext.h"
+#include "AudioVector.h"
 #include "BackfireSoundGenerator.h"
 #include "Car.h"
 #include "Damper.h"
@@ -83,7 +84,7 @@ int main() {
     // Engine engineDef("Diablo/Murci V12", Engine::getFiringOrderFromString("1-7-4-10-2-8-6-12-3-9-5-11"), 6);
     // Engine engineDef("Countach V12", Engine::getFiringOrderFromString("1 7 5 11 3 9 6 12 2 8 4 10"), 4.5);
     // Engine engineDef("F1 V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 16);
-    Engine engineDef("Audi V10 FSI", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {90, 54, 90, 54, 90, 54, 90, 54, 90, 54}, 5.4);
+    // Engine engineDef("Audi V10 FSI", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {90, 54, 90, 54, 90, 54, 90, 54, 90, 54}, 5.4);
     // Engine engineDef("1LR-GUE V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, 5);
     // Engine engineDef("F1 V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, 12.5);
     // Engine engineDef("Bugatti W16", Engine::getFiringOrderFromString("1 14 9 4 7 12 15 6 13 8 3 16 11 2 5 10"), 8.2);
@@ -93,18 +94,19 @@ int main() {
     // Engine engineDef("Murican V8 +", Engine::getFiringOrderFromString("1-8-7-2-6-5-4-3"),3);
     // Engine engineDef("2UR-GSE V8", Engine::getFiringOrderFromString("1-8-7-3-6-5-4-2"),3);
     // Engine engineDef("BMW N54", Engine::getFiringOrderFromString("1-5-3-6-2-4"), 3);
+    // Engine engineDef("VR6", Engine::getFiringOrderFromString("1-5-3-6-2-4"), {120, 130, 110, 125, 115, 120}, 3);
     // Engine engineDef("Audi i5", Engine::getFiringOrderFromString("1-2-4-5-3"),3);
     // Engine engineDef("Perfect Fifth i5", Engine::getFiringOrderFromString("1 3 5 2 4"), {120, 180, 120, 180, 120},3);
     // Engine engineDef("4 Banger", Engine::getFiringOrderFromString("1-3-4-2"),2);
     // Engine engineDef("Super Sport", Engine::getFiringOrderFromString("1-3-4-2"),4);
-    // Engine engineDef("Nissan VQ", Engine::getFiringOrderFromString("1-2-3-4-5-6"),3);
+    Engine engineDef("Nissan VQ", Engine::getFiringOrderFromString("1-2-3-4-5-6"),3);
     // Engine engineDef("Ford 4.0L V6", Engine::getFiringOrderFromString("1-4-2-5-3-6"),3);
     // Engine engineDef("Buick odd firing V6", Engine::getFiringOrderFromString("1-6-5-4-3-2"), {90,150,90,150,90,150},3);
     // Engine engineDef("Porsche Flat 6", Engine::getFiringOrderFromString("1-6-2-4-3-5"), 3.6);
     EngineSoundGenerator engine(mainSamples, engineDef, 1000.0f, 0.5f);
     EngineSoundGenerator engineAlt(mainSamples, engineDef, 1000.0f, 0.5f);
     // engine.setNoteOffset(6);
-    engineAlt.setNoteOffset(12);
+    engineAlt.setNoteOffset(16);
 
     // ==== SUPERCHARGER (Just a high revving 1 cylinder)
     Engine superchargerDef("Supercharger", {0}, 8);
@@ -136,7 +138,8 @@ int main() {
     backfire.setAmplitude(0.2f);
 
     // Audio sample generators that get summed up and played together
-    AudioContext context({&engine, &whoosh, &backfire, &turboShaft, &turboGen, &generalGen, &engineAlt});
+    AudioContext engineCtx({&engine, &engineAlt});
+    AudioContext context({&whoosh, &backfire, &turboShaft, &turboGen, &generalGen, &engineCtx});
     // PortAudio for live audio playback
     Pa_Initialize();
     PaStream *stream;
@@ -201,12 +204,12 @@ int main() {
     // Biquad filters
     Biquad lowShelfFilter(bq_type_lowshelf, 150.0f / SAMPLE_RATE, 0.707f, -12.0f);  // cut lows
     Biquad midBoostFilter(bq_type_peak, 1500.0f / SAMPLE_RATE, 1.0f, 10.0f);        // boost mids
-    Biquad highShelfFilter(bq_type_highshelf, 8000.0f / SAMPLE_RATE, 0.707f, 4.0f); // boost highs
+    Biquad highShelfFilter(bq_type_highshelf, 8000.0f / SAMPLE_RATE, 0.707f, 6.0f); // boost highs
     Biquad rumbleBoostFilter(bq_type_peak, 80.0f / SAMPLE_RATE, 0.5f, 9.0f);
-    context.fx.addFilter(lowShelfFilter);
-    context.fx.addFilter(midBoostFilter);
-    context.fx.addFilter(highShelfFilter);
-    context.fx.addFilter(rumbleBoostFilter);
+    engineCtx.fx.addFilter(lowShelfFilter);
+    engineCtx.fx.addFilter(midBoostFilter);
+    engineCtx.fx.addFilter(highShelfFilter);
+    engineCtx.fx.addFilter(rumbleBoostFilter);
 
     // ==== APPLICATION MAIN LOOP ====
     while (window.isOpen()) {
@@ -236,10 +239,10 @@ int main() {
                     upShiftFrame = frame + 90 / deltaTime;
                     shiftLock = true;
                     if (gasAvg.getAverage() > 100) {
-                        context.fx.biquads[0].setPeakGain(0.0f);
-                        context.fx.biquads[1].setPeakGain(0.0f);
-                        context.fx.biquads[2].setPeakGain(0.0f);
-                        context.fx.biquads[3].setPeakGain(car.getRPM() / 900.0f);
+                        engineCtx.fx.biquads[0].setPeakGain(0.0f);
+                        engineCtx.fx.biquads[1].setPeakGain(0.0f);
+                        engineCtx.fx.biquads[2].setPeakGain(0.0f);
+                        engineCtx.fx.biquads[3].setPeakGain(car.getRPM() / 900.0f);
                     }
                 }
                 if (keyPressed->scancode == sf::Keyboard::Scancode::Down && !shiftLock) {
@@ -296,10 +299,10 @@ int main() {
                     upShiftFrame = frame + 90 / deltaTime;
                     shiftLock = true;
                     if (gasAvg.getAverage() > 100) {
-                        context.fx.biquads[0].setPeakGain(0.0f);
-                        context.fx.biquads[1].setPeakGain(0.0f);
-                        context.fx.biquads[2].setPeakGain(0.0f);
-                        context.fx.biquads[3].setPeakGain(car.getRPM() / 900.0f);
+                        engineCtx.fx.biquads[0].setPeakGain(0.0f);
+                        engineCtx.fx.biquads[1].setPeakGain(0.0f);
+                        engineCtx.fx.biquads[2].setPeakGain(0.0f);
+                        engineCtx.fx.biquads[3].setPeakGain(car.getRPM() / 900.0f);
                     }
                 } else if (joystickButton->button == 5 && !shiftLock) { // RB button
                     std::cout << "Downshift\n";
@@ -321,10 +324,10 @@ int main() {
             upShiftFrame = 0;
             shiftLock = false;
             backfire.triggerPop();
-            context.fx.biquads[0].setPeakGain(-12.0f);
-            context.fx.biquads[1].setPeakGain(10.0f);
-            context.fx.biquads[2].setPeakGain(4.0f);
-            context.fx.biquads[3].setPeakGain(0.0f);
+            engineCtx.fx.biquads[0].setPeakGain(-12.0f);
+            engineCtx.fx.biquads[1].setPeakGain(10.0f);
+            engineCtx.fx.biquads[2].setPeakGain(6.0f);
+            engineCtx.fx.biquads[3].setPeakGain(0.0f);
         }
 
         if (frame == downShiftFrame) {
