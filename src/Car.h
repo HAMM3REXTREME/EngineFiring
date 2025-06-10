@@ -10,23 +10,26 @@ class Car {
     bool ignition = false; // Ignition
 
     // Rev limiter
-    int defaultRevLimitTick = 2; // Cuts off gas for n ticks if rev limit is reached.
-    int revLimitTick = 0;        // no-gas ticks remaining
-    int revLimit = 8000;         // Gas will be cut when rev limit is reached
+    int revLimiterCutTicks = 2; // Cuts off gas for n ticks if rev limit is reached
+    int revLimitTicks = 0;      // ticks with gas cut off remaining
+    int revLimit = 8000;        // Gas will be cut when rev limit is reached
 
-    float gearRatios[8] = {0, 1, 1.4, 2, 2.75, 3.85, 5.4, 7.5}; // Gearing ratios - Used to match engine rpm to wheel rpm
-    float gearLazyValues[8] = {0.99,   0.999,  0.9994, 0.9995, 0.9996,
-                               0.9997, 0.9998, 0.9999}; // Engine time for revs to settle back - values closer to one need more time to go back to idle cause
-                                                        // less resistance (exponential decay)
-    float gearThrottleResponses[8] = {
-        1, 0.25, 0.20, 0.15, 0.10, 0.09, 0.082, 0.069}; // Throttle sensitivity - Should feel lower in higher gears since the high gears is hard on the engine.
+    float gearRatios[8] = {0,      0.0820, 0.1362, 0.1879,
+                           0.2457, 0.3091, 0.3747, 0.4507}; // Gearing ratios - Used to match engine rpm to wheel rpm (1/(specsheet ratio * final drive))
+    float gearDragFactors[8] = {
+        0.99,   0.999,  0.9994, 0.9995, 0.9996,
+        0.9997, 0.9998, 0.9999}; // Rate for revs to settle back - values closer to 1 need more time to settle back due to less resistance (exponential decay)
+    float gearThrottleResponses[8] = {1,    0.25, 0.20,  0.15,
+                                      0.10, 0.09, 0.082, 0.069}; // Throttle fake sensitivity (or how fast the needle moves) - should feel lower in higher gears
 
     // Wheel resistances
     double quadraticWheelDrag = 0.999; // Driving drag on wheels (and also engine if in gear)
     float linearWheelDrag = 0;         // Linear drag on wheels (and engine if in gear)
 
-    float clutchKick = 0.1; // Clutch jerkiness (1 is smooth)
-    float boostThreshold = 1500;
+    float clutchKick = 0.1;      // Clutch jerkiness (1 is smooth)
+    float boostThreshold = 1500; // Start making fake boost at this rpm
+
+    float wheelRadius = 0.33; // Wheel radius in metres (for wheel speed calculation)
 
     void tick();
 

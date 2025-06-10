@@ -76,7 +76,7 @@ include_directories(
 set_property(SOURCE ${SWIG_INTERFACE_FILE} PROPERTY CPLUSPLUS ON)
 
 # Set SWIG flags BEFORE swig_add_library
-set(CMAKE_SWIG_FLAGS -package com.example.squeeze -c++)
+set(CMAKE_SWIG_FLAGS -package engine.firing -c++)
 
 swig_add_library(engineaudio_jni
     LANGUAGE java

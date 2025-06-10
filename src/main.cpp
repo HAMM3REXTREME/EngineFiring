@@ -1,4 +1,5 @@
 #include <SFML/Graphics.hpp>
+#include <SFML/Graphics/Text.hpp>
 #include <SFML/Window/Mouse.hpp>
 #include <algorithm>
 #include <map>
@@ -84,7 +85,7 @@ int main() {
     // Engine engineDef("Diablo/Murci V12", Engine::getFiringOrderFromString("1-7-4-10-2-8-6-12-3-9-5-11"), 6);
     // Engine engineDef("Countach V12", Engine::getFiringOrderFromString("1 7 5 11 3 9 6 12 2 8 4 10"), 4.5);
     // Engine engineDef("F1 V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 16);
-    // Engine engineDef("Audi V10 FSI", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {90, 54, 90, 54, 90, 54, 90, 54, 90, 54}, 5.4);
+    Engine engineDef("Audi V10 FSI", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {90, 54, 90, 54, 90, 54, 90, 54, 90, 54}, 5.4);
     // Engine engineDef("1LR-GUE V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, 5);
     // Engine engineDef("F1 V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, 12.5);
     // Engine engineDef("Bugatti W16", Engine::getFiringOrderFromString("1 14 9 4 7 12 15 6 13 8 3 16 11 2 5 10"), 8.2);
@@ -99,7 +100,7 @@ int main() {
     // Engine engineDef("Perfect Fifth i5", Engine::getFiringOrderFromString("1 3 5 2 4"), {120, 180, 120, 180, 120},3);
     // Engine engineDef("4 Banger", Engine::getFiringOrderFromString("1-3-4-2"),2);
     // Engine engineDef("Super Sport", Engine::getFiringOrderFromString("1-3-4-2"),4);
-    Engine engineDef("Nissan VQ", Engine::getFiringOrderFromString("1-2-3-4-5-6"),3);
+    // Engine engineDef("Nissan VQ", Engine::getFiringOrderFromString("1-2-3-4-5-6"),3);
     // Engine engineDef("Ford 4.0L V6", Engine::getFiringOrderFromString("1-4-2-5-3-6"),3);
     // Engine engineDef("Buick odd firing V6", Engine::getFiringOrderFromString("1-6-5-4-3-2"), {90,150,90,150,90,150},3);
     // Engine engineDef("Porsche Flat 6", Engine::getFiringOrderFromString("1-6-2-4-3-5"), 3.6);
@@ -201,6 +202,16 @@ int main() {
     spriteMiddle.setPosition({WINDOW_X / 2.f, WINDOW_Y / 2.f});
     spriteMiddle.setScale({0.07, 0.07});
 
+        // Text Information
+    sf::Font font;
+    if (!font.openFromFile("assets/fonts/Aldrich-Regular.ttf")) {
+        std::cerr << "Failed to load font" << std::endl;
+        return EXIT_FAILURE;
+    }
+    sf::Text gaugeValue(font, "Text", 16);
+    gaugeValue.setFillColor(sf::Color::White);
+    gaugeValue.setPosition({WINDOW_X / 2.f + 25.f, WINDOW_Y / 2.f + 25.f});
+
     // Biquad filters
     Biquad lowShelfFilter(bq_type_lowshelf, 150.0f / SAMPLE_RATE, 0.707f, -12.0f);  // cut lows
     Biquad midBoostFilter(bq_type_peak, 1500.0f / SAMPLE_RATE, 1.0f, 10.0f);        // boost mids
@@ -222,7 +233,8 @@ int main() {
             // Close window: exit
             if (event->is<sf::Event::Closed>()) {
                 window.close();
-            } else if (const auto *keyPressed = event->getIf<sf::Event::KeyPressed>()) {
+            }
+            if (const auto *keyPressed = event->getIf<sf::Event::KeyPressed>()) {
                 auto it = userThrottleMap.find(keyPressed->scancode);
                 if (it != userThrottleMap.end()) {
                     // std::cout << "Accelerator at " << it->second << " \n";
@@ -269,9 +281,10 @@ int main() {
                     std::cout << "Set ignition to " << car.ignition << "\n";
                 }
                 if (keyPressed->scancode == sf::Keyboard::Scancode::Period) {
-                    car.linearWheelDrag = 25;
+                    car.linearWheelDrag = 5;
                 }
-            } else if (const auto *keyReleased = event->getIf<sf::Event::KeyReleased>()) {
+            }
+            if (const auto *keyReleased = event->getIf<sf::Event::KeyReleased>()) {
                 if (keyReleased->scancode == sf::Keyboard::Scancode::T) {
                     gas = 0;
                 }
@@ -289,7 +302,8 @@ int main() {
                     // std:: cout << "Moved: " << joystickMove->position << "\n";
                     gas = 0.75 * (100 - joystickMove->position);
                 }
-            } else if (const auto *joystickButton = event->getIf<sf::Event::JoystickButtonPressed>()) {
+            }
+            if (const auto *joystickButton = event->getIf<sf::Event::JoystickButtonPressed>()) {
                 // Handle button presses
                 if (joystickButton->button == 4 && !shiftLock) { // LB button
                     std::cout << "Upshift\n";
@@ -367,11 +381,13 @@ int main() {
 
         // Update tachometer needle rotation according to rpm.
         tach.setRotation(sf::degrees(car.getRPM() / 27.5 - 90));
-        // std::cout << "RPM: " << (int)engine.getRPM() << "  boost: " << car.getBoost() << " Gear: " << car.getGear() << "\n";
+        gaugeValue.setString("RPM: " + std::to_string((int)engine.getRPM()) + "\nBoost: " + std::to_string((int)car.getBoost()) + "\nGear: " + std::to_string((int)car.getGear()) + "\nSpeed: " + std::to_string((int)(car.getWheelSpeed() * 3.6)));
+        //std::cout << "RPM: " << (int)engine.getRPM() << "  boost: " << car.getBoost() << " Gear: " << car.getGear() << " Speed: " << car.getWheelSpeed() * 3.6 << "\n";
 
         // ==== RENDERING
         window.clear();
         window.draw(spriteTach);
+        window.draw(gaugeValue);
         window.draw(tach);
         window.draw(spriteMiddle);
         window.display();

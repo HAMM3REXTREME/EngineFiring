@@ -2,13 +2,14 @@
 
 #include "Car.h"
 #include "Damper.h"
+#include <math.h>
 
 #include <mutex>
 
 void Car::tick() {
     std::lock_guard<std::mutex> lock(m_tick);
     controlIdle();
-    rpm = rpm * gearLazyValues[gear]; // Apply engine internal drag
+    rpm = rpm * gearDragFactors[gear]; // Apply engine internal drag
     addEnergy();
 
     // Apply clutch revs in multiple smaller chunks of revs, makes a kick, like dumping the clutch in a real car
@@ -27,7 +28,7 @@ void Car::tick() {
     wheelRPM < 0 ? wheelRPM = 0 : 0;
 
     rpmDamper.addValue(rpm);
-    wheelSpeedDamper.addValue(wheelRPM);
+    wheelSpeedDamper.addValue(wheelRPM * 2.0 * M_PI * wheelRadius * (1.0 / 60.0));
 }
 
 void Car::setGear(int newGear) {
@@ -35,8 +36,8 @@ void Car::setGear(int newGear) {
     if (gear <= 0) {
         return;
     }
-    if (wheelRPM / gearRatios[gear] <= 50 && rpm >= 700) { // 'Dumping' the clutch won't stall
-        wheelRPM = rpm / (8 * gearRatios[gear]);
+    if (wheelRPM * gearRatios[gear] <= 50 && rpm >= 700) { // 'Dumping' the clutch won't stall
+        wheelRPM = rpm * gearRatios[gear] / 8;
         clutchKick = 0.05;
     } else {
         clutchKick = 0.4;
@@ -57,14 +58,14 @@ void Car::addEnergy() {
         rpm += Torque; // Don't divide by zero
         if (ignition) {
             if (rpm <= revLimit) { // Rev limiter thingy
-                if (revLimitTick <= 0) {
+                if (revLimitTicks <= 0) {
                     Torque = (gas + idleValve) * gearThrottleResponses[gear];
                 } else {
-                    revLimitTick--;
+                    revLimitTicks--;
                 }
             } else {
                 // Start a rev limit cut cycle if rpm exceeds the limit
-                revLimitTick = defaultRevLimitTick;
+                revLimitTicks = revLimiterCutTicks;
                 Torque = 0;
             }
 
