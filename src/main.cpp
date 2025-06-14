@@ -27,6 +27,10 @@ constexpr float SAMPLE_RATE = 48000;
 constexpr int WINDOW_X = 1080;
 constexpr int WINDOW_Y = 720;
 
+constexpr int DOWNSHIFT_DELAY = 250;
+constexpr int UPSHIFT_DELAY = 190;
+
+
 // Function for the PortAudio audio callback
 int audio_callback(const void *, void *outputBuffer, unsigned long framesPerBuffer, const PaStreamCallbackTimeInfo *, PaStreamCallbackFlags, void *userData) {
     auto *audioContext = static_cast<AudioContext *>(userData);
@@ -81,11 +85,11 @@ int main() {
                              "assets/audio/tick_library/note_97.wav",  "assets/audio/tick_library/note_98.wav",  "assets/audio/tick_library/note_99.wav",
                              "assets/audio/tick_library/note_100.wav", "assets/audio/tick_library/note_101.wav", "assets/audio/tick_library/note_102.wav"});
 
-    // Engine engineDef("Revuelto V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 6.5);
+    Engine engineDef("Revuelto V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 6.5);
     // Engine engineDef("Diablo/Murci V12", Engine::getFiringOrderFromString("1-7-4-10-2-8-6-12-3-9-5-11"), 6);
     // Engine engineDef("Countach V12", Engine::getFiringOrderFromString("1 7 5 11 3 9 6 12 2 8 4 10"), 4.5);
     // Engine engineDef("F1 V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 16);
-    Engine engineDef("Audi V10 FSI", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {90, 54, 90, 54, 90, 54, 90, 54, 90, 54}, 5.4);
+    // Engine engineDef("Audi V10 FSI", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {90, 54, 90, 54, 90, 54, 90, 54, 90, 54}, 5.4);
     // Engine engineDef("1LR-GUE V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, 5);
     // Engine engineDef("F1 V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, 12.5);
     // Engine engineDef("Bugatti W16", Engine::getFiringOrderFromString("1 14 9 4 7 12 15 6 13 8 3 16 11 2 5 10"), 8.2);
@@ -106,8 +110,9 @@ int main() {
     // Engine engineDef("Porsche Flat 6", Engine::getFiringOrderFromString("1-6-2-4-3-5"), 3.6);
     EngineSoundGenerator engine(mainSamples, engineDef, 1000.0f, 0.5f);
     EngineSoundGenerator engineAlt(mainSamples, engineDef, 1000.0f, 0.5f);
-    // engine.setNoteOffset(6);
-    engineAlt.setNoteOffset(16);
+    EngineSoundGenerator engineAltAlt(mainSamples, engineDef, 1000.0f, 0.5f);
+    engineAlt.setNoteOffset(22);
+    engineAltAlt.setNoteOffset(16);
 
     // ==== SUPERCHARGER (Just a high revving 1 cylinder)
     Engine superchargerDef("Supercharger", {0}, 8);
@@ -139,7 +144,7 @@ int main() {
     backfire.setAmplitude(0.2f);
 
     // Audio sample generators that get summed up and played together
-    AudioContext engineCtx({&engine, &engineAlt});
+    AudioContext engineCtx({&engine, &engineAlt, &engineAltAlt});
     AudioContext context({&whoosh, &backfire, &turboShaft, &turboGen, &generalGen, &engineCtx});
     // PortAudio for live audio playback
     Pa_Initialize();
@@ -213,9 +218,9 @@ int main() {
     gaugeValue.setPosition({WINDOW_X / 2.f + 25.f, WINDOW_Y / 2.f + 25.f});
 
     // Biquad filters
-    Biquad lowShelfFilter(bq_type_lowshelf, 150.0f / SAMPLE_RATE, 0.707f, -12.0f);  // cut lows
+    Biquad lowShelfFilter(bq_type_lowshelf, 150.0f / SAMPLE_RATE, 0.707f, -5.0f);  // cut lows
     Biquad midBoostFilter(bq_type_peak, 1500.0f / SAMPLE_RATE, 1.0f, 10.0f);        // boost mids
-    Biquad highShelfFilter(bq_type_highshelf, 8000.0f / SAMPLE_RATE, 0.707f, 6.0f); // boost highs
+    Biquad highShelfFilter(bq_type_highshelf, 8000.0f / SAMPLE_RATE, 0.707f, 3.0f); // boost highs
     Biquad rumbleBoostFilter(bq_type_peak, 80.0f / SAMPLE_RATE, 0.5f, 9.0f);
     engineCtx.fx.addFilter(lowShelfFilter);
     engineCtx.fx.addFilter(midBoostFilter);
@@ -248,13 +253,13 @@ int main() {
                     lastGear = car.getGear();
                     car.setGear(0);
                     car.setGas(0);
-                    upShiftFrame = frame + 90 / deltaTime;
+                    upShiftFrame = frame + UPSHIFT_DELAY / deltaTime;
                     shiftLock = true;
                     if (gasAvg.getAverage() > 100) {
                         engineCtx.fx.biquads[0].setPeakGain(0.0f);
                         engineCtx.fx.biquads[1].setPeakGain(0.0f);
                         engineCtx.fx.biquads[2].setPeakGain(0.0f);
-                        engineCtx.fx.biquads[3].setPeakGain(car.getRPM() / 900.0f);
+                        engineCtx.fx.biquads[3].setPeakGain(9.0f + car.getRPM() / 500.0f);
                     }
                 }
                 if (keyPressed->scancode == sf::Keyboard::Scancode::Down && !shiftLock) {
@@ -262,7 +267,7 @@ int main() {
                     lastGear = car.getGear();
                     car.setGear(0);
                     car.setGas((0.02 * car.getRPM()) + 30);
-                    downShiftFrame = frame + 250 / deltaTime;
+                    downShiftFrame = frame + DOWNSHIFT_DELAY / deltaTime;
                     shiftLock = true;
                 }
                 if (keyPressed->scancode == sf::Keyboard::Scancode::S) {
@@ -310,7 +315,7 @@ int main() {
                     lastGear = car.getGear();
                     car.setGear(0);
                     car.setGas(0);
-                    upShiftFrame = frame + 90 / deltaTime;
+                    upShiftFrame = frame + UPSHIFT_DELAY / deltaTime;
                     shiftLock = true;
                     if (gasAvg.getAverage() > 100) {
                         engineCtx.fx.biquads[0].setPeakGain(0.0f);
@@ -323,7 +328,7 @@ int main() {
                     lastGear = car.getGear();
                     car.setGear(0);
                     car.setGas((0.02 * car.getRPM()) + 30);
-                    downShiftFrame = frame + 250 / deltaTime;
+                    downShiftFrame = frame + DOWNSHIFT_DELAY / deltaTime;
                     shiftLock = true;
                 }
             }
@@ -338,10 +343,10 @@ int main() {
             upShiftFrame = 0;
             shiftLock = false;
             backfire.triggerPop();
-            engineCtx.fx.biquads[0].setPeakGain(-12.0f);
+            engineCtx.fx.biquads[0].setPeakGain(-5.0f);
             engineCtx.fx.biquads[1].setPeakGain(10.0f);
-            engineCtx.fx.biquads[2].setPeakGain(6.0f);
-            engineCtx.fx.biquads[3].setPeakGain(0.0f);
+            engineCtx.fx.biquads[2].setPeakGain(3.0f);
+            engineCtx.fx.biquads[3].setPeakGain(9.0f);
         }
 
         if (frame == downShiftFrame) {
@@ -367,8 +372,10 @@ int main() {
         // TODO: Seperation of concerns (Boost logic, shift styles etc.)
         engine.setRPM(car.getRPM());
         engineAlt.setRPM(car.getRPM());
+        engineAltAlt.setRPM(car.getRPM());
         engine.setAmplitude(car.getTorque() / 100 + 0.2f);
         engineAlt.setAmplitude((car.getRPM() * car.getTorque()) / 5000000);
+        engineAltAlt.setAmplitude(car.getRPM()/85000);
         whoosh.setIntensity(car.getBoost() / 150);
         whoosh.setAmplitude(car.getBoost() / 2500);
         turboShaft.setAmplitude(car.getBoost() / 750);
