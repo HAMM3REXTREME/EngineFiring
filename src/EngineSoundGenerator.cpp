@@ -37,8 +37,8 @@ float EngineSoundGenerator::getAmplitude() const { return max_amplitude; }
 float EngineSoundGenerator::getSample() {
     float sample = 0.0f;
     // Mix active firings
-    for (auto it = active_firings.begin(); it != active_firings.end();) {
-        if (it->second < it->first->size()) {
+    for (auto it = active_firings.begin(); it != active_firings.end();) { // Go through the click samples, playback position of all active firings
+        if (it->second < it->first->size()) { // If our playback position is less than the size of the click sample data, we're not done, add the click sample value at the current playback position to OUR float sample then increment the playback position
             sample += (*(it->first))[it->second++] * max_amplitude;
             ++it;
         } else {
