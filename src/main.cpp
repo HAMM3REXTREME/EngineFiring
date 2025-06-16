@@ -15,7 +15,6 @@
 #include "AudioContext.h"
 #include "AudioVector.h"
 #include "BackfireSoundGenerator.h"
-#include "Biquad.h"
 #include "Car.h"
 #include "Damper.h"
 #include "Engine.h"
@@ -88,7 +87,7 @@ int main() {
 
     // Engine engineDef("Revuelto V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 6.5);
     // Engine engineDef("Diablo/Murci V12", Engine::getFiringOrderFromString("1-7-4-10-2-8-6-12-3-9-5-11"), 6);
-    // Engine engineDef("Countach V12", Engine::getFiringOrderFromString("1 7 5 11 3 9 6 12 2 8 4 10"), 4.5);
+    Engine engineDef("Countach V12", Engine::getFiringOrderFromString("1 7 5 11 3 9 6 12 2 8 4 10"), 4.5);
     // Engine engineDef("F1 V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 16);
     // Engine engineDef("Audi V10 FSI", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {90, 54, 90, 54, 90, 54, 90, 54, 90, 54}, 5.4);
     // Engine engineDef("1LR-GUE V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, 5);
@@ -97,7 +96,7 @@ int main() {
     // Engine engineDef("Inline 9 - Experimental", Engine::getFiringOrderFromString("1 2 4 6 8 9 7 5 3"), 5);
     // Engine engineDef("Flat plane V8", Engine::getFiringOrderFromString("1 5 3 7 4 8 2 6"), 4);
     // Engine engineDef("Mercedes M120 V12", Engine::getFiringOrderFromString("1-12-5-8-3-10-6-7-2-11-4-9"),7.6);
-    Engine engineDef("Murican V8 +", Engine::getFiringOrderFromString("1-8-7-2-6-5-4-3"),3);
+    // Engine engineDef("Murican V8 +", Engine::getFiringOrderFromString("1-8-7-2-6-5-4-3"),3);
     // Engine engineDef("2UR-GSE V8", Engine::getFiringOrderFromString("1-8-7-3-6-5-4-2"),3);
     // Engine engineDef("BMW N54", Engine::getFiringOrderFromString("1-5-3-6-2-4"), 3);
     // Engine engineDef("VR6", Engine::getFiringOrderFromString("1-5-3-6-2-4"), {120, 130, 110, 125, 115, 120}, 3);
@@ -119,7 +118,7 @@ int main() {
     Engine superchargerDef("Supercharger", {0}, 8);
     EngineSoundGenerator supercharger(mainSamples, superchargerDef, 1000.0f, 0.7f);
     supercharger.setAmplitude(0.5f);
-    supercharger.setNoteOffset(38);
+    supercharger.setNoteOffset(20);
 
     // ==== GENERAL SOUND SAMPLES
     SoundBank generalSamples;
@@ -146,8 +145,7 @@ int main() {
 
     // Audio sample generators that get summed up and played together
     AudioContext engineCtx({&engine, &engineAlt, &engineAltAlt});
-    AudioContext superChargerCtx({&supercharger});
-    AudioContext context({&whoosh, &backfire, &turboShaft, &turboGen, &generalGen, &engineCtx, &superChargerCtx});
+    AudioContext context({&whoosh, &backfire, &turboShaft, &turboGen, &generalGen, &engineCtx});
     // PortAudio for live audio playback
     Pa_Initialize();
     PaStream *stream;
@@ -220,17 +218,14 @@ int main() {
     gaugeValue.setPosition({WINDOW_X / 2.f + 25.f, WINDOW_Y / 2.f + 25.f});
 
     // Biquad filters
-    Biquad lowShelfFilter(bq_type_lowshelf, 150.0f / SAMPLE_RATE, 0.707f, 2.0f);  // cut boost lows
-    Biquad midBoostFilter(bq_type_peak, 1500.0f / SAMPLE_RATE, 1.0f, 3.0f);        // boost mids
-    Biquad highShelfFilter(bq_type_highshelf, 8000.0f / SAMPLE_RATE, 0.707f, 1.0f); // boost highs
+    Biquad lowShelfFilter(bq_type_lowshelf, 150.0f / SAMPLE_RATE, 0.707f, -5.0f);  // cut lows
+    Biquad midBoostFilter(bq_type_peak, 1500.0f / SAMPLE_RATE, 1.0f, 10.0f);        // boost mids
+    Biquad highShelfFilter(bq_type_highshelf, 8000.0f / SAMPLE_RATE, 0.707f, 3.0f); // boost highs
     Biquad rumbleBoostFilter(bq_type_peak, 80.0f / SAMPLE_RATE, 0.5f, 10.1f);
     engineCtx.fx.addFilter(lowShelfFilter);
     engineCtx.fx.addFilter(midBoostFilter);
     engineCtx.fx.addFilter(highShelfFilter);
     engineCtx.fx.addFilter(rumbleBoostFilter);
-
-    Biquad superchargerFilter(bq_type_highshelf, 5000.0f / SAMPLE_RATE, 0.707f, -8.0f);
-    superChargerCtx.fx.addFilter(superchargerFilter);
 
     // ==== APPLICATION MAIN LOOP ====
     while (window.isOpen()) {
@@ -377,7 +372,10 @@ int main() {
         turboShaft.setAmplitude(car.getBoost() / 750);
         turboShaft.setRPM(10000 + car.getBoost() * 100);
         supercharger.setRPM(car.getRPM()); // Supercharger example
-        supercharger.setAmplitude(car.getRPM() * car.getTorque() / 2000000 + 0.01f);
+        supercharger.setAmplitude(car.getRPM() / 100000 + 0.1f);
+        // Gear whine example
+        // supercharger.setNoteOffset(25+car.getGear());
+        // supercharger.setRPM(car.getRPM()*(car.gearRatios[car.getGear()]/5)+1000);
 
         // Update tachometer needle rotation according to rpm.
         tach.setRotation(sf::degrees(car.getRPM() / 27.5 - 90));
