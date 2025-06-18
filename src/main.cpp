@@ -23,13 +23,15 @@
 #include "SoundBank.h"
 #include "TurboWhooshGenerator.h"
 
+#include "LuaEngine.h"
+#include "sol/sol.hpp"
+
 constexpr float SAMPLE_RATE = 48000;
 constexpr int WINDOW_X = 1080;
 constexpr int WINDOW_Y = 720;
 
 constexpr int DOWNSHIFT_DELAY = 250;
 constexpr int UPSHIFT_DELAY = 190;
-
 
 // Function for the PortAudio audio callback
 int audio_callback(const void *, void *outputBuffer, unsigned long framesPerBuffer, const PaStreamCallbackTimeInfo *, PaStreamCallbackFlags, void *userData) {
@@ -65,7 +67,55 @@ void carStarter(Car *car, bool *m_isStarting) {
     *m_isStarting = false;
 }
 
+std::vector<float> tableToVectorFloat(sol::table t) {
+    std::vector<float> result;
+
+    t.for_each([&](sol::object key, sol::object value) {
+        // Only process integer keys (array portion)
+        if (key.is<int>()) {
+            if (value.is<float>()) {
+                result.push_back(value.as<float>());
+            } else {
+                std::cerr << "Warning: Non-float value at index " << key.as<int>() << " ignored\n";
+            }
+        }
+    });
+    return result;
+}
+std::vector<int> tableToVectorInt(sol::table t) {
+    std::vector<int> result;
+
+    t.for_each([&](sol::object key, sol::object value) {
+        if (key.is<int>()) {
+            if (value.is<int>()) {
+                result.push_back(value.as<int>());
+            } else if (value.is<float>()) {
+                // Convert float to int (truncates decimal part)
+                result.push_back(static_cast<int>(value.as<float>()));
+                std::cerr << "Notice: Converted float to int at index " << key.as<int>() << "\n";
+            } else {
+                std::cerr << "Warning: Non-numeric value at index " << key.as<int>() << " ignored\n";
+            }
+        }
+    });
+    return result;
+}
 int main() {
+    sol::state lua;
+
+    lua.open_libraries(sol::lib::base);
+    lua["vecFloat"] = &tableToVectorFloat;
+    lua["vecInt"] = &tableToVectorInt;
+
+    lua.new_usertype<Engine>("Engine",
+                             sol::constructors<Engine(std::string, const std::vector<int> &, const std::vector<float> &, float),
+                                               Engine(std::string, const std::vector<int> &, float)>(),
+                             "name", &Engine::name, "firingOrder", &Engine::firingOrder, "firingIntervalFactors", &Engine::firingIntervalFactors,
+                             "audioRpmFactor", &Engine::audioRpmFactor, "setIntervalsFromDegrees", &Engine::setIntervalsFromDegrees, "getFiringOrderFromString",
+                             sol::var(&Engine::getFiringOrderFromString), "getCylinderCount", &Engine::getCylinderCount);
+
+    lua.script_file("assets/scripts/script.lua");
+
     sf::RenderWindow window(sf::VideoMode({WINDOW_X, WINDOW_Y}), "Engine Firing Simulator");
     sf::Clock deltaClock;
 
@@ -115,7 +165,7 @@ int main() {
     engineAltAlt.setNoteOffset(16);
 
     // ==== SUPERCHARGER (Just a high revving 1 cylinder)
-    Engine superchargerDef("Supercharger", {0}, 8);
+    Engine superchargerDef("Supercharger", {0}, 8.0f);
     EngineSoundGenerator supercharger(mainSamples, superchargerDef, 1000.0f, 0.7f);
     supercharger.setAmplitude(0.5f);
     supercharger.setNoteOffset(20);
@@ -127,7 +177,7 @@ int main() {
     generalGen.setAmplitude(0.3f);
 
     // ==== TURBOCHARGER SHAFT (Sounds like a faint supercharger)
-    Engine turboshaftDef("BorgWarner K04 - Shaft", {0}, 8);
+    Engine turboshaftDef("BorgWarner K04 - Shaft", {0}, 8.0f);
     EngineSoundGenerator turboShaft(mainSamples, turboshaftDef, 1000.0f, 0.05f);
 
     // ==== TURBO WHOOSH NOISE GENERATOR
@@ -207,7 +257,7 @@ int main() {
     spriteMiddle.setPosition({WINDOW_X / 2.f, WINDOW_Y / 2.f});
     spriteMiddle.setScale({0.07, 0.07});
 
-        // Text Information
+    // Text Information
     sf::Font font;
     if (!font.openFromFile("assets/fonts/Aldrich-Regular.ttf")) {
         std::cerr << "Failed to load font" << std::endl;
@@ -218,7 +268,7 @@ int main() {
     gaugeValue.setPosition({WINDOW_X / 2.f + 25.f, WINDOW_Y / 2.f + 25.f});
 
     // Biquad filters
-    Biquad lowShelfFilter(bq_type_lowshelf, 150.0f / SAMPLE_RATE, 0.707f, -5.0f);  // cut lows
+    Biquad lowShelfFilter(bq_type_lowshelf, 150.0f / SAMPLE_RATE, 0.707f, -5.0f);   // cut lows
     Biquad midBoostFilter(bq_type_peak, 1500.0f / SAMPLE_RATE, 1.0f, 10.0f);        // boost mids
     Biquad highShelfFilter(bq_type_highshelf, 8000.0f / SAMPLE_RATE, 0.707f, 3.0f); // boost highs
     Biquad rumbleBoostFilter(bq_type_peak, 80.0f / SAMPLE_RATE, 0.5f, 10.1f);
@@ -370,7 +420,7 @@ int main() {
         engineAltAlt.setRPM(car.getRPM());
         engine.setAmplitude(car.getTorque() / 100 + 0.2f);
         engineAlt.setAmplitude((car.getRPM() * car.getTorque()) / 5000000);
-        engineAltAlt.setAmplitude(car.getRPM()/85000);
+        engineAltAlt.setAmplitude(car.getRPM() / 85000);
         whoosh.setIntensity(car.getBoost() / 150);
         whoosh.setAmplitude(car.getBoost() / 2500);
         turboShaft.setAmplitude(car.getBoost() / 750);
@@ -383,8 +433,10 @@ int main() {
 
         // Update tachometer needle rotation according to rpm.
         tach.setRotation(sf::degrees(car.getRPM() / 27.5 - 90));
-        gaugeValue.setString("RPM: " + std::to_string((int)engine.getRPM()) + "\nBoost: " + std::to_string((int)car.getBoost()) + "\nGear: " + std::to_string((int)car.getGear()) + "\nSpeed: " + std::to_string((int)(car.getWheelSpeed() * 3.6)));
-        //std::cout << "RPM: " << (int)engine.getRPM() << "  boost: " << car.getBoost() << " Gear: " << car.getGear() << " Speed: " << car.getWheelSpeed() * 3.6 << "\n";
+        gaugeValue.setString("RPM: " + std::to_string((int)engine.getRPM()) + "\nBoost: " + std::to_string((int)car.getBoost()) +
+                             "\nGear: " + std::to_string((int)car.getGear()) + "\nSpeed: " + std::to_string((int)(car.getWheelSpeed() * 3.6)));
+        // std::cout << "RPM: " << (int)engine.getRPM() << "  boost: " << car.getBoost() << " Gear: " << car.getGear() << " Speed: " << car.getWheelSpeed()
+        // * 3.6 << "\n";
 
         // ==== RENDERING
         window.clear();

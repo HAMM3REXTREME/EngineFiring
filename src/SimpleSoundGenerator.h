@@ -21,8 +21,8 @@ class SimpleSoundGenerator : public SoundGenerator {
     void setAmplitude(float newGain) override;
     float getAmplitude() const override;
 
-    void setLooping(bool loop);
-    bool isLooping() const;
+    void setLooping(bool loop) { looping = loop; };
+    bool isLooping() const { return looping; };
 
   private:
     SoundBank &soundBank;
