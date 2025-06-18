@@ -301,8 +301,12 @@ int main() {
             }
             if (const auto *joystickMove = event->getIf<sf::Event::JoystickMoved>()) {
                 if (joystickMove->axis == sf::Joystick::Axis::Z) {
-                    // std:: cout << "Moved: " << joystickMove->position << "\n";
+                    // std:: cout << "Axis::Z " << joystickMove->position << "\n";
                     gas = 0.75 * (100 - joystickMove->position);
+                }
+                if (joystickMove->axis == sf::Joystick::Axis::R) {
+                    // std:: cout << "Axis::R " << joystickMove->position << "\n";
+                    car.linearWheelDrag = 0.03 * (100 - joystickMove->position);
                 }
             }
             if (const auto *joystickButton = event->getIf<sf::Event::JoystickButtonPressed>()) {
