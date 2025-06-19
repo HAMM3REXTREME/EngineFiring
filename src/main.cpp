@@ -24,7 +24,6 @@
 #include "TurboWhooshGenerator.h"
 
 #include "LuaEngine.h"
-#include "sol/sol.hpp"
 
 constexpr float SAMPLE_RATE = 48000;
 constexpr int WINDOW_X = 1080;
@@ -67,54 +66,8 @@ void carStarter(Car *car, bool *m_isStarting) {
     *m_isStarting = false;
 }
 
-std::vector<float> tableToVectorFloat(sol::table t) {
-    std::vector<float> result;
-
-    t.for_each([&](sol::object key, sol::object value) {
-        // Only process integer keys (array portion)
-        if (key.is<int>()) {
-            if (value.is<float>()) {
-                result.push_back(value.as<float>());
-            } else {
-                std::cerr << "Warning: Non-float value at index " << key.as<int>() << " ignored\n";
-            }
-        }
-    });
-    return result;
-}
-std::vector<int> tableToVectorInt(sol::table t) {
-    std::vector<int> result;
-
-    t.for_each([&](sol::object key, sol::object value) {
-        if (key.is<int>()) {
-            if (value.is<int>()) {
-                result.push_back(value.as<int>());
-            } else if (value.is<float>()) {
-                // Convert float to int (truncates decimal part)
-                result.push_back(static_cast<int>(value.as<float>()));
-                std::cerr << "Notice: Converted float to int at index " << key.as<int>() << "\n";
-            } else {
-                std::cerr << "Warning: Non-numeric value at index " << key.as<int>() << " ignored\n";
-            }
-        }
-    });
-    return result;
-}
 int main() {
     sol::state lua;
-
-    lua.open_libraries(sol::lib::base);
-    lua["vecFloat"] = &tableToVectorFloat;
-    lua["vecInt"] = &tableToVectorInt;
-
-    lua.new_usertype<Engine>("Engine",
-                             sol::constructors<Engine(std::string, const std::vector<int> &, const std::vector<float> &, float),
-                                               Engine(std::string, const std::vector<int> &, float)>(),
-                             "name", &Engine::name, "firingOrder", &Engine::firingOrder, "firingIntervalFactors", &Engine::firingIntervalFactors,
-                             "audioRpmFactor", &Engine::audioRpmFactor, "setIntervalsFromDegrees", &Engine::setIntervalsFromDegrees, "getFiringOrderFromString",
-                             sol::var(&Engine::getFiringOrderFromString), "getCylinderCount", &Engine::getCylinderCount);
-
-    lua.script_file("assets/scripts/script.lua");
 
     sf::RenderWindow window(sf::VideoMode({WINDOW_X, WINDOW_Y}), "Engine Firing Simulator");
     sf::Clock deltaClock;
@@ -195,12 +148,7 @@ int main() {
 
     // Audio sample generators that get summed up and played together
     AudioContext engineCtx({&engine, &engineAlt, &engineAltAlt});
-    AudioContext context({&whoosh, &backfire, &turboShaft, &turboGen, &generalGen, &engineCtx});
-    // PortAudio for live audio playback
-    Pa_Initialize();
-    PaStream *stream;
-    Pa_OpenDefaultStream(&stream, 0, 1, paFloat32, SAMPLE_RATE, 256, audio_callback, &context);
-    Pa_StartStream(stream);
+    AudioContext context({&whoosh, &backfire, &turboShaft, &turboGen, &generalGen});
 
     Car car;
     std::atomic<bool> carRunning = true;
@@ -277,6 +225,17 @@ int main() {
     engineCtx.fx.addFilter(highShelfFilter);
     engineCtx.fx.addFilter(rumbleBoostFilter);
 
+    // PortAudio for live audio playback
+    Pa_Initialize();
+    PaStream *stream;
+    Pa_OpenDefaultStream(&stream, 0, 1, paFloat32, SAMPLE_RATE, 256, audio_callback, &context);
+    Pa_StartStream(stream);
+
+    LuaEngine luaEngine;
+    luaEngine.lua["mainCtx"] = std::ref(context);
+    // luaEngine.lua["car"] = std::ref(car);
+    luaEngine.runLuaScript("assets/scripts/script.lua");
+    luaEngine.init();
     // ==== APPLICATION MAIN LOOP ====
     while (window.isOpen()) {
         frame++;
@@ -413,6 +372,7 @@ int main() {
         if (car.getBoost() >= 50) {
             blowoff = false;
         }
+        luaEngine.tick();
 
         // TODO: Seperation of concerns (Boost logic, shift styles etc.)
         engine.setRPM(car.getRPM());
