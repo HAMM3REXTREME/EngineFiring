@@ -23,7 +23,6 @@
 #include "SoundBank.h"
 #include "TurboWhooshGenerator.h"
 
-#include "LuaEngine.h"
 
 constexpr float SAMPLE_RATE = 48000;
 constexpr int WINDOW_X = 1080;
@@ -31,6 +30,40 @@ constexpr int WINDOW_Y = 720;
 
 constexpr int DOWNSHIFT_DELAY = 250;
 constexpr int UPSHIFT_DELAY = 190;
+
+class SecondOrderFilter {
+public:
+    SecondOrderFilter(float frequency, float dampingRatio, float dt)
+        : omega_n(2.0f * M_PI * frequency),
+          zeta(dampingRatio),
+          dt(dt),
+          y(0.0f),
+          dy(0.0f),
+          x_prev(0.0f)
+    {}
+
+    float update(float x) {
+        float omega2 = omega_n * omega_n;
+        float damp = 2.0f * zeta * omega_n;
+
+        float ddy = omega2 * (x - y) - damp * dy;
+
+        dy += ddy * dt;
+        y += dy * dt;
+
+        x_prev = x;
+        return y;
+    }
+
+private:
+    float omega_n;
+    float zeta;
+    float dt;
+    float y;
+    float dy;
+    float x_prev;
+};
+
 
 // Function for the PortAudio audio callback
 int audio_callback(const void *, void *outputBuffer, unsigned long framesPerBuffer, const PaStreamCallbackTimeInfo *, PaStreamCallbackFlags, void *userData) {
@@ -67,7 +100,7 @@ void carStarter(Car *car, bool *m_isStarting) {
 }
 
 int main() {
-    sol::state lua;
+    //sol::state lua;
 
     sf::RenderWindow window(sf::VideoMode({WINDOW_X, WINDOW_Y}), "Engine Firing Simulator");
     sf::Clock deltaClock;
@@ -88,9 +121,9 @@ int main() {
                              "assets/audio/tick_library/note_97.wav",  "assets/audio/tick_library/note_98.wav",  "assets/audio/tick_library/note_99.wav",
                              "assets/audio/tick_library/note_100.wav", "assets/audio/tick_library/note_101.wav", "assets/audio/tick_library/note_102.wav"});
 
-    // Engine engineDef("Revuelto V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 6.5);
+    Engine engineDef("Revuelto V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 6.5);
     // Engine engineDef("Diablo/Murci V12", Engine::getFiringOrderFromString("1-7-4-10-2-8-6-12-3-9-5-11"), 6);
-    Engine engineDef("Countach V12", Engine::getFiringOrderFromString("1 7 5 11 3 9 6 12 2 8 4 10"), 4.5);
+    // Engine engineDef("Countach V12", Engine::getFiringOrderFromString("1 7 5 11 3 9 6 12 2 8 4 10"), 4.5);
     // Engine engineDef("F1 V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 16);
     // Engine engineDef("Audi V10 FSI", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {90, 54, 90, 54, 90, 54, 90, 54, 90, 54}, 5.4);
     // Engine engineDef("1LR-GUE V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, 5);
@@ -114,7 +147,8 @@ int main() {
     EngineSoundGenerator engine(mainSamples, engineDef, 1000.0f, 0.5f);
     EngineSoundGenerator engineAlt(mainSamples, engineDef, 1000.0f, 0.5f);
     EngineSoundGenerator engineAltAlt(mainSamples, engineDef, 1000.0f, 0.5f);
-    engineAlt.setNoteOffset(18);
+    engine.setNoteOffset(2);
+    engineAlt.setNoteOffset(24);
     engineAltAlt.setNoteOffset(16);
 
     // ==== SUPERCHARGER (Just a high revving 1 cylinder)
@@ -148,7 +182,7 @@ int main() {
 
     // Audio sample generators that get summed up and played together
     AudioContext engineCtx({&engine, &engineAlt, &engineAltAlt});
-    AudioContext context({&whoosh, &backfire, &turboShaft, &turboGen, &generalGen});
+    AudioContext context({&whoosh, &backfire, &turboShaft, &turboGen, &generalGen, &engineCtx});
 
     Car car;
     std::atomic<bool> carRunning = true;
@@ -231,11 +265,13 @@ int main() {
     Pa_OpenDefaultStream(&stream, 0, 1, paFloat32, SAMPLE_RATE, 256, audio_callback, &context);
     Pa_StartStream(stream);
 
-    LuaEngine luaEngine;
-    luaEngine.lua["mainCtx"] = std::ref(context);
+    SecondOrderFilter filter(5.0f, 0.2f, 0.01);
+
+    //LuaEngine luaEngine;
+    //luaEngine.lua["mainCtx"] = std::ref(context);
     // luaEngine.lua["car"] = std::ref(car);
-    luaEngine.runLuaScript("assets/scripts/script.lua");
-    luaEngine.init();
+    //luaEngine.runLuaScript("assets/scripts/script.lua");
+    //luaEngine.init();
     // ==== APPLICATION MAIN LOOP ====
     while (window.isOpen()) {
         frame++;
@@ -372,15 +408,15 @@ int main() {
         if (car.getBoost() >= 50) {
             blowoff = false;
         }
-        luaEngine.tick();
-
+        //luaEngine.tick();
+        float carRpm = filter.update(car.getRPM());
         // TODO: Seperation of concerns (Boost logic, shift styles etc.)
-        engine.setRPM(car.getRPM());
-        engineAlt.setRPM(car.getRPM());
-        engineAltAlt.setRPM(car.getRPM());
+        engine.setRPM(carRpm);
+        engineAlt.setRPM(carRpm);
+        engineAltAlt.setRPM(carRpm);
         engine.setAmplitude(car.getTorque() / 100 + 0.2f);
-        engineAlt.setAmplitude((car.getRPM() * car.getTorque()) / 5000000);
-        engineAltAlt.setAmplitude(car.getRPM() / 85000);
+        engineAlt.setAmplitude((carRpm * car.getTorque()) / 5000000);
+        engineAltAlt.setAmplitude(carRpm / 85000);
         whoosh.setIntensity(car.getBoost() / 150);
         whoosh.setAmplitude(car.getBoost() / 2500);
         turboShaft.setAmplitude(car.getBoost() / 750);
@@ -392,7 +428,7 @@ int main() {
         // supercharger.setRPM(car.getRPM()*(car.gearRatios[car.getGear()]/5)+1000);
 
         // Update tachometer needle rotation according to rpm.
-        tach.setRotation(sf::degrees(car.getRPM() / 27.5 - 90));
+        tach.setRotation(sf::degrees(carRpm/ 27.5 - 90));
         gaugeValue.setString("RPM: " + std::to_string((int)engine.getRPM()) + "\nBoost: " + std::to_string((int)car.getBoost()) +
                              "\nGear: " + std::to_string((int)car.getGear()) + "\nSpeed: " + std::to_string((int)(car.getWheelSpeed() * 3.6)));
         // std::cout << "RPM: " << (int)engine.getRPM() << "  boost: " << car.getBoost() << " Gear: " << car.getGear() << " Speed: " << car.getWheelSpeed()
