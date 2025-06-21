@@ -113,7 +113,7 @@ int main() {
                              "assets/audio/tick_library/note_97.wav",  "assets/audio/tick_library/note_98.wav",  "assets/audio/tick_library/note_99.wav",
                              "assets/audio/tick_library/note_100.wav", "assets/audio/tick_library/note_101.wav", "assets/audio/tick_library/note_102.wav"});
 
-    Engine engineDef("Revuelto V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 7);
+    // Engine engineDef("Revuelto V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 7);
     // Engine engineDef("Diablo/Murci V12", Engine::getFiringOrderFromString("1-7-4-10-2-8-6-12-3-9-5-11"), 6);
     // Engine engineDef("Countach V12", Engine::getFiringOrderFromString("1 7 5 11 3 9 6 12 2 8 4 10"), 4.5);
     // Engine engineDef("F1 V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 16);
@@ -126,7 +126,7 @@ int main() {
     // Engine engineDef("Mercedes M120 V12", Engine::getFiringOrderFromString("1-12-5-8-3-10-6-7-2-11-4-9"),7.6);
     // Engine engineDef("Murican V8 +", Engine::getFiringOrderFromString("1-8-7-2-6-5-4-3"),3);
     // Engine engineDef("2UR-GSE V8", Engine::getFiringOrderFromString("1-8-7-3-6-5-4-2"),3);
-    // Engine engineDef("BMW N54", Engine::getFiringOrderFromString("1-5-3-6-2-4"), 3);
+    Engine engineDef("BMW N54", Engine::getFiringOrderFromString("1-5-3-6-2-4"), 3);
     // Engine engineDef("VR6", Engine::getFiringOrderFromString("1-5-3-6-2-4"), {120, 130, 110, 125, 115, 120}, 3);
     // Engine engineDef("Audi i5", Engine::getFiringOrderFromString("1-2-4-5-3"),3);
     // Engine engineDef("Perfect Fifth i5", Engine::getFiringOrderFromString("1 3 5 2 4"), {120, 180, 120, 180, 120},3);
@@ -170,11 +170,12 @@ int main() {
 
     // ==== BACKFIRE NOISE GENERATOR
     BackfireSoundGenerator backfire(SAMPLE_RATE);
-    backfire.setAmplitude(0.4f);
+    backfire.setAmplitude(0.6f);
 
     // Audio sample generators that get summed up and played together
     AudioContext engineCtx({&engine, &engineAlt, &engineAltAlt});
-    AudioContext context({&whoosh, &backfire, &turboShaft, &turboGen, &generalGen, &engineCtx});
+    AudioContext backfireCtx({&backfire});
+    AudioContext context({&whoosh, &turboShaft, &turboGen, &generalGen, &engineCtx, &backfireCtx});
 
     Car car;
     std::atomic<bool> carRunning = true;
@@ -273,6 +274,16 @@ int main() {
     engineCtx.fx.addFilter(boost2600Hz);
     engineCtx.fx.addFilter(boost3600Hz);
     engineCtx.fx.addFilter(boost4000Hz);
+
+
+    Biquad backfireFilter(bq_type_lowshelf, 150.0f / SAMPLE_RATE, 0.707f, 12.0f);
+    backfireCtx.fx.addFilter(backfireFilter);
+    backfireCtx.fx.addFilter(rumbleBoostFilter);
+    backfireCtx.fx.addFilter(midBoostFilter);
+    backfireCtx.fx.addFilter(cut14600Hz);
+    backfireCtx.fx.addFilter(cut18100Hz);
+    backfireCtx.fx.addFilter(boost2100Hz);
+
 
     // PortAudio for live audio playback
     Pa_Initialize();
