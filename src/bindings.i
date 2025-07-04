@@ -13,6 +13,8 @@
 #include "SoundBank.h"
 #include "TurboWhooshGenerator.h"
 #include "Biquad.h"
+#include "SecondOrderFilter.h"
+#include "EffectChain.h"
 %}
 
 %include "std_string.i"
@@ -46,3 +48,5 @@ namespace std {
 %include "SoundBank.h"
 %include "TurboWhooshGenerator.h"
 %include "Biquad.h"
+%include "SecondOrderFilter.h"
+%include "EffectChain.h"

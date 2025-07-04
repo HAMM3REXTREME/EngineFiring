@@ -5,6 +5,7 @@
 #include <map>
 #include <portaudio.h>
 #include <sndfile.h>
+#include <cmath>
 
 #include <atomic>
 #include <chrono>
@@ -13,8 +14,9 @@
 #include <vector>
 
 #include "AudioContext.h"
-#include "AudioVector.h"
+#include "AudioScene.h"
 #include "BackfireSoundGenerator.h"
+#include "Biquad.h"
 #include "Car.h"
 #include "Damper.h"
 #include "Engine.h"
@@ -22,40 +24,14 @@
 #include "SimpleSoundGenerator.h"
 #include "SoundBank.h"
 #include "TurboWhooshGenerator.h"
+#include "SecondOrderFilter.h"
 
 constexpr float SAMPLE_RATE = 48000;
 constexpr int WINDOW_X = 1080;
 constexpr int WINDOW_Y = 720;
 
-constexpr int DOWNSHIFT_DELAY = 250;
-constexpr int UPSHIFT_DELAY = 110;
-
-class SecondOrderFilter {
-  public:
-    SecondOrderFilter(float frequency, float dampingRatio, float dt)
-        : omega_n(2.0f * M_PI * frequency), zeta(dampingRatio), dt(dt), y(0.0f), dy(0.0f), x_prev(0.0f) {}
-
-    float update(float x) {
-        float omega2 = omega_n * omega_n;
-        float damp = 2.0f * zeta * omega_n;
-
-        float ddy = omega2 * (x - y) - damp * dy;
-
-        dy += ddy * dt;
-        y += dy * dt;
-
-        x_prev = x;
-        return y;
-    }
-
-  private:
-    float omega_n;
-    float zeta;
-    float dt;
-    float y;
-    float dy;
-    float x_prev;
-};
+constexpr int DOWNSHIFT_DELAY = 200;
+constexpr int UPSHIFT_DELAY = 50;
 
 // Function for the PortAudio audio callback
 int audio_callback(const void *, void *outputBuffer, unsigned long framesPerBuffer, const PaStreamCallbackTimeInfo *, PaStreamCallbackFlags, void *userData) {
@@ -63,7 +39,7 @@ int audio_callback(const void *, void *outputBuffer, unsigned long framesPerBuff
     float *out = static_cast<float *>(outputBuffer);
 
     for (unsigned long i = 0; i < framesPerBuffer; ++i) {
-        *out++ = audioContext->getAllSamples();
+        *out++ = std::tanh(audioContext->getAllSamples());
     }
 
     return paContinue;
@@ -113,12 +89,12 @@ int main() {
                              "assets/audio/tick_library/note_97.wav",  "assets/audio/tick_library/note_98.wav",  "assets/audio/tick_library/note_99.wav",
                              "assets/audio/tick_library/note_100.wav", "assets/audio/tick_library/note_101.wav", "assets/audio/tick_library/note_102.wav"});
 
-    // Engine engineDef("Revuelto V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 7);
+    Engine engineDef("Revuelto V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 7);
     // Engine engineDef("Diablo/Murci V12", Engine::getFiringOrderFromString("1-7-4-10-2-8-6-12-3-9-5-11"), 6);
-    // Engine engineDef("Countach V12", Engine::getFiringOrderFromString("1 7 5 11 3 9 6 12 2 8 4 10"), 4.5);
+    // Engine engineDef("Countach V12", Engine::getFiringOrderFromString("1 7 5 11 3 9 6 12 2 8 4 10"), 5);
     // Engine engineDef("F1 V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 16);
     // Engine engineDef("Audi V10 FSI", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {90, 54, 90, 54, 90, 54, 90, 54, 90, 54}, 5.2);
-    Engine engineDef("1LR-GUE V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, 5);
+    // Engine engineDef("1LR-GUE V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, 5);
     // Engine engineDef("Mercedes AMG M156", Engine::getFiringOrderFromString("1-5-4-2-6-3-7-8"),4);
     // Engine engineDef("F1 V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, 12.5);
     // Engine engineDef("Bugatti W16", Engine::getFiringOrderFromString("1 14 9 4 7 12 15 6 13 8 3 16 11 2 5 10"), 8.2);
@@ -130,22 +106,24 @@ int main() {
     // Engine engineDef("BMW N54", Engine::getFiringOrderFromString("1-5-3-6-2-4"), 3);
     // Engine engineDef("V Twin", Engine::getFiringOrderFromString("1-2"), {315,405},0.8);
     // Engine engineDef("1 Cylinder", {0}, 0.5);
+    // Engine engineDef("3 Cylinder Sport", Engine::getFiringOrderFromString("1-2-3"),2);
     // Engine engineDef("VR6", Engine::getFiringOrderFromString("1-5-3-6-2-4"), {120, 130, 110, 125, 115, 120}, 3);
-    // Engine engineDef("Audi i5", Engine::getFiringOrderFromString("1-2-4-5-3"),3);
+    // Engine engineDef("Audi i5", Engine::getFiringOrderFromString("1-2-4-5-3"),2);
     // Engine engineDef("Perfect Fifth i5", Engine::getFiringOrderFromString("1 3 5 2 4"), {120, 180, 120, 180, 120},3);
     // Engine engineDef("4 Banger", Engine::getFiringOrderFromString("1-3-4-2"),2);
     // Engine engineDef("Super Sport", Engine::getFiringOrderFromString("1-3-4-2"),4);
     // Engine engineDef("Ducati V4", Engine::getFiringOrderFromString("1-2-4-3"),{90,200,90,340}, 4);
     // Engine engineDef("Nissan VQ", Engine::getFiringOrderFromString("1-2-3-4-5-6"),3);
     // Engine engineDef("Ford 4.0L V6", Engine::getFiringOrderFromString("1-4-2-5-3-6"),3);
+    // Engine engineDef("F1 V6", Engine::getFiringOrderFromString("1-4-2-5-3-6"),6);
     // Engine engineDef("Buick odd firing V6", Engine::getFiringOrderFromString("1-6-5-4-3-2"), {90,150,90,150,90,150},3);
     // Engine engineDef("Porsche Flat 6", Engine::getFiringOrderFromString("1-6-2-4-3-5"), 3.6);
     EngineSoundGenerator engine(mainSamples, engineDef, 1000.0f, 0.5f);
     EngineSoundGenerator engineAlt(mainSamples, engineDef, 1000.0f, 0.5f);
     EngineSoundGenerator engineAltAlt(mainSamples, engineDef, 1000.0f, 0.5f);
-    engine.setNoteOffset(0);
-    engineAlt.setNoteOffset(22);
-    engineAltAlt.setNoteOffset(14);
+    engine.setNoteOffset(1);
+    engineAlt.setNoteOffset(24);
+    engineAltAlt.setNoteOffset(18);
 
     // ==== SUPERCHARGER (Just a high revving 1 cylinder)
     Engine superchargerDef("Supercharger", {0}, 8.0f);
@@ -170,21 +148,25 @@ int main() {
     SoundBank turboSamples;
     turboSamples.addFromWavs({"assets/audio/extra/thump.wav", "assets/audio/extra/flutter.wav"});
     SimpleSoundGenerator turboGen(turboSamples);
-    turboGen.setAmplitude(0.01f);
+    turboGen.setAmplitude(0.025f);
 
     // ==== BACKFIRE NOISE GENERATOR
     BackfireSoundGenerator backfire(SAMPLE_RATE);
-    backfire.setAmplitude(0.6f);
+    backfire.setAmplitude(0.4f);
 
     // Audio sample generators that get summed up and played together
-    AudioContext engineCtx({&engine, &engineAlt, &engineAltAlt});
-    AudioContext backfireCtx({&backfire});
-    AudioContext context({&whoosh, &turboShaft, &turboGen, &generalGen, &engineCtx, &backfireCtx});
+    AudioContext engineCtx("engines",{&engine, &engineAlt, &engineAltAlt});
+    AudioContext backfireCtx("backfire",{&backfire});
+    AudioContext context("root",{&whoosh, &turboShaft, &turboGen, &generalGen, &engineCtx, &backfireCtx});
 
     Car car;
     std::atomic<bool> carRunning = true;
     std::thread carThread{manageCar, &car, &carRunning};
     car.ignition = false;
+
+    bool showDebug = false;
+
+    float carRpm = 0;
 
     // Testing shift behavior etc.
     bool shifting = false;
@@ -246,10 +228,13 @@ int main() {
     sf::Text gaugeValue(font, "Text", 24);
     gaugeValue.setFillColor(sf::Color::White);
     gaugeValue.setPosition({WINDOW_X / 2.f + 25.f, WINDOW_Y / 2.f + 25.f});
+    sf::Text debugText(font, "Debug text", 16);
+    debugText.setFillColor(sf::Color::Green);
+    debugText.setPosition({25.f, 25.f});
 
     // Biquad filters
-    Biquad lowShelfFilter(bq_type_lowshelf, 150.0f / SAMPLE_RATE, 0.707f, 6.0f); // cut lows
-    Biquad midBoostFilter(bq_type_peak, 1500.0f / SAMPLE_RATE, 1.0f, 12.0f);       // boost mids
+    Biquad lowShelfFilter(bq_type_lowshelf, 150.0f / SAMPLE_RATE, 0.707f, -6.0f); // cut lows
+    Biquad midBoostFilter(bq_type_peak, 1500.0f / SAMPLE_RATE, 1.0f, 3.0f);       // boost mids
     Biquad highShelfFilter(bq_type_highshelf, 2500.0f / SAMPLE_RATE, 1.0f, 8.0f);  // boost highs
     Biquad rumbleBoostFilter(bq_type_peak, 80.0f / SAMPLE_RATE, 0.5f, 10.1f);      // deep bass boost
 
@@ -267,17 +252,17 @@ int main() {
     Biquad huracanBoost(bq_type_peak, 350/ SAMPLE_RATE, 1.0f, 5.0f);
 
     // Add all filters to FX chain
-    engineCtx.fx.addFilter(lowShelfFilter);
+    // engineCtx.fx.addFilter(lowShelfFilter);
     engineCtx.fx.addFilter(midBoostFilter);
-    engineCtx.fx.addFilter(highShelfFilter);
-    engineCtx.fx.addFilter(rumbleBoostFilter);
+    // engineCtx.fx.addFilter(highShelfFilter);
+    // engineCtx.fx.addFilter(rumbleBoostFilter);
 
     engineCtx.fx.addFilter(cut22Hz);
     engineCtx.fx.addFilter(cut28Hz);
     engineCtx.fx.addFilter(cut18100Hz);
-    engineCtx.fx.addFilter(cut14600Hz);
+    // engineCtx.fx.addFilter(cut14600Hz);
 
-    engineCtx.fx.addFilter(huracanBoost);
+    // engineCtx.fx.addFilter(huracanBoost);
 
     // engineCtx.fx.addFilter(boost2100Hz);
     // engineCtx.fx.addFilter(boost2600Hz);
@@ -297,6 +282,7 @@ int main() {
     backfireCtx.fx.addFilter(backfireHighFilter);
     backfireCtx.fx.addFilter(backfireHighFilter2);
 
+    Biquad torqueFilter(bq_type_lowpass, 5.0f/60.0f, 0.707f, 0.0f);
 
     // PortAudio for live audio playback
     Pa_Initialize();
@@ -305,7 +291,7 @@ int main() {
     Pa_StartStream(stream);
 
     SecondOrderFilter filter(6.0f, 0.3f, 0.01);
-    car.revLimiterCutTicks = 6;
+    //car.revLimiterCutTicks = 1;
 
     // LuaEngine luaEngine;
     // luaEngine.lua["mainCtx"] = std::ref(context);
@@ -333,6 +319,9 @@ int main() {
                 if (keyPressed->scancode == sf::Keyboard::Scancode::Escape) {
                     window.close();
                 }
+                if (keyPressed->scancode == sf::Keyboard::Scancode::D) {
+                    showDebug = !showDebug;
+                }
                 if (keyPressed->scancode == sf::Keyboard::Scancode::Up && !shiftLock) {
                     std::cout << "Upshift\n";
                     lastGear = car.getGear();
@@ -341,7 +330,7 @@ int main() {
                     upShiftFrame = frame + UPSHIFT_DELAY / deltaTime;
                     shiftLock = true;
                     if (gasAvg.getAverage() > 100) {
-                        engineCtx.fx.biquads[3].setPeakGain(10.1f + car.getRPM() / 500.0f);
+                        //engineCtx.fx.biquads[3].setPeakGain(10.1f + car.getRPM() / 500.0f);
                     }
                 }
                 if (keyPressed->scancode == sf::Keyboard::Scancode::Down && !shiftLock) {
@@ -389,6 +378,10 @@ int main() {
                     // std:: cout << "Axis::Z " << joystickMove->position << "\n";
                     gas = 0.75 * (100 - joystickMove->position);
                 }
+                // if (joystickMove->axis == sf::Joystick::Axis::X) {
+                //     // std:: cout << "Axis::X " << joystickMove->position << "\n";
+                //     carRpm = 50 * (100+ joystickMove->position);
+                // }
                 if (joystickMove->axis == sf::Joystick::Axis::R) {
                     // std:: cout << "Axis::R " << joystickMove->position << "\n";
                     car.linearWheelDrag = 0.03 * (100 - joystickMove->position);
@@ -404,7 +397,7 @@ int main() {
                     upShiftFrame = frame + UPSHIFT_DELAY / deltaTime;
                     shiftLock = true;
                     if (gasAvg.getAverage() > 100) {
-                        engineCtx.fx.biquads[3].setPeakGain(10.1f + car.getRPM() / 500.0f);
+                        //engineCtx.fx.biquads[3].setPeakGain(10.1f + car.getRPM() / 500.0f);
                     }
                 } else if (joystickButton->button == 5 && !shiftLock) { // RB button
                     std::cout << "Downshift\n";
@@ -425,7 +418,7 @@ int main() {
             upShiftFrame = 0;
             shiftLock = false;
             backfire.triggerPop();
-            engineCtx.fx.biquads[3].setPeakGain(10.1f);
+            //engineCtx.fx.biquads[3].setPeakGain(10.1f);
         }
         if (frame == downShiftFrame) {
             car.setGear(std::clamp(lastGear - 1, 0, 7));
@@ -438,7 +431,7 @@ int main() {
             blowoff = true;
             turboGen.startPlayback(1);
         }
-        if (car.getBoost() >= 50) {
+        if (car.getBoost() >= 100) {
             blowoff = false;
         }
 
@@ -457,20 +450,21 @@ int main() {
             backfire.setIntensity(0);
         }
         // luaEngine.tick();
-        float carRpm = filter.update(car.getRPM());
+        carRpm = filter.update(car.getRPM());
+        float carTorque = torqueFilter.process(car.getTorque());
         // TODO: Seperation of concerns (Boost logic, shift styles etc.)
         engine.setRPM(carRpm);
         engineAlt.setRPM(carRpm);
         engineAltAlt.setRPM(carRpm);
-        engine.setAmplitude(car.getTorque() / 120 + 0.1f);
-        engineAlt.setAmplitude((carRpm * car.getTorque()) / 5500000);
-        engineAltAlt.setAmplitude(carRpm / 85000);
+        engine.setAmplitude(carTorque / 100 + 0.1f);
+        engineAlt.setAmplitude((carRpm * carTorque) / 4000000);
+        engineAltAlt.setAmplitude(carRpm / 80000);
         whoosh.setIntensity(car.getBoost() / 150);
-        whoosh.setAmplitude(car.getBoost() / 2500);
-        turboShaft.setAmplitude(car.getBoost() / 750);
+        whoosh.setAmplitude(car.getBoost() / 2000);
+        turboShaft.setAmplitude(car.getBoost() / 500);
         turboShaft.setRPM(10000 + car.getBoost() * 100);
-        supercharger.setRPM(car.getRPM()); // Supercharger example
-        supercharger.setAmplitude(car.getRPM() / 100000 + 0.1f);
+        // supercharger.setRPM(car.getRPM()); // Supercharger example
+        // supercharger.setAmplitude(car.getRPM() / 100000 + 0.1f);
         // Gear whine example
         // supercharger.setNoteOffset(25+car.getGear());
         // supercharger.setRPM(car.getRPM()*(car.gearRatios[car.getGear()]/5)+1000);
@@ -479,8 +473,10 @@ int main() {
         tach.setRotation(sf::degrees(carRpm / 27.5 - 90));
         gaugeValue.setString("RPM: " + std::to_string((int)engine.getRPM()) + "\nBoost: " + std::to_string((int)car.getBoost()) +
                              "\nGear: " + std::to_string((int)car.getGear()) + "\nSpeed: " + std::to_string((int)(car.getWheelSpeed() * 3.6)));
+        debugText.setString(context.getInfo(0));
         // std::cout << "RPM: " << (int)engine.getRPM() << "  boost: " << car.getBoost() << " Gear: " << car.getGear() << " Speed: " << car.getWheelSpeed()
         // * 3.6 << "\n";
+        std::cout << car.getTorque() << "\n";
 
         // ==== RENDERING
         window.clear();
@@ -488,6 +484,8 @@ int main() {
         window.draw(gaugeValue);
         window.draw(tach);
         window.draw(spriteMiddle);
+        if (showDebug){
+        window.draw(debugText);}
         window.display();
     }
 
