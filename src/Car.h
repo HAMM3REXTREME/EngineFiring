@@ -62,6 +62,7 @@ class Car {
     float clutch = 0; // Difference of revs to 'smoothly' join
 
     Damper rpmDamper{5};
+    Damper torqueDamper{1};
     Damper wheelSpeedDamper{10};
 
     Damper idleValve{5};

@@ -78,6 +78,7 @@ void Car::addEnergy() {
     } else {
         boostDamper.addValue(0);
     }
+    torqueDamper.addValue(Torque);
 }
 
 int Car::getGear() { return gear; }
@@ -93,4 +94,5 @@ float Car::getBoost() { return boostDamper.getAverage(); }
 void Car::setWheelSpeed(float newSpeed) { wheelRPM = newSpeed; } // Sets wheelRPM for next tick
 float Car::getWheelSpeed() { return wheelSpeedDamper.getAverage(); }
 
-float Car::getTorque() { return Torque / gearThrottleResponses[gear]; }
+// FIXME: Sudden torque spike for like 1 frame when downshifting with rev matching ( causes a loud pop if using torque for sound intensity etc.)
+float Car::getTorque() { return torqueDamper.getAverage() / gearThrottleResponses[gear]; }
