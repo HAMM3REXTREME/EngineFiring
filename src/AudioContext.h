@@ -22,9 +22,14 @@
 class AudioContext : public SoundGenerator {
   public:
     AudioContext(std::vector<SoundGenerator *> generators);
+    AudioContext(const std::string& new_id, std::vector<SoundGenerator *> generators);
     AudioContext();
+    std::string id;
     void update() override {}
     void addGenerator(SoundGenerator *generator);
+    void addFilter(Biquad &biquad) {
+      fx.addFilter(biquad);
+    }
     float getAllSamples();
     void getAllSamples(float *buffer, int numFrames, int numChannels);
     std::vector<SoundGenerator *> generators;
@@ -32,6 +37,7 @@ class AudioContext : public SoundGenerator {
     float getSample() override;
     void setAmplitude(float amp) override;
     float getAmplitude() const override;
+    std::string getInfo(int depth) const override;
 
   private:
     float ctxAmplitude;
