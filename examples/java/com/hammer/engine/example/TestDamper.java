@@ -1,4 +1,5 @@
-package com.hammer.engine.firing;
+package com.hammer.engine.example;
+import com.hammer.engine.firing.Damper;
 
 public class TestDamper {
     static {

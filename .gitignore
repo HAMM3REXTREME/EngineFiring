@@ -1,6 +1,4 @@
-a.out
-engine
-.ropeproject
-src/*.o
-build
-build-android
+/src/*.o
+/build
+/build-android
+/examples/java/com/hammer/engine/firing/*

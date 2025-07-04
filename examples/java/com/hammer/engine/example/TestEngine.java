@@ -1,7 +1,7 @@
-package com.hammer.engine.firing;
+package com.hammer.engine.example;
 
 import java.util.Arrays;
-
+import com.hammer.engine.firing.*;
 public class TestEngine {
     static {
         // Load the JNI shared library
@@ -61,7 +61,7 @@ public class TestEngine {
         // Test: maybe print some info or just confirm creation
         System.out.println("EngineSoundGenerator created successfully!");
         
-        while (True){
+        while (true){
         
         }
     }
