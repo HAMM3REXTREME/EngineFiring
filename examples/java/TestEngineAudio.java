@@ -1,4 +1,4 @@
-package org.engine.firing;
+package com.hammer.engine.firing;
 
 import javax.sound.sampled.*;
 import java.util.Arrays;
