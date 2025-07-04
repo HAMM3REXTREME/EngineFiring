@@ -1,4 +1,7 @@
 #include "SimpleSoundGenerator.h"
+#include <algorithm>
+#include <iostream>
+#include <sstream>
 
 SimpleSoundGenerator::SimpleSoundGenerator(SoundBank &bank) : soundBank(bank), currentSampleIndex(-1), playbackPosition(0), gain(1.0f) {}
 
@@ -32,6 +35,15 @@ float SimpleSoundGenerator::getSample() {
         return gain * soundBank.samples[currentSampleIndex].samples[playbackPosition];
     }
     return 0.0f; // Silence when not playing
+}
+
+std::string SimpleSoundGenerator::getInfo(int depth) const {
+    std::ostringstream oss;
+    for (int i = 0; i < depth; ++i) {
+        oss << "    ";
+    }
+    oss << "SimpleSoundGenerator: gain " << gain << ", looping " << looping << ", playing sample " << currentSampleIndex << ", playback position " << playbackPosition << "\n";
+    return oss.str();
 }
 
 void SimpleSoundGenerator::setAmplitude(float newGain) { gain = std::fmax(0.0f, newGain); }

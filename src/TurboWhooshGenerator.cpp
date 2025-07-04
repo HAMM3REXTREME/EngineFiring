@@ -1,4 +1,6 @@
 #include "TurboWhooshGenerator.h"
+#include <iostream>
+#include <sstream>
 
 TurboWhooshGenerator::TurboWhooshGenerator(float sampleRate)
     : sampleRate(sampleRate), intensity(0.0f), phase(0.0f), amplitude(0.5f) // Default gain set to 0.5f
@@ -8,6 +10,16 @@ TurboWhooshGenerator::TurboWhooshGenerator(float sampleRate)
 }
 
 void TurboWhooshGenerator::update() {} // Nothing needed
+
+
+std::string TurboWhooshGenerator::getInfo(int depth) const {
+    std::ostringstream oss;
+    for (int i = 0; i < depth; ++i) {
+        oss << "    ";
+    }
+    oss << "TurboWhooshGenerator: intensity " << intensity << ", amplitude " << amplitude << "\n";
+    return oss.str();
+}
 
 float TurboWhooshGenerator::getSample() {
     // Base frequencies for high-pitched whistle and low rumble

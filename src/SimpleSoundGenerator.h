@@ -24,6 +24,9 @@ class SimpleSoundGenerator : public SoundGenerator {
     void setLooping(bool loop) { looping = loop; };
     bool isLooping() const { return looping; };
 
+    std::string getInfo(int depth) const override;
+
+
   private:
     SoundBank &soundBank;
     int currentSampleIndex;  // -1 means no sample playing

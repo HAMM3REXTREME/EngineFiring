@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include <string>
 class SoundGenerator {
   public:
     virtual ~SoundGenerator() = default;
@@ -10,4 +11,6 @@ class SoundGenerator {
 
     virtual void setAmplitude(float amp) = 0;
     virtual float getAmplitude() const = 0;
+
+    virtual std::string getInfo(int depth) const = 0;
 };

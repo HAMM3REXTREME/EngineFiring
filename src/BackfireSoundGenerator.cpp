@@ -78,3 +78,12 @@ float BackfireSoundGenerator::bandpass(float input, float freq, float Q) {
 
     return y;
 }
+
+std::string BackfireSoundGenerator::getInfo(int depth) const {
+    std::ostringstream oss;
+    for (int i = 0; i < depth; ++i) {
+        oss << "    ";
+    }
+    oss << "BackfireSoundGenerator: intensity: " << intensity << ", amplitude " << amplitude << "\n";
+    return oss.str();
+}

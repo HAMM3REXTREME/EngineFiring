@@ -1,6 +1,8 @@
 #include "EngineSoundGenerator.h"
+#include "Engine.h"
 
 #include <algorithm>
+#include <iostream>
 
 EngineSoundGenerator::EngineSoundGenerator(const SoundBank &m_pistonClicks, const Engine &m_engine, float m_rpm, float m_max_amplitude, int m_sample_rate,
                                            int m_channels)
@@ -21,11 +23,12 @@ void EngineSoundGenerator::update() {
         int piston_index = engine.firingOrder[phase % engine.getCylinderCount()];
         active_firings.push_back({&pistonClicks.samples[piston_index + noteOffset].samples, 0});
         phase++;
-        // std::string firingVisual(engine.getCylinderCount(), '-');
-        // firingVisual[piston_index] = 'O';
-        // std::cout << firingVisual << " | ";
-        // std::cout << "Interval timer -= " <<
-        // engine.firingIntervalFactors[piston_index] * interval << "\n";
+        // if (engine.name=="DEBUG"){
+        //     std::string firingVisual(engine.getCylinderCount(), '-');
+        //     firingVisual[piston_index] = 'O';
+        //     std::cout << firingVisual << " | ";
+        //     std::cout << "interval timer: " << interval_timer << ", interval: " << interval << "\n";
+        // }
         interval_timer -= engine.firingIntervalFactors[piston_index] * interval; // Larger number = slower, 0.1 etc. = faster
     }
 }
@@ -47,4 +50,14 @@ float EngineSoundGenerator::getSample() {
         }
     }
     return std::clamp(sample, -1.0f, 1.0f);
+}
+
+
+std::string EngineSoundGenerator::getInfo(int depth) const {
+    std::ostringstream oss;
+    for (int i = 0; i < depth; ++i) {
+        oss << "    ";
+    }
+    oss << "EngineSoundGenerator: using engine '" << engine.name << "' " << audioRpm << " aRPM,  note offset by " << noteOffset << ", amplitude " << max_amplitude << "\n";
+    return oss.str();
 }

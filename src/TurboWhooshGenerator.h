@@ -4,6 +4,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <ctime>
+#include <string>
 
 class TurboWhooshGenerator : public SoundGenerator {
   public:
@@ -22,6 +23,7 @@ class TurboWhooshGenerator : public SoundGenerator {
     // Get the current gain value
     float getAmplitude() const override;
 
+    std::string getInfo(int depth) const override;
   private:
     float sampleRate;
     float intensity;

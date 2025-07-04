@@ -25,6 +25,8 @@ class BackfireSoundGenerator : public SoundGenerator {
 
     void triggerPop() { triggerPopBurst(); }
 
+    std::string getInfo(int depth) const override;
+
   private:
     float sampleRate;
     float amplitude;
