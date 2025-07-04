@@ -21,7 +21,7 @@ class Engine {
     std::string name;
     std::vector<int> firingOrder;
     std::vector<float> firingIntervalFactors;
-    float audioRpmFactor;
+    float audioRpmFactor; // Beats per 360 degrees of crankshaft rev
 
     int getCylinderCount() const { return firingOrder.size(); };
 };

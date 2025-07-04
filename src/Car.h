@@ -56,7 +56,6 @@ class Car {
     float boost = 0;    // Turbo boost
     Damper boostDamper{50};
 
-    float idleValve = 1; // Idle valve
     float Torque = 0;    // Immediate Torque
     int gear = 0;        // Current Gear
 
@@ -64,6 +63,8 @@ class Car {
 
     Damper rpmDamper{5};
     Damper wheelSpeedDamper{10};
+
+    Damper idleValve{5};
 
     void controlIdle();
     void addEnergy();

@@ -22,14 +22,10 @@
 
 class AudioScene {
   public:
-    // Use shared_ptr or unique_ptr to manage polymorphic SoundGenerator objects safely
-    std::vector<std::shared_ptr<AudioContext>> audioContexts;
-
-    // Store polymorphic sound generators as pointers for polymorphism
-    std::vector<std::shared_ptr<SoundGenerator>> soundGenerators;
-
-    // Store engine definitions
+    std::vector<AudioContext> audioContexts;
+    std::vector<SoundGenerator> soundGenerators;
     std::vector<Engine> engineDefs;
+    std::vector<SoundBank> SoundBanks;
 
     AudioScene() = default;
 
@@ -41,11 +37,19 @@ class AudioScene {
         return ptr;
     }
 
-    std::shared_ptr<AudioContext> addAudioContext(const std::vector<SoundGenerator *> &generators) {
-        auto ctx = std::make_shared<AudioContext>(generators);
-        audioContexts.push_back(ctx);
-        return ctx;
+    AudioContext* findAudioContext(const std::string& id) {
+        for (auto& context : audioContexts) {
+            if (context.id == id) {
+                return &context;
+            }
+        }
+        return nullptr;
     }
+
+    
+
+
+
 
     void addEngineDef(const Engine &engineDef) { engineDefs.push_back(engineDef); }
 

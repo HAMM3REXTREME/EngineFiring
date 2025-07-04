@@ -46,10 +46,10 @@ void Car::setGear(int newGear) {
 }
 
 void Car::controlIdle() {
-    if (rpm >= 901) { // Idle air control valve
-        idleValve = 5;
-    } else if (rpm <= 895) {
-        idleValve = 0.02 * (895 - rpm) * gearRatios[gear] + 10;
+    if (rpm >= 905) { // Idle air control valve
+        idleValve.addValue(8);
+    } else if (rpm <= 900) {
+        idleValve.addValue(0.02 * (895 - rpm) * gearRatios[gear] + 10);
     }
 }
 
@@ -59,7 +59,7 @@ void Car::addEnergy() {
         if (ignition) {
             if (rpm <= revLimit) { // Rev limiter thingy
                 if (revLimitTicks <= 0) {
-                    Torque = (gas + idleValve) * gearThrottleResponses[gear];
+                    Torque = (gas + idleValve.getAverage()) * gearThrottleResponses[gear];
                 } else {
                     revLimitTicks--;
                 }
