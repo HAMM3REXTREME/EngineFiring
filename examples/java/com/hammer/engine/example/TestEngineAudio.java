@@ -4,6 +4,10 @@ import javax.sound.sampled.*;
 import java.util.Arrays;
 import com.hammer.engine.firing.*;
 
+// To run:
+// javac $(find . -name "*.java")
+// java -Djava.library.path=com/hammer/engine/firing/ com/hammer/engine/example/TestEngineAudio
+
 public class TestEngineAudio {
     static {
         // Load the JNI shared library

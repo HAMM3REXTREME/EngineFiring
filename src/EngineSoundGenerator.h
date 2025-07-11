@@ -18,11 +18,11 @@ class EngineSoundGenerator : public SoundGenerator {
     float getRPM();
 
     // Audio sample generation
-    void update();
-    float getSample();
+    void update() override;
+    float getSample() override;
 
-    void setAmplitude(float amp);
-    float getAmplitude() const;
+    void setAmplitude(float amp) override;
+    float getAmplitude() const override;
 
     void setNoteOffset(int offset); // VTEC kicked in, yo
     int getNoteOffset() const;

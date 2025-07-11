@@ -55,11 +55,12 @@ void Car::controlIdle() {
 
 void Car::addEnergy() {
     if (rpm > 50) {
-        rpm += Torque; // Don't divide by zero
+        rpm += Torque * gearThrottleResponses[gear];
         if (ignition) {
-            if (rpm <= revLimit) { // Rev limiter thingy
+             // Rev limiter thingy
+            if (rpm <= revLimit) {
                 if (revLimitTicks <= 0) {
-                    Torque = (gas + idleValve.getAverage()) * gearThrottleResponses[gear];
+                    Torque = (gas + idleValve.getAverage());
                 } else {
                     revLimitTicks--;
                 }
@@ -94,5 +95,4 @@ float Car::getBoost() { return boostDamper.getAverage(); }
 void Car::setWheelSpeed(float newSpeed) { wheelRPM = newSpeed; } // Sets wheelRPM for next tick
 float Car::getWheelSpeed() { return wheelSpeedDamper.getAverage(); }
 
-// FIXME: Sudden torque spike for like 1 frame when downshifting with rev matching ( causes a loud pop if using torque for sound intensity etc.)
-float Car::getTorque() { return torqueDamper.getAverage() / gearThrottleResponses[gear]; }
+float Car::getTorque() { return torqueDamper.getAverage(); }

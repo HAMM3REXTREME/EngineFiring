@@ -30,7 +30,7 @@ constexpr float SAMPLE_RATE = 48000;
 constexpr int WINDOW_X = 1080;
 constexpr int WINDOW_Y = 720;
 
-constexpr int DOWNSHIFT_DELAY = 200;
+constexpr int DOWNSHIFT_DELAY = 250;
 constexpr int UPSHIFT_DELAY = 50;
 
 // Function for the PortAudio audio callback
@@ -39,7 +39,7 @@ int audio_callback(const void *, void *outputBuffer, unsigned long framesPerBuff
     float *out = static_cast<float *>(outputBuffer);
 
     for (unsigned long i = 0; i < framesPerBuffer; ++i) {
-        *out++ = std::tanh(audioContext->getAllSamples());
+        *out++ = audioContext->getAllSamples();
     }
 
     return paContinue;
@@ -89,11 +89,12 @@ int main() {
                              "assets/audio/tick_library/note_97.wav",  "assets/audio/tick_library/note_98.wav",  "assets/audio/tick_library/note_99.wav",
                              "assets/audio/tick_library/note_100.wav", "assets/audio/tick_library/note_101.wav", "assets/audio/tick_library/note_102.wav"});
 
-    Engine engineDef("Revuelto V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 7);
+    // Engine engineDef("Revuelto V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 7);
     // Engine engineDef("Diablo/Murci V12", Engine::getFiringOrderFromString("1-7-4-10-2-8-6-12-3-9-5-11"), 6);
     // Engine engineDef("Countach V12", Engine::getFiringOrderFromString("1 7 5 11 3 9 6 12 2 8 4 10"), 5);
+    // Engine engineDef("BMW S70/2 V12", Engine::getFiringOrderFromString("1 7 5 11 3 9 6 12 2 8 4 10"), 6.2);
     // Engine engineDef("F1 V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 16);
-    // Engine engineDef("Audi V10 FSI", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {90, 54, 90, 54, 90, 54, 90, 54, 90, 54}, 5.2);
+    Engine engineDef("Audi V10 FSI", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {90, 54, 90, 54, 90, 54, 90, 54, 90, 54}, 5);
     // Engine engineDef("1LR-GUE V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, 5);
     // Engine engineDef("Mercedes AMG M156", Engine::getFiringOrderFromString("1-5-4-2-6-3-7-8"),4);
     // Engine engineDef("F1 V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, 12.5);
@@ -102,7 +103,7 @@ int main() {
     // Engine engineDef("Flat plane V8", Engine::getFiringOrderFromString("1 5 3 7 4 8 2 6"), 4);
     // Engine engineDef("Mercedes M120 V12", Engine::getFiringOrderFromString("1-12-5-8-3-10-6-7-2-11-4-9"),7.6);
     // Engine engineDef("Murican V8 +", Engine::getFiringOrderFromString("1-8-7-2-6-5-4-3"),3);
-    // Engine engineDef("2UR-GSE V8", Engine::getFiringOrderFromString("1-8-7-3-6-5-4-2"),3);
+    // Engine engineDef("2UR-GSE V8", Engine::getFiringOrderFromString("1-8-7-3-6-5-4-2"),4);
     // Engine engineDef("BMW N54", Engine::getFiringOrderFromString("1-5-3-6-2-4"), 3);
     // Engine engineDef("V Twin", Engine::getFiringOrderFromString("1-2"), {315,405},0.8);
     // Engine engineDef("1 Cylinder", {0}, 0.5);
@@ -115,15 +116,17 @@ int main() {
     // Engine engineDef("Ducati V4", Engine::getFiringOrderFromString("1-2-4-3"),{90,200,90,340}, 4);
     // Engine engineDef("Nissan VQ", Engine::getFiringOrderFromString("1-2-3-4-5-6"),3);
     // Engine engineDef("Ford 4.0L V6", Engine::getFiringOrderFromString("1-4-2-5-3-6"),3);
+    // Engine engineDef("Ferrari V6", Engine::getFiringOrderFromString("1-6-3-4-2-5"),3.5);
     // Engine engineDef("F1 V6", Engine::getFiringOrderFromString("1-4-2-5-3-6"),6);
+    // Engine engineDef("Buick even firing V6", Engine::getFiringOrderFromString("1-6-5-4-3-2"),3);
     // Engine engineDef("Buick odd firing V6", Engine::getFiringOrderFromString("1-6-5-4-3-2"), {90,150,90,150,90,150},3);
     // Engine engineDef("Porsche Flat 6", Engine::getFiringOrderFromString("1-6-2-4-3-5"), 3.6);
     EngineSoundGenerator engine(mainSamples, engineDef, 1000.0f, 0.5f);
     EngineSoundGenerator engineAlt(mainSamples, engineDef, 1000.0f, 0.5f);
     EngineSoundGenerator engineAltAlt(mainSamples, engineDef, 1000.0f, 0.5f);
-    engine.setNoteOffset(1);
-    engineAlt.setNoteOffset(24);
-    engineAltAlt.setNoteOffset(18);
+    engine.setNoteOffset(3);
+    engineAlt.setNoteOffset(26);
+    engineAltAlt.setNoteOffset(24);
 
     // ==== SUPERCHARGER (Just a high revving 1 cylinder)
     Engine superchargerDef("Supercharger", {0}, 8.0f);
@@ -260,9 +263,9 @@ int main() {
     engineCtx.fx.addFilter(cut22Hz);
     engineCtx.fx.addFilter(cut28Hz);
     engineCtx.fx.addFilter(cut18100Hz);
-    // engineCtx.fx.addFilter(cut14600Hz);
+    engineCtx.fx.addFilter(cut14600Hz);
 
-    // engineCtx.fx.addFilter(huracanBoost);
+    engineCtx.fx.addFilter(huracanBoost);
 
     // engineCtx.fx.addFilter(boost2100Hz);
     // engineCtx.fx.addFilter(boost2600Hz);
@@ -282,7 +285,7 @@ int main() {
     backfireCtx.fx.addFilter(backfireHighFilter);
     backfireCtx.fx.addFilter(backfireHighFilter2);
 
-    Biquad torqueFilter(bq_type_lowpass, 5.0f/60.0f, 0.707f, 0.0f);
+    Biquad torqueFilter(bq_type_lowpass, 10.0f/60.0f, 0.707f, 0.0f);
 
     // PortAudio for live audio playback
     Pa_Initialize();
@@ -290,8 +293,8 @@ int main() {
     Pa_OpenDefaultStream(&stream, 0, 1, paFloat32, SAMPLE_RATE, 256, audio_callback, &context);
     Pa_StartStream(stream);
 
-    SecondOrderFilter filter(6.0f, 0.3f, 0.01);
-    //car.revLimiterCutTicks = 1;
+    SecondOrderFilter rpmFilter(6.0f, 0.3f, 0.01);
+    car.revLimiterCutTicks = 5;
 
     // LuaEngine luaEngine;
     // luaEngine.lua["mainCtx"] = std::ref(context);
@@ -450,7 +453,7 @@ int main() {
             backfire.setIntensity(0);
         }
         // luaEngine.tick();
-        carRpm = filter.update(car.getRPM());
+        carRpm = rpmFilter.update(car.getRPM());
         float carTorque = torqueFilter.process(car.getTorque());
         // TODO: Seperation of concerns (Boost logic, shift styles etc.)
         engine.setRPM(carRpm);
