@@ -42,7 +42,8 @@ std::string SimpleSoundGenerator::getInfo(int depth) const {
     for (int i = 0; i < depth; ++i) {
         oss << "    ";
     }
-    oss << "SimpleSoundGenerator: gain " << gain << ", looping " << looping << ", playing sample " << currentSampleIndex << ", playback position " << playbackPosition << "\n";
+    oss << "SimpleSoundGenerator: gain " << gain << ", looping " << looping << ", playing sample " << currentSampleIndex << ", playback position "
+        << playbackPosition << "\n";
     return oss.str();
 }
 

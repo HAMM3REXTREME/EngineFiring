@@ -28,7 +28,6 @@ class EngineSoundGenerator : public SoundGenerator {
     int getNoteOffset() const;
     std::string getInfo(int depth) const override;
 
-
   private:
     const Engine &engine;
     const SoundBank &pistonClicks;

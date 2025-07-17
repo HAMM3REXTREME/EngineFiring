@@ -1,7 +1,6 @@
 #pragma once
 #include <cmath>
 
-
 // Second Order filter: adds a bouncing effect to abrupt value changes (useful to post process rpm)
 class SecondOrderFilter {
   public:

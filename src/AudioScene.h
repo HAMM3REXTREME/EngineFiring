@@ -37,19 +37,14 @@ class AudioScene {
         return ptr;
     }
 
-    AudioContext* findAudioContext(const std::string& id) {
-        for (auto& context : audioContexts) {
+    AudioContext *findAudioContext(const std::string &id) {
+        for (auto &context : audioContexts) {
             if (context.id == id) {
                 return &context;
             }
         }
         return nullptr;
     }
-
-    
-
-
-
 
     void addEngineDef(const Engine &engineDef) { engineDefs.push_back(engineDef); }
 

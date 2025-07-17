@@ -2,10 +2,10 @@
 #include <SFML/Graphics/Text.hpp>
 #include <SFML/Window/Mouse.hpp>
 #include <algorithm>
+#include <cmath>
 #include <map>
 #include <portaudio.h>
 #include <sndfile.h>
-#include <cmath>
 
 #include <atomic>
 #include <chrono>
@@ -21,10 +21,10 @@
 #include "Damper.h"
 #include "Engine.h"
 #include "EngineSoundGenerator.h"
+#include "SecondOrderFilter.h"
 #include "SimpleSoundGenerator.h"
 #include "SoundBank.h"
 #include "TurboWhooshGenerator.h"
-#include "SecondOrderFilter.h"
 
 constexpr float SAMPLE_RATE = 48000;
 constexpr int WINDOW_X = 1080;
@@ -159,10 +159,10 @@ int main() {
     backfire.setAmplitude(0.4f);
 
     // Audio sample generators that get summed up and played together
-    AudioContext engineCtx("engines",{ &engine, &engineAlt, &engineAltAlt});
-    AudioContext backfireCtx("backfire",{&backfire});
-    AudioContext superchargerCtx("supercharger",{&supercharger});
-    AudioContext context("root",{&whoosh, &turboShaft, &generalGen, &engineCtx, &backfireCtx});
+    AudioContext engineCtx("engines", {&engine, &engineAlt, &engineAltAlt});
+    AudioContext backfireCtx("backfire", {&backfire});
+    AudioContext superchargerCtx("supercharger", {&supercharger});
+    AudioContext context("root", {&whoosh, &turboShaft, &generalGen, &engineCtx, &backfireCtx});
 
     Car car;
     std::atomic<bool> carRunning = true;
@@ -240,8 +240,8 @@ int main() {
     // Biquad filters
     Biquad lowShelfFilter(bq_type_lowshelf, 150.0f / SAMPLE_RATE, 0.707f, -6.0f); // cut lows
     Biquad midBoostFilter(bq_type_peak, 1500.0f / SAMPLE_RATE, 1.0f, 3.0f);       // boost mids
-    Biquad highShelfFilter(bq_type_highshelf, 2500.0f / SAMPLE_RATE, 1.0f, 8.0f);  // boost highs
-    Biquad rumbleBoostFilter(bq_type_peak, 80.0f / SAMPLE_RATE, 0.5f, 10.1f);      // deep bass boost
+    Biquad highShelfFilter(bq_type_highshelf, 2500.0f / SAMPLE_RATE, 1.0f, 8.0f); // boost highs
+    Biquad rumbleBoostFilter(bq_type_peak, 80.0f / SAMPLE_RATE, 0.5f, 10.1f);     // deep bass boost
 
     // Additional precise EQ filters from EasyEffects
     Biquad cut22Hz(bq_type_peak, 22.0f / SAMPLE_RATE, 4.36f, -36.0f);
@@ -254,7 +254,7 @@ int main() {
     Biquad boost3600Hz(bq_type_peak, 3600.0f / SAMPLE_RATE, 4.36f, +2.0f);
     Biquad boost4000Hz(bq_type_peak, 4000.0f / SAMPLE_RATE, 4.36f, +2.0f);
 
-    Biquad huracanBoost(bq_type_peak, 300/ SAMPLE_RATE, 1.0f, -2.0f);
+    Biquad huracanBoost(bq_type_peak, 300 / SAMPLE_RATE, 1.0f, -2.0f);
 
     // Add all filters to FX chain
     // engineCtx.fx.addFilter(lowShelfFilter);
@@ -283,7 +283,6 @@ int main() {
     // engineCtx.fx.addFilter(boost3600Hz);
     // engineCtx.fx.addFilter(boost4000Hz);
 
-
     Biquad backfireFilter(bq_type_lowshelf, 150.0f / SAMPLE_RATE, 0.707f, 12.0f);
     Biquad backfireHighFilter(bq_type_highshelf, 3000.0f / SAMPLE_RATE, 0.707f, -12.0f);
     Biquad backfireHighFilter2(bq_type_peak, 4500.0f / SAMPLE_RATE, 0.3f, -12.0f);
@@ -296,7 +295,7 @@ int main() {
     backfireCtx.fx.addFilter(backfireHighFilter);
     backfireCtx.fx.addFilter(backfireHighFilter2);
 
-    Biquad torqueFilter(bq_type_lowpass, 10.0f/60.0f, 0.707f, 0.0f);
+    Biquad torqueFilter(bq_type_lowpass, 10.0f / 60.0f, 0.707f, 0.0f);
 
     // PortAudio for live audio playback
     Pa_Initialize();
@@ -344,7 +343,7 @@ int main() {
                     upShiftFrame = frame + UPSHIFT_DELAY / deltaTime;
                     shiftLock = true;
                     if (gasAvg.getAverage() > 100) {
-                        //engineCtx.fx.biquads[3].setPeakGain(10.1f + car.getRPM() / 500.0f);
+                        // engineCtx.fx.biquads[3].setPeakGain(10.1f + car.getRPM() / 500.0f);
                     }
                 }
                 if (keyPressed->scancode == sf::Keyboard::Scancode::Down && !shiftLock) {
@@ -411,7 +410,7 @@ int main() {
                     upShiftFrame = frame + UPSHIFT_DELAY / deltaTime;
                     shiftLock = true;
                     if (gasAvg.getAverage() > 100) {
-                        //engineCtx.fx.biquads[3].setPeakGain(10.1f + car.getRPM() / 500.0f);
+                        // engineCtx.fx.biquads[3].setPeakGain(10.1f + car.getRPM() / 500.0f);
                     }
                 } else if (joystickButton->button == 5 && !shiftLock) { // RB button
                     std::cout << "Downshift\n";
@@ -432,7 +431,7 @@ int main() {
             upShiftFrame = 0;
             shiftLock = false;
             backfire.triggerPop();
-            //engineCtx.fx.biquads[3].setPeakGain(10.1f);
+            // engineCtx.fx.biquads[3].setPeakGain(10.1f);
         }
         if (frame == downShiftFrame) {
             car.setGear(std::clamp(lastGear - 1, 0, 7));
@@ -449,11 +448,11 @@ int main() {
             blowoff = false;
         }
 
-        if (car.getGas()<=10 && !lifted){
+        if (car.getGas() <= 10 && !lifted) {
             lastLiftOff = frame;
             lifted = true;
         }
-        if (car.getGas()>=15){
+        if (car.getGas() >= 15) {
             lifted = false;
         }
 
@@ -498,8 +497,9 @@ int main() {
         window.draw(gaugeValue);
         window.draw(tach);
         window.draw(spriteMiddle);
-        if (showDebug){
-        window.draw(debugText);}
+        if (showDebug) {
+            window.draw(debugText);
+        }
         window.display();
     }
 

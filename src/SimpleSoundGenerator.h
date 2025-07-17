@@ -26,7 +26,6 @@ class SimpleSoundGenerator : public SoundGenerator {
 
     std::string getInfo(int depth) const override;
 
-
   private:
     SoundBank &soundBank;
     int currentSampleIndex;  // -1 means no sample playing

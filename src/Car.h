@@ -56,8 +56,8 @@ class Car {
     float boost = 0;    // Turbo boost
     Damper boostDamper{50};
 
-    float Torque = 0;    // Immediate Torque
-    int gear = 0;        // Current Gear
+    float Torque = 0; // Immediate Torque
+    int gear = 0;     // Current Gear
 
     float clutch = 0; // Difference of revs to 'smoothly' join
 

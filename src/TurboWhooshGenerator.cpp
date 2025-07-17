@@ -11,7 +11,6 @@ TurboWhooshGenerator::TurboWhooshGenerator(float sampleRate)
 
 void TurboWhooshGenerator::update() {} // Nothing needed
 
-
 std::string TurboWhooshGenerator::getInfo(int depth) const {
     std::ostringstream oss;
     for (int i = 0; i < depth; ++i) {

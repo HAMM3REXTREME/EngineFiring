@@ -52,12 +52,12 @@ float EngineSoundGenerator::getSample() {
     return std::clamp(sample, -1.0f, 1.0f);
 }
 
-
 std::string EngineSoundGenerator::getInfo(int depth) const {
     std::ostringstream oss;
     for (int i = 0; i < depth; ++i) {
         oss << "    ";
     }
-    oss << "EngineSoundGenerator: using engine '" << engine.name << "' " << audioRpm << " aRPM,  note offset by " << noteOffset << ", amplitude " << max_amplitude << "\n";
+    oss << "EngineSoundGenerator: using engine '" << engine.name << "' " << audioRpm << " aRPM,  note offset by " << noteOffset << ", amplitude "
+        << max_amplitude << "\n";
     return oss.str();
 }

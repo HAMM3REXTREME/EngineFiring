@@ -24,6 +24,7 @@ class TurboWhooshGenerator : public SoundGenerator {
     float getAmplitude() const override;
 
     std::string getInfo(int depth) const override;
+
   private:
     float sampleRate;
     float intensity;

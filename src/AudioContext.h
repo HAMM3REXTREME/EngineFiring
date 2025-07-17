@@ -22,14 +22,12 @@
 class AudioContext : public SoundGenerator {
   public:
     AudioContext(std::vector<SoundGenerator *> generators);
-    AudioContext(const std::string& new_id, std::vector<SoundGenerator *> generators);
+    AudioContext(const std::string &new_id, std::vector<SoundGenerator *> generators);
     AudioContext();
     std::string id;
     void update() override {}
     void addGenerator(SoundGenerator *generator);
-    void addFilter(Biquad &biquad) {
-      fx.addFilter(biquad);
-    }
+    void addFilter(Biquad &biquad) { fx.addFilter(biquad); }
     float getAllSamples();
     void getAllSamples(float *buffer, int numFrames, int numChannels);
     std::vector<SoundGenerator *> generators;

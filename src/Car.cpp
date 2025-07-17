@@ -57,7 +57,7 @@ void Car::addEnergy() {
     if (rpm > 50) {
         rpm += Torque * gearThrottleResponses[gear];
         if (ignition) {
-             // Rev limiter thingy
+            // Rev limiter thingy
             if (rpm <= revLimit) {
                 if (revLimitTicks <= 0) {
                     Torque = (gas + idleValve.getAverage());

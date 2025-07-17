@@ -2,8 +2,8 @@
 #include "Biquad.h"
 #include <sstream>
 
-AudioContext::AudioContext(std::vector<SoundGenerator *> generators) :  id("no name"), generators(generators), ctxAmplitude(1.0f) {}
-AudioContext::AudioContext(const std::string& new_id,std::vector<SoundGenerator *> generators) : id(new_id), generators(generators), ctxAmplitude(1.0f) {}
+AudioContext::AudioContext(std::vector<SoundGenerator *> generators) : id("no name"), generators(generators), ctxAmplitude(1.0f) {}
+AudioContext::AudioContext(const std::string &new_id, std::vector<SoundGenerator *> generators) : id(new_id), generators(generators), ctxAmplitude(1.0f) {}
 AudioContext::AudioContext() : id("no name"), ctxAmplitude(1.0f) {}
 
 void AudioContext::addGenerator(SoundGenerator *generator) { generators.push_back(generator); }
@@ -39,9 +39,10 @@ std::string AudioContext::getInfo(int depth) const {
     if (depth == 0) {
         oss << "Root ";
     }
-    oss << "AudioContext: id '" << id << "' amplitude " << ctxAmplitude << ", " << fx.biquads.size() << " biquad filters, " << generators.size() << " generators:\n";
+    oss << "AudioContext: id '" << id << "' amplitude " << ctxAmplitude << ", " << fx.biquads.size() << " biquad filters, " << generators.size()
+        << " generators:\n";
     for (auto *gen : generators) {
-        oss  << gen->getInfo(depth+1);
+        oss << gen->getInfo(depth + 1);
     }
     if (depth == 0) {
         oss << "================\n";
