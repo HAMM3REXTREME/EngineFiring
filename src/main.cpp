@@ -113,6 +113,7 @@ int main() {
     // Engine engineDef("Perfect Fifth i5", Engine::getFiringOrderFromString("1 3 5 2 4"), {120, 180, 120, 180, 120},3);
     // Engine engineDef("4 Banger", Engine::getFiringOrderFromString("1-3-4-2"),2);
     // Engine engineDef("Super Sport", Engine::getFiringOrderFromString("1-3-4-2"),4);
+    // Engine engineDef("Cross plane i4 moto", Engine::getFiringOrderFromString("1-3-2-4"), {180,90,180,270},4);
     // Engine engineDef("Ducati V4", Engine::getFiringOrderFromString("1-2-4-3"),{90,200,90,340}, 4);
     // Engine engineDef("Nissan VQ", Engine::getFiringOrderFromString("1-2-3-4-5-6"),3);
     // Engine engineDef("Ford 4.0L V6", Engine::getFiringOrderFromString("1-4-2-5-3-6"),3);
@@ -124,9 +125,9 @@ int main() {
     EngineSoundGenerator engine(mainSamples, engineDef, 1000.0f, 0.5f);
     EngineSoundGenerator engineAlt(mainSamples, engineDef, 1000.0f, 0.5f);
     EngineSoundGenerator engineAltAlt(mainSamples, engineDef, 1000.0f, 0.5f);
-    engine.setNoteOffset(3);
-    engineAlt.setNoteOffset(26);
-    engineAltAlt.setNoteOffset(24);
+    engine.setNoteOffset(0);
+    engineAlt.setNoteOffset(4);
+    engineAltAlt.setNoteOffset(8);
 
     // ==== SUPERCHARGER (Just a high revving 1 cylinder)
     Engine superchargerDef("Supercharger", {0}, 8.0f);
@@ -158,9 +159,10 @@ int main() {
     backfire.setAmplitude(0.4f);
 
     // Audio sample generators that get summed up and played together
-    AudioContext engineCtx("engines",{&engine, &engineAlt, &engineAltAlt});
+    AudioContext engineCtx("engines",{ &engine, &engineAlt, &engineAltAlt});
     AudioContext backfireCtx("backfire",{&backfire});
-    AudioContext context("root",{&whoosh, &turboShaft, &turboGen, &generalGen, &engineCtx, &backfireCtx});
+    AudioContext superchargerCtx("supercharger",{&supercharger});
+    AudioContext context("root",{&whoosh, &turboShaft, &generalGen, &engineCtx, &backfireCtx});
 
     Car car;
     std::atomic<bool> carRunning = true;
@@ -252,20 +254,29 @@ int main() {
     Biquad boost3600Hz(bq_type_peak, 3600.0f / SAMPLE_RATE, 4.36f, +2.0f);
     Biquad boost4000Hz(bq_type_peak, 4000.0f / SAMPLE_RATE, 4.36f, +2.0f);
 
-    Biquad huracanBoost(bq_type_peak, 350/ SAMPLE_RATE, 1.0f, 5.0f);
+    Biquad huracanBoost(bq_type_peak, 300/ SAMPLE_RATE, 1.0f, -2.0f);
 
     // Add all filters to FX chain
     // engineCtx.fx.addFilter(lowShelfFilter);
     engineCtx.fx.addFilter(midBoostFilter);
     // engineCtx.fx.addFilter(highShelfFilter);
-    // engineCtx.fx.addFilter(rumbleBoostFilter);
+    superchargerCtx.fx.addFilter(rumbleBoostFilter);
 
     engineCtx.fx.addFilter(cut22Hz);
     engineCtx.fx.addFilter(cut28Hz);
     engineCtx.fx.addFilter(cut18100Hz);
+    superchargerCtx.fx.addFilter(cut22Hz);
+    superchargerCtx.fx.addFilter(cut28Hz);
+    superchargerCtx.fx.addFilter(cut18100Hz);
     engineCtx.fx.addFilter(cut14600Hz);
 
     engineCtx.fx.addFilter(huracanBoost);
+
+    engineCtx.fx.addFilter(Biquad(bq_type_peak, 120.0f / SAMPLE_RATE, 0.707f, 4.0f));
+    engineCtx.fx.addFilter(Biquad(bq_type_peak, 500.0f / SAMPLE_RATE, 0.707f, -2.0f));
+    engineCtx.fx.addFilter(Biquad(bq_type_peak, 3000.0f / SAMPLE_RATE, 0.707f, 5.0f));
+    engineCtx.fx.addFilter(Biquad(bq_type_peak, 8000.0f / SAMPLE_RATE, 0.707f, 6.0f));
+    engineCtx.fx.addFilter(Biquad(bq_type_peak, 9000.0f / SAMPLE_RATE, 0.707f, 5.0f));
 
     // engineCtx.fx.addFilter(boost2100Hz);
     // engineCtx.fx.addFilter(boost2600Hz);
@@ -294,7 +305,7 @@ int main() {
     Pa_StartStream(stream);
 
     SecondOrderFilter rpmFilter(6.0f, 0.3f, 0.01);
-    car.revLimiterCutTicks = 5;
+    car.revLimiterCutTicks = 2;
 
     // LuaEngine luaEngine;
     // luaEngine.lua["mainCtx"] = std::ref(context);
@@ -459,15 +470,15 @@ int main() {
         engine.setRPM(carRpm);
         engineAlt.setRPM(carRpm);
         engineAltAlt.setRPM(carRpm);
-        engine.setAmplitude(carTorque / 100 + 0.1f);
-        engineAlt.setAmplitude((carRpm * carTorque) / 4000000);
+        engine.setAmplitude(carTorque / 175 + 0.1f);
+        engineAlt.setAmplitude((carRpm * carTorque) / 1500000);
         engineAltAlt.setAmplitude(carRpm / 80000);
         whoosh.setIntensity(car.getBoost() / 150);
         whoosh.setAmplitude(car.getBoost() / 2000);
         turboShaft.setAmplitude(car.getBoost() / 500);
         turboShaft.setRPM(10000 + car.getBoost() * 100);
-        // supercharger.setRPM(car.getRPM()); // Supercharger example
-        // supercharger.setAmplitude(car.getRPM() / 100000 + 0.1f);
+        supercharger.setRPM(car.getRPM()); // Supercharger example
+        supercharger.setAmplitude(carTorque / 300);
         // Gear whine example
         // supercharger.setNoteOffset(25+car.getGear());
         // supercharger.setRPM(car.getRPM()*(car.gearRatios[car.getGear()]/5)+1000);
