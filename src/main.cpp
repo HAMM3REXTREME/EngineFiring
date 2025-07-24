@@ -31,7 +31,7 @@ constexpr int WINDOW_X = 1080;
 constexpr int WINDOW_Y = 720;
 
 constexpr int DOWNSHIFT_DELAY = 250;
-constexpr int UPSHIFT_DELAY = 50;
+constexpr int UPSHIFT_DELAY = 90;
 
 // Function for the PortAudio audio callback
 int audio_callback(const void *, void *outputBuffer, unsigned long framesPerBuffer, const PaStreamCallbackTimeInfo *, PaStreamCallbackFlags, void *userData) {
@@ -96,6 +96,7 @@ int main() {
     // Engine engineDef("F1 V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 16);
     Engine engineDef("Audi V10 FSI", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {90, 54, 90, 54, 90, 54, 90, 54, 90, 54}, 5);
     // Engine engineDef("1LR-GUE V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, 5);
+    // Engine engineDef("Random V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {72,73,74,75,76,77,78,79,80,81}, 5);
     // Engine engineDef("Mercedes AMG M156", Engine::getFiringOrderFromString("1-5-4-2-6-3-7-8"),4);
     // Engine engineDef("F1 V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, 12.5);
     // Engine engineDef("Bugatti W16", Engine::getFiringOrderFromString("1 14 9 4 7 12 15 6 13 8 3 16 11 2 5 10"), 8.2);
@@ -116,6 +117,7 @@ int main() {
     // Engine engineDef("Cross plane i4 moto", Engine::getFiringOrderFromString("1-3-2-4"), {180,90,180,270},4);
     // Engine engineDef("Ducati V4", Engine::getFiringOrderFromString("1-2-4-3"),{90,200,90,340}, 4);
     // Engine engineDef("Nissan VQ", Engine::getFiringOrderFromString("1-2-3-4-5-6"),3);
+    // Engine engineDef("Nissan VQ - Unequal headers", Engine::getFiringOrderFromString("1-2-3-4-5-6"), {179,181,179,181,179,181}, 3);
     // Engine engineDef("Ford 4.0L V6", Engine::getFiringOrderFromString("1-4-2-5-3-6"),3);
     // Engine engineDef("Ferrari V6", Engine::getFiringOrderFromString("1-6-3-4-2-5"),3.5);
     // Engine engineDef("F1 V6", Engine::getFiringOrderFromString("1-4-2-5-3-6"),6);
@@ -125,9 +127,9 @@ int main() {
     EngineSoundGenerator engine(mainSamples, engineDef, 1000.0f, 0.5f);
     EngineSoundGenerator engineAlt(mainSamples, engineDef, 1000.0f, 0.5f);
     EngineSoundGenerator engineAltAlt(mainSamples, engineDef, 1000.0f, 0.5f);
-    engine.setNoteOffset(0);
-    engineAlt.setNoteOffset(4);
-    engineAltAlt.setNoteOffset(8);
+    engine.setNoteOffset(1);
+    engineAlt.setNoteOffset(0);
+    engineAltAlt.setNoteOffset(5);
 
     // ==== SUPERCHARGER (Just a high revving 1 cylinder)
     Engine superchargerDef("Supercharger", {0}, 8.0f);
@@ -474,7 +476,7 @@ int main() {
         engineAltAlt.setAmplitude(carRpm / 80000);
         whoosh.setIntensity(car.getBoost() / 150);
         whoosh.setAmplitude(car.getBoost() / 2000);
-        turboShaft.setAmplitude(car.getBoost() / 500);
+        turboShaft.setAmplitude(car.getBoost() / 300);
         turboShaft.setRPM(10000 + car.getBoost() * 100);
         supercharger.setRPM(car.getRPM()); // Supercharger example
         supercharger.setAmplitude(carTorque / 300);
