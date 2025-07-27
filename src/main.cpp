@@ -30,8 +30,9 @@ constexpr float SAMPLE_RATE = 48000;
 constexpr int WINDOW_X = 1080;
 constexpr int WINDOW_Y = 720;
 
-constexpr int DOWNSHIFT_DELAY = 250;
-constexpr int UPSHIFT_DELAY = 90;
+constexpr int DOWNSHIFT_DELAY = 120;
+constexpr int UPSHIFT_DELAY = 20;
+
 
 // Function for the PortAudio audio callback
 int audio_callback(const void *, void *outputBuffer, unsigned long framesPerBuffer, const PaStreamCallbackTimeInfo *, PaStreamCallbackFlags, void *userData) {
@@ -39,8 +40,8 @@ int audio_callback(const void *, void *outputBuffer, unsigned long framesPerBuff
     float *out = static_cast<float *>(outputBuffer);
 
     for (unsigned long i = 0; i < framesPerBuffer; ++i) {
-        *out++ = audioContext->getAllSamples();
-    }
+        *out++ = std::sin((M_PI / 2.0f) * audioContext->getAllSamples());
+    } 
 
     return paContinue;
 }
@@ -117,7 +118,7 @@ int main() {
     // Engine engineDef("Cross plane i4 moto", Engine::getFiringOrderFromString("1-3-2-4"), {180,90,180,270},4);
     // Engine engineDef("Ducati V4", Engine::getFiringOrderFromString("1-2-4-3"),{90,200,90,340}, 4);
     // Engine engineDef("Nissan VQ", Engine::getFiringOrderFromString("1-2-3-4-5-6"),3);
-    // Engine engineDef("Nissan VQ - Unequal headers", Engine::getFiringOrderFromString("1-2-3-4-5-6"), {179,181,179,181,179,181}, 3);
+    // Engine engineDef("Nissan VQ - Unequal headers", Engine::getFiringOrderFromString("1-2-3-4-5-6"), {177,183,177,183,177,183}, 2.8);
     // Engine engineDef("Ford 4.0L V6", Engine::getFiringOrderFromString("1-4-2-5-3-6"),3);
     // Engine engineDef("Ferrari V6", Engine::getFiringOrderFromString("1-6-3-4-2-5"),3.5);
     // Engine engineDef("F1 V6", Engine::getFiringOrderFromString("1-4-2-5-3-6"),6);
@@ -127,9 +128,9 @@ int main() {
     EngineSoundGenerator engine(mainSamples, engineDef, 1000.0f, 0.5f);
     EngineSoundGenerator engineAlt(mainSamples, engineDef, 1000.0f, 0.5f);
     EngineSoundGenerator engineAltAlt(mainSamples, engineDef, 1000.0f, 0.5f);
-    engine.setNoteOffset(1);
-    engineAlt.setNoteOffset(0);
-    engineAltAlt.setNoteOffset(5);
+    engine.setNoteOffset(0);
+    engineAlt.setNoteOffset(5);
+    engineAltAlt.setNoteOffset(7);
 
     // ==== SUPERCHARGER (Just a high revving 1 cylinder)
     Engine superchargerDef("Supercharger", {0}, 8.0f);
@@ -164,7 +165,7 @@ int main() {
     AudioContext engineCtx("engines", {&engine, &engineAlt, &engineAltAlt});
     AudioContext backfireCtx("backfire", {&backfire});
     AudioContext superchargerCtx("supercharger", {&supercharger});
-    AudioContext context("root", {&whoosh, &turboShaft, &generalGen, &engineCtx, &backfireCtx});
+    AudioContext context("root", {&engineCtx, &generalGen, &backfireCtx, &superchargerCtx});
 
     Car car;
     std::atomic<bool> carRunning = true;
@@ -292,7 +293,7 @@ int main() {
     backfireCtx.fx.addFilter(rumbleBoostFilter);
     backfireCtx.fx.addFilter(midBoostFilter);
     backfireCtx.fx.addFilter(cut14600Hz);
-    backfireCtx.fx.addFilter(cut18100Hz);
+    // backfireCtx.fx.addFilter(cut18100Hz);
     backfireCtx.fx.addFilter(boost2100Hz);
     backfireCtx.fx.addFilter(backfireHighFilter);
     backfireCtx.fx.addFilter(backfireHighFilter2);
@@ -305,7 +306,7 @@ int main() {
     Pa_OpenDefaultStream(&stream, 0, 1, paFloat32, SAMPLE_RATE, 256, audio_callback, &context);
     Pa_StartStream(stream);
 
-    SecondOrderFilter rpmFilter(6.0f, 0.3f, 0.01);
+    SecondOrderFilter rpmFilter(8.0f, 0.2f, 0.01);
     car.revLimiterCutTicks = 2;
 
     // LuaEngine luaEngine;
@@ -352,7 +353,7 @@ int main() {
                     std::cout << "Downshift\n";
                     lastGear = car.getGear();
                     car.setGear(0);
-                    car.setGas((0.02 * car.getRPM()) + 30);
+                    car.setGas((0.04 * car.getRPM()) + 30);
                     downShiftFrame = frame + DOWNSHIFT_DELAY / deltaTime;
                     shiftLock = true;
                 }
@@ -418,7 +419,7 @@ int main() {
                     std::cout << "Downshift\n";
                     lastGear = car.getGear();
                     car.setGear(0);
-                    car.setGas((0.02 * car.getRPM()) + 30);
+                    car.setGas((0.04 * car.getRPM()) + 30);
                     downShiftFrame = frame + DOWNSHIFT_DELAY / deltaTime;
                     shiftLock = true;
                 }
@@ -453,9 +454,11 @@ int main() {
         if (car.getGas() <= 10 && !lifted) {
             lastLiftOff = frame;
             lifted = true;
+            supercharger.setNoteOffset(10);
         }
         if (car.getGas() >= 15) {
             lifted = false;
+            supercharger.setNoteOffset(20);
         }
 
         if (car.getGas() <= 10 && (lastLiftOff + 1000 / deltaTime >= frame)) {
@@ -478,11 +481,11 @@ int main() {
         whoosh.setAmplitude(car.getBoost() / 2000);
         turboShaft.setAmplitude(car.getBoost() / 300);
         turboShaft.setRPM(10000 + car.getBoost() * 100);
-        supercharger.setRPM(car.getRPM()); // Supercharger example
-        supercharger.setAmplitude(carTorque / 300);
+        // supercharger.setRPM(car.getRPM()); // Supercharger example
+        // supercharger.setAmplitude(carTorque / 300);
         // Gear whine example
-        // supercharger.setNoteOffset(25+car.getGear());
-        // supercharger.setRPM(car.getRPM()*(car.gearRatios[car.getGear()]/5)+1000);
+        supercharger.setAmplitude(car.getGear() > 0 ?  car.getWheelSpeed()/500 : 0.0f);
+        supercharger.setRPM(carRpm *(car.gearRatios[car.getGear()]*2)+1000);
 
         // Update tachometer needle rotation according to rpm.
         tach.setRotation(sf::degrees(carRpm / 27.5 - 90));
