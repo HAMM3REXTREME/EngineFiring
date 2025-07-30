@@ -31,7 +31,7 @@ constexpr int WINDOW_X = 1080;
 constexpr int WINDOW_Y = 720;
 
 constexpr int DOWNSHIFT_DELAY = 120;
-constexpr int UPSHIFT_DELAY = 20;
+constexpr int UPSHIFT_DELAY = 170;
 
 
 // Function for the PortAudio audio callback
@@ -95,8 +95,9 @@ int main() {
     // Engine engineDef("Countach V12", Engine::getFiringOrderFromString("1 7 5 11 3 9 6 12 2 8 4 10"), 5);
     // Engine engineDef("BMW S70/2 V12", Engine::getFiringOrderFromString("1 7 5 11 3 9 6 12 2 8 4 10"), 6.2);
     // Engine engineDef("F1 V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 16);
-    Engine engineDef("Audi V10 FSI", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {90, 54, 90, 54, 90, 54, 90, 54, 90, 54}, 5);
-    // Engine engineDef("1LR-GUE V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, 5);
+    // Engine engineDef("Audi V10 FSI", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {90, 54, 90, 54, 90, 54, 90, 54, 90, 54}, 5);
+    Engine engineDef("1LR-GUE V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, 5);
+    // Engine engineDef("M80 V10",{0, 5, 4, 9, 1, 6, 2, 7, 3, 8},{70,74,70,74,70,74,70,74,70,74,70} , 5);
     // Engine engineDef("Random V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {72,73,74,75,76,77,78,79,80,81}, 5);
     // Engine engineDef("Mercedes AMG M156", Engine::getFiringOrderFromString("1-5-4-2-6-3-7-8"),4);
     // Engine engineDef("F1 V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, 12.5);
@@ -129,8 +130,8 @@ int main() {
     EngineSoundGenerator engineAlt(mainSamples, engineDef, 1000.0f, 0.5f);
     EngineSoundGenerator engineAltAlt(mainSamples, engineDef, 1000.0f, 0.5f);
     engine.setNoteOffset(0);
-    engineAlt.setNoteOffset(5);
-    engineAltAlt.setNoteOffset(7);
+    engineAlt.setNoteOffset(26);
+    engineAltAlt.setNoteOffset(8);
 
     // ==== SUPERCHARGER (Just a high revving 1 cylinder)
     Engine superchargerDef("Supercharger", {0}, 8.0f);
@@ -165,7 +166,7 @@ int main() {
     AudioContext engineCtx("engines", {&engine, &engineAlt, &engineAltAlt});
     AudioContext backfireCtx("backfire", {&backfire});
     AudioContext superchargerCtx("supercharger", {&supercharger});
-    AudioContext context("root", {&engineCtx, &generalGen, &backfireCtx, &superchargerCtx});
+    AudioContext context("root", {&engineCtx, &generalGen});
 
     Car car;
     std::atomic<bool> carRunning = true;
@@ -257,7 +258,7 @@ int main() {
     Biquad boost3600Hz(bq_type_peak, 3600.0f / SAMPLE_RATE, 4.36f, +2.0f);
     Biquad boost4000Hz(bq_type_peak, 4000.0f / SAMPLE_RATE, 4.36f, +2.0f);
 
-    Biquad huracanBoost(bq_type_peak, 300 / SAMPLE_RATE, 1.0f, -2.0f);
+    Biquad huracanBoost(bq_type_peak, 300 / SAMPLE_RATE, 1.0f, 2.0f);
 
     // Add all filters to FX chain
     // engineCtx.fx.addFilter(lowShelfFilter);
@@ -276,10 +277,10 @@ int main() {
     engineCtx.fx.addFilter(huracanBoost);
 
     engineCtx.fx.addFilter(Biquad(bq_type_peak, 120.0f / SAMPLE_RATE, 0.707f, 4.0f));
-    engineCtx.fx.addFilter(Biquad(bq_type_peak, 500.0f / SAMPLE_RATE, 0.707f, -2.0f));
+    engineCtx.fx.addFilter(Biquad(bq_type_peak, 500.0f / SAMPLE_RATE, 0.707f, 1.0f));
     engineCtx.fx.addFilter(Biquad(bq_type_peak, 3000.0f / SAMPLE_RATE, 0.707f, 5.0f));
-    engineCtx.fx.addFilter(Biquad(bq_type_peak, 8000.0f / SAMPLE_RATE, 0.707f, 6.0f));
-    engineCtx.fx.addFilter(Biquad(bq_type_peak, 9000.0f / SAMPLE_RATE, 0.707f, 5.0f));
+    engineCtx.fx.addFilter(Biquad(bq_type_peak, 8000.0f / SAMPLE_RATE, 0.707f, -2.0f));
+    //engineCtx.fx.addFilter(Biquad(bq_type_peak, 9000.0f / SAMPLE_RATE, 0.707f, 5.0f));
 
     // engineCtx.fx.addFilter(boost2100Hz);
     // engineCtx.fx.addFilter(boost2600Hz);
@@ -306,7 +307,7 @@ int main() {
     Pa_OpenDefaultStream(&stream, 0, 1, paFloat32, SAMPLE_RATE, 256, audio_callback, &context);
     Pa_StartStream(stream);
 
-    SecondOrderFilter rpmFilter(8.0f, 0.2f, 0.01);
+    SecondOrderFilter rpmFilter(5.6f, 0.2f, 0.01);
     car.revLimiterCutTicks = 2;
 
     // LuaEngine luaEngine;
