@@ -31,8 +31,7 @@ constexpr int WINDOW_X = 1080;
 constexpr int WINDOW_Y = 720;
 
 constexpr int DOWNSHIFT_DELAY = 120;
-constexpr int UPSHIFT_DELAY = 50;
-
+constexpr int UPSHIFT_DELAY = 120;
 
 // Function for the PortAudio audio callback
 int audio_callback(const void *, void *outputBuffer, unsigned long framesPerBuffer, const PaStreamCallbackTimeInfo *, PaStreamCallbackFlags, void *userData) {
@@ -41,7 +40,7 @@ int audio_callback(const void *, void *outputBuffer, unsigned long framesPerBuff
 
     for (unsigned long i = 0; i < framesPerBuffer; ++i) {
         *out++ = std::sin((M_PI / 2.0f) * audioContext->getAllSamples());
-    } 
+    }
 
     return paContinue;
 }
@@ -95,7 +94,7 @@ int main() {
     // Engine engineDef("Countach V12", Engine::getFiringOrderFromString("1 7 5 11 3 9 6 12 2 8 4 10"), 5);
     // Engine engineDef("BMW S70/2 V12", Engine::getFiringOrderFromString("1 7 5 11 3 9 6 12 2 8 4 10"), 6.2);
     // Engine engineDef("F1 V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 16);
-    // Engine engineDef("Audi V10 FSI", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {90, 54, 90, 54, 90, 54, 90, 54, 90, 54}, 5);
+    Engine engineDef("Audi V10 FSI", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {90, 54, 90, 54, 90, 54, 90, 54, 90, 54}, 5);
     // Engine engineDef("1LR-GUE V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, 5);
     // Engine engineDef("M80 V10",{0, 5, 4, 9, 1, 6, 2, 7, 3, 8},{70,74,70,74,70,74,70,74,70,74,70} , 5);
     // Engine engineDef("Random V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {72,73,74,75,76,77,78,79,80,81}, 5);
@@ -107,7 +106,7 @@ int main() {
     // Engine engineDef("Mercedes M120 V12", Engine::getFiringOrderFromString("1-12-5-8-3-10-6-7-2-11-4-9"),7.6);
     // Engine engineDef("Murican V8 +", Engine::getFiringOrderFromString("1-8-7-2-6-5-4-3"),3);
     // Engine engineDef("2UR-GSE V8", Engine::getFiringOrderFromString("1-8-7-3-6-5-4-2"),4);
-    Engine engineDef("BMW N54", Engine::getFiringOrderFromString("1-5-3-6-2-4"), 3);
+    // Engine engineDef("BMW N54", Engine::getFiringOrderFromString("1-5-3-6-2-4"), 3);
     // Engine engineDef("V Twin", Engine::getFiringOrderFromString("1-2"), {315,405},0.8);
     // Engine engineDef("1 Cylinder", {0}, 0.5);
     // Engine engineDef("3 Cylinder Sport", Engine::getFiringOrderFromString("1-2-3"),2);
@@ -129,9 +128,9 @@ int main() {
     EngineSoundGenerator engine(mainSamples, engineDef, 1000.0f, 0.5f);
     EngineSoundGenerator engineAlt(mainSamples, engineDef, 1000.0f, 0.5f);
     EngineSoundGenerator engineAltAlt(mainSamples, engineDef, 1000.0f, 0.5f);
-    engine.setNoteOffset(1);
-    engineAlt.setNoteOffset(8);
-    engineAltAlt.setNoteOffset(5);
+    engine.setNoteOffset(0);
+    engineAlt.setNoteOffset(22);
+    engineAltAlt.setNoteOffset(18);
 
     // EQ Tips:
     // 1. Filter out any harsh harmonics (extremes of hearing range)
@@ -171,7 +170,7 @@ int main() {
     AudioContext engineCtx("engines", {&engine, &engineAlt, &engineAltAlt});
     AudioContext backfireCtx("backfire", {&backfire});
     AudioContext superchargerCtx("supercharger", {&supercharger});
-    AudioContext context("root", {&engineCtx, &generalGen, &backfireCtx, &whoosh, &turboShaft});
+    AudioContext context("root", {&engineCtx, &generalGen, &backfireCtx});
 
     Car car;
     std::atomic<bool> carRunning = true;
@@ -284,12 +283,12 @@ int main() {
     engineCtx.fx.addFilter(Biquad(bq_type_peak, 120.0f / SAMPLE_RATE, 0.707f, 4.0f));
     engineCtx.fx.addFilter(Biquad(bq_type_peak, 500.0f / SAMPLE_RATE, 0.707f, 1.0f));
 
-    //engineCtx.fx.addFilter(Biquad(bq_type_peak, 1400.0f / SAMPLE_RATE, 0.707f, 5.0f));
-    //engineCtx.fx.addFilter(Biquad(bq_type_peak, 1700.0f / SAMPLE_RATE, 0.707f, 5.0f));
-    
+    // engineCtx.fx.addFilter(Biquad(bq_type_peak, 1400.0f / SAMPLE_RATE, 0.707f, 5.0f));
+    // engineCtx.fx.addFilter(Biquad(bq_type_peak, 1700.0f / SAMPLE_RATE, 0.707f, 5.0f));
+
     engineCtx.fx.addFilter(Biquad(bq_type_peak, 3000.0f / SAMPLE_RATE, 0.707f, 5.0f));
     engineCtx.fx.addFilter(Biquad(bq_type_peak, 8000.0f / SAMPLE_RATE, 0.707f, -2.0f));
-    //engineCtx.fx.addFilter(Biquad(bq_type_peak, 9000.0f / SAMPLE_RATE, 0.707f, 5.0f));
+    // engineCtx.fx.addFilter(Biquad(bq_type_peak, 9000.0f / SAMPLE_RATE, 0.707f, 5.0f));
 
     // engineCtx.fx.addFilter(boost2100Hz);
     // engineCtx.fx.addFilter(boost2600Hz);
@@ -305,8 +304,8 @@ int main() {
     backfireCtx.fx.addFilter(cut14600Hz);
     // backfireCtx.fx.addFilter(cut18100Hz);
     backfireCtx.fx.addFilter(boost2100Hz);
-    //backfireCtx.fx.addFilter(backfireHighFilter);
-    //backfireCtx.fx.addFilter(backfireHighFilter2);
+    backfireCtx.fx.addFilter(backfireHighFilter);
+    // backfireCtx.fx.addFilter(backfireHighFilter2);
 
     Biquad torqueFilter(bq_type_lowpass, 25.0f / 60.0f, 0.707f, 0.0f);
 
@@ -316,7 +315,7 @@ int main() {
     Pa_OpenDefaultStream(&stream, 0, 1, paFloat32, SAMPLE_RATE, 256, audio_callback, &context);
     Pa_StartStream(stream);
 
-    SecondOrderFilter rpmFilter(6.0f, 0.2f, 0.01);
+    SecondOrderFilter rpmFilter(8.0f, 0.2f, 0.01);
     car.revLimiterCutTicks = 2;
 
     // LuaEngine luaEngine;
@@ -471,8 +470,8 @@ int main() {
             supercharger.setNoteOffset(20);
         }
 
-        if (car.getGas() <= 10 && (lastLiftOff + 200 / deltaTime >= frame)) {
-            backfire.setIntensity(1.0f - ((frame - lastLiftOff) / (200 / deltaTime)));
+        if (car.getGas() <= 10 && (lastLiftOff + 600 / deltaTime >= frame)) {
+            backfire.setIntensity(1.0f - ((frame - lastLiftOff) / (600 / deltaTime)));
         }
         if (car.getRPM() <= 4000 || car.getGas() >= 25) {
             backfire.setIntensity(0);
@@ -494,8 +493,8 @@ int main() {
         // supercharger.setRPM(car.getRPM()); // Supercharger example
         // supercharger.setAmplitude(carTorque / 300);
         // Gear whine example
-        supercharger.setAmplitude(car.getGear() > 0 ?  car.getWheelSpeed()/500 : 0.0f);
-        supercharger.setRPM(carRpm *(car.gearRatios[car.getGear()]*2)+1000);
+        supercharger.setAmplitude(car.getGear() > 0 ? car.getWheelSpeed() / 500 : 0.0f);
+        supercharger.setRPM(carRpm * (car.gearRatios[car.getGear()] * 2) + 1000);
 
         // Update tachometer needle rotation according to rpm.
         tach.setRotation(sf::degrees(carRpm / 27.5 - 90));
