@@ -30,8 +30,10 @@ constexpr float SAMPLE_RATE = 48000;
 constexpr int WINDOW_X = 1080;
 constexpr int WINDOW_Y = 720;
 
-constexpr int DOWNSHIFT_DELAY = 120;
-constexpr int UPSHIFT_DELAY = 120;
+constexpr int DOWNSHIFT_DELAY = 220;
+constexpr int UPSHIFT_DELAY = 220;
+
+constexpr float THROTTLE_BLIP_DOWN = 0.02f;
 
 // Function for the PortAudio audio callback
 int audio_callback(const void *, void *outputBuffer, unsigned long framesPerBuffer, const PaStreamCallbackTimeInfo *, PaStreamCallbackFlags, void *userData) {
@@ -90,11 +92,11 @@ int main() {
                              "assets/audio/tick_library/note_100.wav", "assets/audio/tick_library/note_101.wav", "assets/audio/tick_library/note_102.wav"});
 
     // Engine engineDef("Revuelto V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 7);
-    // Engine engineDef("Diablo/Murci V12", Engine::getFiringOrderFromString("1-7-4-10-2-8-6-12-3-9-5-11"), 6);
+    Engine engineDef("Diablo/Murci V12", Engine::getFiringOrderFromString("1-7-4-10-2-8-6-12-3-9-5-11"), 6);
     // Engine engineDef("Countach V12", Engine::getFiringOrderFromString("1 7 5 11 3 9 6 12 2 8 4 10"), 5);
     // Engine engineDef("BMW S70/2 V12", Engine::getFiringOrderFromString("1 7 5 11 3 9 6 12 2 8 4 10"), 6.2);
     // Engine engineDef("F1 V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 16);
-    Engine engineDef("Audi V10 FSI", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {90, 54, 90, 54, 90, 54, 90, 54, 90, 54}, 5);
+    // Engine engineDef("Audi V10 FSI", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {90, 54, 90, 54, 90, 54, 90, 54, 90, 54}, 5);
     // Engine engineDef("1LR-GUE V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, 5);
     // Engine engineDef("M80 V10",{0, 5, 4, 9, 1, 6, 2, 7, 3, 8},{70,74,70,74,70,74,70,74,70,74,70} , 5);
     // Engine engineDef("Random V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {72,73,74,75,76,77,78,79,80,81}, 5);
@@ -129,8 +131,8 @@ int main() {
     EngineSoundGenerator engineAlt(mainSamples, engineDef, 1000.0f, 0.5f);
     EngineSoundGenerator engineAltAlt(mainSamples, engineDef, 1000.0f, 0.5f);
     engine.setNoteOffset(0);
-    engineAlt.setNoteOffset(22);
-    engineAltAlt.setNoteOffset(18);
+    engineAlt.setNoteOffset(16);
+    engineAltAlt.setNoteOffset(14);
 
     // EQ Tips:
     // 1. Filter out any harsh harmonics (extremes of hearing range)
@@ -262,14 +264,12 @@ int main() {
     Biquad boost3600Hz(bq_type_peak, 3600.0f / SAMPLE_RATE, 4.36f, +2.0f);
     Biquad boost4000Hz(bq_type_peak, 4000.0f / SAMPLE_RATE, 4.36f, +2.0f);
 
-    Biquad huracanBoost(bq_type_peak, 300 / SAMPLE_RATE, 1.0f, 2.0f);
-
-    // Add all filters to FX chain
     // engineCtx.fx.addFilter(lowShelfFilter);
     engineCtx.fx.addFilter(midBoostFilter);
     // engineCtx.fx.addFilter(highShelfFilter);
     superchargerCtx.fx.addFilter(rumbleBoostFilter);
-
+    
+    // Harsh sounds
     engineCtx.fx.addFilter(cut22Hz);
     engineCtx.fx.addFilter(cut28Hz);
     engineCtx.fx.addFilter(cut18100Hz);
@@ -278,22 +278,19 @@ int main() {
     superchargerCtx.fx.addFilter(cut18100Hz);
     engineCtx.fx.addFilter(cut14600Hz);
 
-    engineCtx.fx.addFilter(huracanBoost);
-
+    // Low ends
     engineCtx.fx.addFilter(Biquad(bq_type_peak, 120.0f / SAMPLE_RATE, 0.707f, 4.0f));
+    engineCtx.fx.addFilter(Biquad(bq_type_peak, 300 / SAMPLE_RATE, 1.0f, 2.0f));
     engineCtx.fx.addFilter(Biquad(bq_type_peak, 500.0f / SAMPLE_RATE, 0.707f, 1.0f));
 
+    // Mid range
     // engineCtx.fx.addFilter(Biquad(bq_type_peak, 1400.0f / SAMPLE_RATE, 0.707f, 5.0f));
-    // engineCtx.fx.addFilter(Biquad(bq_type_peak, 1700.0f / SAMPLE_RATE, 0.707f, 5.0f));
-
+    engineCtx.fx.addFilter(Biquad(bq_type_peak, 1700.0f / SAMPLE_RATE, 0.707f, 5.0f));
     engineCtx.fx.addFilter(Biquad(bq_type_peak, 3000.0f / SAMPLE_RATE, 0.707f, 5.0f));
-    engineCtx.fx.addFilter(Biquad(bq_type_peak, 8000.0f / SAMPLE_RATE, 0.707f, -2.0f));
-    // engineCtx.fx.addFilter(Biquad(bq_type_peak, 9000.0f / SAMPLE_RATE, 0.707f, 5.0f));
 
-    // engineCtx.fx.addFilter(boost2100Hz);
-    // engineCtx.fx.addFilter(boost2600Hz);
-    // engineCtx.fx.addFilter(boost3600Hz);
-    // engineCtx.fx.addFilter(boost4000Hz);
+    // engineCtx.fx.addFilter(Biquad(bq_type_peak, 8000.0f / SAMPLE_RATE, 0.707f, -2.0f)); // High note - crispyness
+    // engineCtx.fx.addFilter(Biquad(bq_type_peak, 9000.0f / SAMPLE_RATE, 0.707f, -3.0f));
+
 
     Biquad backfireFilter(bq_type_lowshelf, 150.0f / SAMPLE_RATE, 0.707f, 12.0f);
     Biquad backfireHighFilter(bq_type_highshelf, 3000.0f / SAMPLE_RATE, 0.707f, -12.0f);
@@ -315,8 +312,8 @@ int main() {
     Pa_OpenDefaultStream(&stream, 0, 1, paFloat32, SAMPLE_RATE, 256, audio_callback, &context);
     Pa_StartStream(stream);
 
-    SecondOrderFilter rpmFilter(8.0f, 0.2f, 0.01);
-    car.revLimiterCutTicks = 2;
+    SecondOrderFilter rpmFilter(6.0f, 0.2f, 0.01);
+    car.revLimiterCutTicks = 1;
 
     // LuaEngine luaEngine;
     // luaEngine.lua["mainCtx"] = std::ref(context);
@@ -362,7 +359,7 @@ int main() {
                     std::cout << "Downshift\n";
                     lastGear = car.getGear();
                     car.setGear(0);
-                    car.setGas((0.04 * car.getRPM()) + 30);
+                    car.setGas((THROTTLE_BLIP_DOWN * car.getRPM()) + 30);
                     downShiftFrame = frame + DOWNSHIFT_DELAY / deltaTime;
                     shiftLock = true;
                 }
@@ -428,7 +425,7 @@ int main() {
                     std::cout << "Downshift\n";
                     lastGear = car.getGear();
                     car.setGear(0);
-                    car.setGas((0.04 * car.getRPM()) + 30);
+                    car.setGas((THROTTLE_BLIP_DOWN * car.getRPM()) + 30);
                     downShiftFrame = frame + DOWNSHIFT_DELAY / deltaTime;
                     shiftLock = true;
                 }
@@ -480,6 +477,7 @@ int main() {
         carRpm = rpmFilter.update(car.getRPM());
         float carTorque = torqueFilter.process(car.getTorque());
         // TODO: Seperation of concerns (Boost logic, shift styles etc.)
+        engineCtx.setAmplitude(0.5f + carRpm / 20000.0f);
         engine.setRPM(carRpm);
         engineAlt.setRPM(carRpm);
         engineAltAlt.setRPM(carRpm);
