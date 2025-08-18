@@ -132,8 +132,8 @@ int main() {
     EngineSoundGenerator engineAlt(mainSamples, engineDef, 1000.0f, 0.5f);
     EngineSoundGenerator engineAltAlt(mainSamples, engineDef, 1000.0f, 0.5f);
     engine.setNoteOffset(0);
-    engineAlt.setNoteOffset(16);
-    engineAltAlt.setNoteOffset(12);
+    engineAlt.setNoteOffset(9);
+    engineAltAlt.setNoteOffset(14);
 
     // EQ Tips:
     // 1. Filter out any harsh harmonics (extremes of hearing range)
@@ -173,7 +173,7 @@ int main() {
     AudioContext engineCtx("engines", {&engine, &engineAlt, &engineAltAlt});
     AudioContext backfireCtx("backfire", {&backfire});
     AudioContext superchargerCtx("supercharger", {&supercharger});
-    AudioContext context("root", {&engineCtx, &generalGen, &backfireCtx});
+    AudioContext context("root", {&engineCtx, &generalGen, &backfireCtx, &whoosh, &turboShaft});
 
     Car car;
     std::atomic<bool> carRunning = true;
@@ -287,7 +287,7 @@ int main() {
     // Mid range
     // engineCtx.fx.addFilter(Biquad(bq_type_peak, 1400.0f / SAMPLE_RATE, 0.707f, 5.0f));
     engineCtx.fx.addFilter(Biquad(bq_type_peak, 1700.0f / SAMPLE_RATE, 0.707f, 4.0f));
-    engineCtx.fx.addFilter(Biquad(bq_type_peak, 3000.0f / SAMPLE_RATE, 0.707f, 3.0f));
+    engineCtx.fx.addFilter(Biquad(bq_type_peak, 3000.0f / SAMPLE_RATE, 0.707f, 4.0f));
 
     engineCtx.fx.addFilter(Biquad(bq_type_peak, 8000.0f / SAMPLE_RATE, 0.707f, -2.0f)); // High note - crispyness
     engineCtx.fx.addFilter(Biquad(bq_type_peak, 9000.0f / SAMPLE_RATE, 0.707f, -3.0f));
