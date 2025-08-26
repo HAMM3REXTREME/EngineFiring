@@ -17,9 +17,9 @@ class Car {
     float gearRatios[8] = {0,      0.0820, 0.1362, 0.1879,
                            0.2457, 0.3091, 0.3747, 0.4507}; // Gearing ratios - Used to match engine rpm to wheel rpm (1/(specsheet ratio * final drive))
     float gearDragFactors[8] = {
-        0.99,   0.999,  0.9994, 0.9995, 0.9996,
+        0.988,  0.999,  0.9994, 0.9995, 0.9996,
         0.9997, 0.9998, 0.9999}; // Rate for revs to settle back - values closer to 1 need more time to settle back due to less resistance (exponential decay)
-    float gearThrottleResponses[8] = {1,    0.25, 0.20,  0.15,
+    float gearThrottleResponses[8] = {1.2,  0.25, 0.20,  0.15,
                                       0.10, 0.09, 0.082, 0.069}; // Throttle fake sensitivity (or how fast the needle moves) - should feel lower in higher gears
 
     // Wheel resistances

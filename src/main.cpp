@@ -30,7 +30,7 @@ constexpr float SAMPLE_RATE = 48000;
 constexpr int WINDOW_X = 1080;
 constexpr int WINDOW_Y = 720;
 
-constexpr int DOWNSHIFT_DELAY = 250;
+constexpr int DOWNSHIFT_DELAY = 150;
 constexpr int UPSHIFT_DELAY = 400;
 
 constexpr float THROTTLE_BLIP_DOWN = 0.02f;
@@ -93,7 +93,7 @@ int main() {
 
     // Engine engineDef("Revuelto V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 7);
     // Engine engineDef("Diablo/Murci V12", Engine::getFiringOrderFromString("1-7-4-10-2-8-6-12-3-9-5-11"), 6);
-    Engine engineDef("Countach V12", Engine::getFiringOrderFromString("1 7 5 11 3 9 6 12 2 8 4 10"), 5);
+    // Engine engineDef("Countach V12", Engine::getFiringOrderFromString("1 7 5 11 3 9 6 12 2 8 4 10"), 5);
     // Engine engineDef("BMW S70/2 V12", Engine::getFiringOrderFromString("1 7 5 11 3 9 6 12 2 8 4 10"), 6.2);
     // Engine engineDef("F1 V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 16);
     // Engine engineDef("Audi V10 FSI", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {90, 54, 90, 54, 90, 54, 90, 54, 90, 54}, 5);
@@ -108,7 +108,7 @@ int main() {
     // Engine engineDef("Mercedes M120 V12", Engine::getFiringOrderFromString("1-12-5-8-3-10-6-7-2-11-4-9"),7.6);
     // Engine engineDef("Murican V8 +", Engine::getFiringOrderFromString("1-8-7-2-6-5-4-3"),3);
     // Engine engineDef("2UR-GSE V8", Engine::getFiringOrderFromString("1-8-7-3-6-5-4-2"),4);
-    // Engine engineDef("BMW N54", Engine::getFiringOrderFromString("1-5-3-6-2-4"), 3);
+    Engine engineDef("BMW N54", Engine::getFiringOrderFromString("1-5-3-6-2-4"), 3);
     // Engine engineDef("Diesel inline 6", Engine::getFiringOrderFromString("1-5-3-6-2-4"), 1);
     // Engine engineDef("V Twin", Engine::getFiringOrderFromString("1-2"), {315,405},0.8);
     // Engine engineDef("1 Cylinder", {0}, 0.5);
@@ -120,7 +120,7 @@ int main() {
     // Engine engineDef("Super Sport", Engine::getFiringOrderFromString("1-3-4-2"),4);
     // Engine engineDef("Cross plane i4 moto", Engine::getFiringOrderFromString("1-3-2-4"), {180,90,180,270},4);
     // Engine engineDef("Ducati V4", Engine::getFiringOrderFromString("1-2-4-3"),{90,200,90,340}, 4);
-    // Engine engineDef("Nissan VQ", Engine::getFiringOrderFromString("1-2-3-4-5-6"),3); 
+    // Engine engineDef("Nissan VQ", Engine::getFiringOrderFromString("1-2-3-4-5-6"),3);
     // Engine engineDef("Nissan VQ - Unequal headers", Engine::getFiringOrderFromString("1-2-3-4-5-6"), {177,183,177,183,177,183}, 2.8);
     // Engine engineDef("Ford 4.0L V6 / Honda C-series 90", Engine::getFiringOrderFromString("1-4-2-5-3-6"),3);
     // Engine engineDef("Ferrari V6", Engine::getFiringOrderFromString("1-6-3-4-2-5"),3.5);
@@ -133,7 +133,7 @@ int main() {
     EngineSoundGenerator engineAltAlt(mainSamples, engineDef, 1000.0f, 0.5f);
     engine.setNoteOffset(0);
     engineAlt.setNoteOffset(5);
-    engineAltAlt.setNoteOffset(8);
+    engineAltAlt.setNoteOffset(10);
 
     // EQ Tips:
     // 1. Filter out any harsh harmonics (extremes of hearing range)
@@ -161,9 +161,9 @@ int main() {
 
     // ==== TURBO FLUTTER AND BOV SOUNDS ETC.
     SoundBank turboSamples;
-    turboSamples.addFromWavs({"assets/audio/extra/thump.wav", "assets/audio/extra/flutter.wav"});
+    turboSamples.addFromWavs({"assets/audio/extra/thump.wav", "assets/audio/extra/bov.wav"});
     SimpleSoundGenerator turboGen(turboSamples);
-    turboGen.setAmplitude(0.025f);
+    turboGen.setAmplitude(0.25f);
 
     // ==== BACKFIRE NOISE GENERATOR
     BackfireSoundGenerator backfire(SAMPLE_RATE);
@@ -173,7 +173,7 @@ int main() {
     AudioContext engineCtx("engines", {&engine, &engineAlt, &engineAltAlt});
     AudioContext backfireCtx("backfire", {&backfire});
     AudioContext superchargerCtx("supercharger", {&supercharger});
-    AudioContext context("root", {&engineCtx, &generalGen, &backfireCtx});
+    AudioContext context("root", {&engineCtx, &generalGen, &backfireCtx, &turboShaft, &whoosh, &turboGen});
 
     Car car;
     std::atomic<bool> carRunning = true;
@@ -249,7 +249,7 @@ int main() {
     debugText.setPosition({25.f, 25.f});
 
     // Biquad filters
-    Biquad lowShelfFilter(bq_type_lowshelf, 150.0f / SAMPLE_RATE, 0.707f, 0.0f); // cut lows
+    Biquad lowShelfFilter(bq_type_lowshelf, 150.0f / SAMPLE_RATE, 0.707f, 0.0f);  // cut lows
     Biquad midBoostFilter(bq_type_peak, 1500.0f / SAMPLE_RATE, 1.0f, 3.0f);       // boost mids
     Biquad highShelfFilter(bq_type_highshelf, 2500.0f / SAMPLE_RATE, 1.0f, 8.0f); // boost highs
     Biquad rumbleBoostFilter(bq_type_peak, 80.0f / SAMPLE_RATE, 0.5f, 10.1f);     // deep bass boost
@@ -265,11 +265,10 @@ int main() {
     Biquad boost3600Hz(bq_type_peak, 3600.0f / SAMPLE_RATE, 4.36f, +2.0f);
     Biquad boost4000Hz(bq_type_peak, 4000.0f / SAMPLE_RATE, 4.36f, +2.0f);
 
-
     engineCtx.fx.addFilter(Biquad(bq_type_peak, 1600.0f / SAMPLE_RATE, 0.707f, 0.0f));
     engineCtx.fx.addFilter(midBoostFilter);
     superchargerCtx.fx.addFilter(rumbleBoostFilter);
-    
+
     // Harsh sounds
     engineCtx.fx.addFilter(cut22Hz);
     engineCtx.fx.addFilter(cut28Hz);
@@ -291,7 +290,6 @@ int main() {
 
     engineCtx.fx.addFilter(Biquad(bq_type_peak, 8000.0f / SAMPLE_RATE, 0.707f, -2.0f)); // High note - crispyness
     engineCtx.fx.addFilter(Biquad(bq_type_peak, 9000.0f / SAMPLE_RATE, 0.707f, -3.0f));
-
 
     Biquad backfireFilter(bq_type_lowshelf, 150.0f / SAMPLE_RATE, 0.707f, 12.0f);
     Biquad backfireHighFilter(bq_type_highshelf, 3000.0f / SAMPLE_RATE, 0.707f, -12.0f);
@@ -450,7 +448,7 @@ int main() {
             backfire.triggerPop();
         }
 
-        if (car.getBoost() <= 15 && !blowoff) {
+        if (car.getGas() <= 10 && !blowoff) {
             blowoff = true;
             turboGen.startPlayback(1);
         }
@@ -478,7 +476,7 @@ int main() {
         carRpm = rpmFilter.update(car.getRPM());
         float carTorque = torqueFilter.process(car.getTorque());
         // TODO: Seperation of concerns (Boost logic, shift styles etc.)
-        engineCtx.fx.biquads[0].setPeakGain(8.0f-(carTorque / 20.0f));
+        engineCtx.fx.biquads[0].setPeakGain(8.0f - (carTorque / 20.0f));
         engineCtx.setAmplitude(0.5f + carRpm / 20000.0f);
         engine.setRPM(carRpm);
         engineAlt.setRPM(carRpm);
