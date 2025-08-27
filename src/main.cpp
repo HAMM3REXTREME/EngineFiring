@@ -31,7 +31,7 @@ constexpr int WINDOW_X = 1080;
 constexpr int WINDOW_Y = 720;
 
 constexpr int DOWNSHIFT_DELAY = 150;
-constexpr int UPSHIFT_DELAY = 400;
+constexpr int UPSHIFT_DELAY = 60;
 
 constexpr float THROTTLE_BLIP_DOWN = 0.02f;
 
@@ -70,7 +70,6 @@ void carStarter(Car *car, bool *m_isStarting) {
 }
 
 int main() {
-    // sol::state lua;
 
     sf::RenderWindow window(sf::VideoMode({WINDOW_X, WINDOW_Y}), "Engine Firing Simulator");
     sf::Clock deltaClock;
@@ -93,7 +92,7 @@ int main() {
 
     // Engine engineDef("Revuelto V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 7);
     // Engine engineDef("Diablo/Murci V12", Engine::getFiringOrderFromString("1-7-4-10-2-8-6-12-3-9-5-11"), 6);
-    // Engine engineDef("Countach V12", Engine::getFiringOrderFromString("1 7 5 11 3 9 6 12 2 8 4 10"), 5);
+    Engine engineDef("Countach V12", Engine::getFiringOrderFromString("1 7 5 11 3 9 6 12 2 8 4 10"), 5);
     // Engine engineDef("BMW S70/2 V12", Engine::getFiringOrderFromString("1 7 5 11 3 9 6 12 2 8 4 10"), 6.2);
     // Engine engineDef("F1 V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 16);
     // Engine engineDef("Audi V10 FSI", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {90, 54, 90, 54, 90, 54, 90, 54, 90, 54}, 5);
@@ -108,7 +107,7 @@ int main() {
     // Engine engineDef("Mercedes M120 V12", Engine::getFiringOrderFromString("1-12-5-8-3-10-6-7-2-11-4-9"),7.6);
     // Engine engineDef("Murican V8 +", Engine::getFiringOrderFromString("1-8-7-2-6-5-4-3"),3);
     // Engine engineDef("2UR-GSE V8", Engine::getFiringOrderFromString("1-8-7-3-6-5-4-2"),4);
-    Engine engineDef("BMW N54", Engine::getFiringOrderFromString("1-5-3-6-2-4"), 3);
+    // Engine engineDef("BMW N54", Engine::getFiringOrderFromString("1-5-3-6-2-4"), 3);
     // Engine engineDef("Diesel inline 6", Engine::getFiringOrderFromString("1-5-3-6-2-4"), 1);
     // Engine engineDef("V Twin", Engine::getFiringOrderFromString("1-2"), {315,405},0.8);
     // Engine engineDef("1 Cylinder", {0}, 0.5);
@@ -128,12 +127,12 @@ int main() {
     // Engine engineDef("Buick even firing V6", Engine::getFiringOrderFromString("1-6-5-4-3-2"),3);
     // Engine engineDef("Buick odd firing V6", Engine::getFiringOrderFromString("1-6-5-4-3-2"), {90,150,90,150,90,150},3);
     // Engine engineDef("Porsche Flat 6", Engine::getFiringOrderFromString("1-6-2-4-3-5"), 3.6);
-    EngineSoundGenerator engine(mainSamples, engineDef, 1000.0f, 0.5f);
-    EngineSoundGenerator engineAlt(mainSamples, engineDef, 1000.0f, 0.5f);
-    EngineSoundGenerator engineAltAlt(mainSamples, engineDef, 1000.0f, 0.5f);
-    engine.setNoteOffset(0);
-    engineAlt.setNoteOffset(5);
-    engineAltAlt.setNoteOffset(10);
+    EngineSoundGenerator engineLowNote(mainSamples, engineDef, 1000.0f, 0.5f);
+    EngineSoundGenerator engineHighNote(mainSamples, engineDef, 1000.0f, 0.5f);
+    EngineSoundGenerator engineMechanicals(mainSamples, engineDef, 1000.0f, 0.5f);
+    engineLowNote.setNoteOffset(0);
+    engineHighNote.setNoteOffset(5);
+    engineMechanicals.setNoteOffset(8);
 
     // EQ Tips:
     // 1. Filter out any harsh harmonics (extremes of hearing range)
@@ -170,21 +169,25 @@ int main() {
     backfire.setAmplitude(0.4f);
 
     // Audio sample generators that get summed up and played together
-    AudioContext engineCtx("engines", {&engine, &engineAlt, &engineAltAlt});
+    AudioContext engineCtx("engines", {&engineLowNote, &engineHighNote, &engineMechanicals});
     AudioContext backfireCtx("backfire", {&backfire});
     AudioContext superchargerCtx("supercharger", {&supercharger});
-    AudioContext context("root", {&engineCtx, &generalGen, &backfireCtx, &turboShaft, &whoosh, &turboGen});
+    AudioContext context("root", {&engineCtx, &generalGen, &backfireCtx});
 
     Car car;
     std::atomic<bool> carRunning = true;
     std::thread carThread{manageCar, &car, &carRunning};
     car.ignition = false;
+    car.revLimiterCutTicks = 2;
 
     bool showDebug = false;
 
-    float carRpm = 0;
+    // TODO: Shifting + Post process wrapper class
+    float carRpm = 0;    // Processed RPM
+    float carTorque = 0; // Processed Torque
+    Biquad torqueFilter(bq_type_lowpass, 25.0f / 60.0f, 0.707f, 0.0f);
+    SecondOrderFilter rpmFilter(5.0f, 0.3f, 0.01);
 
-    // Testing shift behavior etc.
     bool shifting = false;
     bool isStarting = false;
     bool blowoff = false;
@@ -198,6 +201,58 @@ int main() {
     int lastLiftOff = 0;
     bool shiftLock = false; // Only allow one type of shift at a time (upshift/downshift)
     Damper gasAvg(5);       // Smooth out gas inputs
+
+    // Biquad filters
+    Biquad lowShelfFilter(bq_type_lowshelf, 150.0f / SAMPLE_RATE, 0.707f, 0.0f);  // cut lows
+    Biquad midBoostFilter(bq_type_peak, 1500.0f / SAMPLE_RATE, 1.0f, 3.0f);       // boost mids
+    Biquad highShelfFilter(bq_type_highshelf, 2500.0f / SAMPLE_RATE, 1.0f, 8.0f); // boost highs
+    Biquad rumbleBoostFilter(bq_type_peak, 80.0f / SAMPLE_RATE, 0.5f, 10.1f);     // deep bass boost
+
+    Biquad cut22Hz(bq_type_peak, 22.0f / SAMPLE_RATE, 4.36f, -36.0f);
+    Biquad cut28Hz(bq_type_peak, 28.0f / SAMPLE_RATE, 4.36f, -16.0f);
+    Biquad cut18100Hz(bq_type_peak, 18100.0f / SAMPLE_RATE, 4.36f, -26.0f);
+    Biquad cut14600Hz(bq_type_peak, 14600.0f / SAMPLE_RATE, 4.36f, -14.0f);
+
+    Biquad boost2100Hz(bq_type_peak, 2100.0f / SAMPLE_RATE, 4.36f, +2.0f);
+    Biquad boost2600Hz(bq_type_peak, 2600.0f / SAMPLE_RATE, 4.36f, +2.0f);
+    Biquad boost3600Hz(bq_type_peak, 3600.0f / SAMPLE_RATE, 4.36f, +2.0f);
+    Biquad boost4000Hz(bq_type_peak, 4000.0f / SAMPLE_RATE, 4.36f, +2.0f);
+
+    engineCtx.fx.addFilter(Biquad(bq_type_peak, 1600.0f / SAMPLE_RATE, 0.707f, 0.0f)); // Example active filter
+    engineCtx.fx.addFilter(midBoostFilter);
+    superchargerCtx.fx.addFilter(rumbleBoostFilter);
+
+    // Harsh sounds
+    engineCtx.fx.addFilter(cut22Hz);
+    engineCtx.fx.addFilter(cut28Hz);
+    engineCtx.fx.addFilter(cut18100Hz);
+    engineCtx.fx.addFilter(cut14600Hz);
+    superchargerCtx.fx.addFilter(cut22Hz);
+    superchargerCtx.fx.addFilter(cut28Hz);
+    superchargerCtx.fx.addFilter(cut18100Hz);
+
+    // Low ends
+    engineCtx.fx.addFilter(Biquad(bq_type_peak, 120.0f / SAMPLE_RATE, 0.707f, 4.0f));
+    engineCtx.fx.addFilter(Biquad(bq_type_peak, 300 / SAMPLE_RATE, 1.0f, 2.0f));
+    engineCtx.fx.addFilter(Biquad(bq_type_peak, 500.0f / SAMPLE_RATE, 0.707f, 1.0f));
+
+    // Mid range
+    engineCtx.fx.addFilter(Biquad(bq_type_peak, 1700.0f / SAMPLE_RATE, 0.707f, 4.0f));
+    engineCtx.fx.addFilter(Biquad(bq_type_peak, 3000.0f / SAMPLE_RATE, 0.707f, 4.0f));
+    engineCtx.fx.addFilter(Biquad(bq_type_peak, 8000.0f / SAMPLE_RATE, 0.707f, -2.0f)); // High note - crispyness
+    engineCtx.fx.addFilter(Biquad(bq_type_peak, 9000.0f / SAMPLE_RATE, 0.707f, -3.0f));
+
+    Biquad backfireFilter(bq_type_lowshelf, 150.0f / SAMPLE_RATE, 0.707f, 12.0f);
+    Biquad backfireHighFilter(bq_type_highshelf, 3000.0f / SAMPLE_RATE, 0.707f, -12.0f);
+    Biquad backfireHighFilter2(bq_type_peak, 4500.0f / SAMPLE_RATE, 0.3f, -12.0f);
+    backfireCtx.fx.addFilter(backfireFilter);
+    backfireCtx.fx.addFilter(rumbleBoostFilter);
+    backfireCtx.fx.addFilter(midBoostFilter);
+    backfireCtx.fx.addFilter(cut14600Hz);
+    // backfireCtx.fx.addFilter(cut18100Hz);
+    backfireCtx.fx.addFilter(boost2100Hz);
+    backfireCtx.fx.addFilter(backfireHighFilter);
+    // backfireCtx.fx.addFilter(backfireHighFilter2);
 
     // Map user keyboard input to differen levels of throttle
     std::map<sf::Keyboard::Scancode, int> userThrottleMap;
@@ -248,77 +303,12 @@ int main() {
     debugText.setFillColor(sf::Color::Green);
     debugText.setPosition({25.f, 25.f});
 
-    // Biquad filters
-    Biquad lowShelfFilter(bq_type_lowshelf, 150.0f / SAMPLE_RATE, 0.707f, 0.0f);  // cut lows
-    Biquad midBoostFilter(bq_type_peak, 1500.0f / SAMPLE_RATE, 1.0f, 3.0f);       // boost mids
-    Biquad highShelfFilter(bq_type_highshelf, 2500.0f / SAMPLE_RATE, 1.0f, 8.0f); // boost highs
-    Biquad rumbleBoostFilter(bq_type_peak, 80.0f / SAMPLE_RATE, 0.5f, 10.1f);     // deep bass boost
-
-    // Additional precise EQ filters from EasyEffects
-    Biquad cut22Hz(bq_type_peak, 22.0f / SAMPLE_RATE, 4.36f, -36.0f);
-    Biquad cut28Hz(bq_type_peak, 28.0f / SAMPLE_RATE, 4.36f, -16.0f);
-    Biquad cut18100Hz(bq_type_peak, 18100.0f / SAMPLE_RATE, 4.36f, -26.0f);
-    Biquad cut14600Hz(bq_type_peak, 14600.0f / SAMPLE_RATE, 4.36f, -14.0f);
-
-    Biquad boost2100Hz(bq_type_peak, 2100.0f / SAMPLE_RATE, 4.36f, +2.0f);
-    Biquad boost2600Hz(bq_type_peak, 2600.0f / SAMPLE_RATE, 4.36f, +2.0f);
-    Biquad boost3600Hz(bq_type_peak, 3600.0f / SAMPLE_RATE, 4.36f, +2.0f);
-    Biquad boost4000Hz(bq_type_peak, 4000.0f / SAMPLE_RATE, 4.36f, +2.0f);
-
-    engineCtx.fx.addFilter(Biquad(bq_type_peak, 1600.0f / SAMPLE_RATE, 0.707f, 0.0f));
-    engineCtx.fx.addFilter(midBoostFilter);
-    superchargerCtx.fx.addFilter(rumbleBoostFilter);
-
-    // Harsh sounds
-    engineCtx.fx.addFilter(cut22Hz);
-    engineCtx.fx.addFilter(cut28Hz);
-    engineCtx.fx.addFilter(cut18100Hz);
-    superchargerCtx.fx.addFilter(cut22Hz);
-    superchargerCtx.fx.addFilter(cut28Hz);
-    superchargerCtx.fx.addFilter(cut18100Hz);
-    engineCtx.fx.addFilter(cut14600Hz);
-
-    // Low ends
-    engineCtx.fx.addFilter(Biquad(bq_type_peak, 120.0f / SAMPLE_RATE, 0.707f, 4.0f));
-    engineCtx.fx.addFilter(Biquad(bq_type_peak, 300 / SAMPLE_RATE, 1.0f, 2.0f));
-    engineCtx.fx.addFilter(Biquad(bq_type_peak, 500.0f / SAMPLE_RATE, 0.707f, 1.0f));
-
-    // Mid range
-    // engineCtx.fx.addFilter(Biquad(bq_type_peak, 1400.0f / SAMPLE_RATE, 0.707f, 5.0f));
-    engineCtx.fx.addFilter(Biquad(bq_type_peak, 1700.0f / SAMPLE_RATE, 0.707f, 4.0f));
-    engineCtx.fx.addFilter(Biquad(bq_type_peak, 3000.0f / SAMPLE_RATE, 0.707f, 4.0f));
-
-    engineCtx.fx.addFilter(Biquad(bq_type_peak, 8000.0f / SAMPLE_RATE, 0.707f, -2.0f)); // High note - crispyness
-    engineCtx.fx.addFilter(Biquad(bq_type_peak, 9000.0f / SAMPLE_RATE, 0.707f, -3.0f));
-
-    Biquad backfireFilter(bq_type_lowshelf, 150.0f / SAMPLE_RATE, 0.707f, 12.0f);
-    Biquad backfireHighFilter(bq_type_highshelf, 3000.0f / SAMPLE_RATE, 0.707f, -12.0f);
-    Biquad backfireHighFilter2(bq_type_peak, 4500.0f / SAMPLE_RATE, 0.3f, -12.0f);
-    backfireCtx.fx.addFilter(backfireFilter);
-    backfireCtx.fx.addFilter(rumbleBoostFilter);
-    backfireCtx.fx.addFilter(midBoostFilter);
-    backfireCtx.fx.addFilter(cut14600Hz);
-    // backfireCtx.fx.addFilter(cut18100Hz);
-    backfireCtx.fx.addFilter(boost2100Hz);
-    backfireCtx.fx.addFilter(backfireHighFilter);
-    // backfireCtx.fx.addFilter(backfireHighFilter2);
-
-    Biquad torqueFilter(bq_type_lowpass, 25.0f / 60.0f, 0.707f, 0.0f);
-
     // PortAudio for live audio playback
     Pa_Initialize();
     PaStream *stream;
     Pa_OpenDefaultStream(&stream, 0, 1, paFloat32, SAMPLE_RATE, 256, audio_callback, &context);
     Pa_StartStream(stream);
 
-    SecondOrderFilter rpmFilter(5.0f, 0.3f, 0.01);
-    car.revLimiterCutTicks = 2;
-
-    // LuaEngine luaEngine;
-    // luaEngine.lua["mainCtx"] = std::ref(context);
-    //  luaEngine.lua["car"] = std::ref(car);
-    // luaEngine.runLuaScript("assets/scripts/script.lua");
-    // luaEngine.init();
     //  ==== APPLICATION MAIN LOOP ====
     while (window.isOpen()) {
         frame++;
@@ -327,7 +317,6 @@ int main() {
         Pa_Sleep(10);
         // Process events
         while (const std::optional event = window.pollEvent()) {
-            // Close window: exit
             if (event->is<sf::Event::Closed>()) {
                 window.close();
             }
@@ -362,35 +351,29 @@ int main() {
                     downShiftFrame = frame + DOWNSHIFT_DELAY / deltaTime;
                     shiftLock = true;
                 }
-                if (keyPressed->scancode == sf::Keyboard::Scancode::S) {
-                    // Only allow starting if not already in the process of being started, otherwise we can attempt to start.
-                    if (!isStarting) {
-                        generalGen.startPlayback(1);
-                        // Push to start.
-                        std::cout << "Starting car...\n";
-                        std::thread starterThread{carStarter, &car, &isStarting};
-                        starterThread.detach();
-                    }
+                if (keyPressed->scancode == sf::Keyboard::Scancode::S && !isStarting) {
+                    // If we've not already started the startup procedure, do the startup procedure
+                    generalGen.startPlayback(1);
+                    // Push to start.
+                    std::cout << "Starting car...\n";
+                    std::thread starterThread{carStarter, &car, &isStarting};
+                    starterThread.detach();
                     isStarting = true;
                 }
                 if (keyPressed->scancode == sf::Keyboard::Scancode::A) {
                     car.ignition = !car.ignition;
-                    std::cout << "Set ignition to " << car.ignition << "\n";
+                    std::cout << "Ignition: " << car.ignition << "\n";
                 }
                 if (keyPressed->scancode == sf::Keyboard::Scancode::Period) {
-                    car.linearWheelDrag = 5;
+                    car.linearWheelDrag = 5; // Brakes
                 }
             }
             if (const auto *keyReleased = event->getIf<sf::Event::KeyReleased>()) {
-                if (keyReleased->scancode == sf::Keyboard::Scancode::T) {
-                    gas = 0;
-                }
                 if (keyReleased->scancode == sf::Keyboard::Scancode::Period) {
                     car.linearWheelDrag = 0;
                 }
                 auto it = userThrottleMap.find(keyReleased->scancode);
                 if (it != userThrottleMap.end()) {
-                    // std::cout << "Accelerator at " << it->second << " \n";
                     gas = 0;
                 }
             }
@@ -399,10 +382,6 @@ int main() {
                     // std:: cout << "Axis::Z " << joystickMove->position << "\n";
                     gas = 0.75 * (100 - joystickMove->position);
                 }
-                // if (joystickMove->axis == sf::Joystick::Axis::X) {
-                //     // std:: cout << "Axis::X " << joystickMove->position << "\n";
-                //     carRpm = 50 * (100+ joystickMove->position);
-                // }
                 if (joystickMove->axis == sf::Joystick::Axis::R) {
                     // std:: cout << "Axis::R " << joystickMove->position << "\n";
                     car.linearWheelDrag = 0.03 * (100 - joystickMove->position);
@@ -417,9 +396,6 @@ int main() {
                     car.setGas(0);
                     upShiftFrame = frame + UPSHIFT_DELAY / deltaTime;
                     shiftLock = true;
-                    if (gasAvg.getAverage() > 100) {
-                        // engineCtx.fx.biquads[3].setPeakGain(10.1f + car.getRPM() / 500.0f);
-                    }
                 } else if (joystickButton->button == 5 && !shiftLock) { // RB button
                     std::cout << "Downshift\n";
                     lastGear = car.getGear();
@@ -474,16 +450,16 @@ int main() {
         }
         // luaEngine.tick();
         carRpm = rpmFilter.update(car.getRPM());
-        float carTorque = torqueFilter.process(car.getTorque());
+        carTorque = torqueFilter.process(car.getTorque());
         // TODO: Seperation of concerns (Boost logic, shift styles etc.)
         engineCtx.fx.biquads[0].setPeakGain(8.0f - (carTorque / 20.0f));
         engineCtx.setAmplitude(0.5f + carRpm / 20000.0f);
-        engine.setRPM(carRpm);
-        engineAlt.setRPM(carRpm);
-        engineAltAlt.setRPM(carRpm);
-        engine.setAmplitude(carTorque / 175 + 0.1f);
-        engineAlt.setAmplitude((carRpm * carTorque) / 1000000);
-        engineAltAlt.setAmplitude(carRpm / 80000);
+        engineLowNote.setRPM(carRpm);
+        engineHighNote.setRPM(carRpm);
+        engineMechanicals.setRPM(carRpm);
+        engineLowNote.setAmplitude(carTorque / 175 + 0.1f);
+        engineHighNote.setAmplitude((carRpm * carTorque) / 1000000);
+        engineMechanicals.setAmplitude(carRpm / 80000);
         whoosh.setIntensity(car.getBoost() / 100);
         whoosh.setAmplitude(car.getBoost() / 2000);
         turboShaft.setAmplitude(car.getBoost() / 200);
@@ -496,7 +472,7 @@ int main() {
 
         // Update tachometer needle rotation according to rpm.
         tach.setRotation(sf::degrees(carRpm / 27.5 - 90));
-        gaugeValue.setString("RPM: " + std::to_string((int)engine.getRPM()) + "\nBoost: " + std::to_string((int)car.getBoost()) +
+        gaugeValue.setString("RPM: " + std::to_string((int)engineLowNote.getRPM()) + "\nBoost: " + std::to_string((int)car.getBoost()) +
                              "\nGear: " + std::to_string((int)car.getGear()) + "\nSpeed: " + std::to_string((int)(car.getWheelSpeed() * 3.6)));
         debugText.setString(context.getInfo(0));
         // std::cout << "RPM: " << (int)engine.getRPM() << "  boost: " << car.getBoost() << " Gear: " << car.getGear() << " Speed: " << car.getWheelSpeed()
