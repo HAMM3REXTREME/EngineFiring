@@ -31,7 +31,7 @@ constexpr int WINDOW_X = 1080;
 constexpr int WINDOW_Y = 720;
 
 constexpr int DOWNSHIFT_DELAY = 150;
-constexpr int UPSHIFT_DELAY = 60;
+constexpr int UPSHIFT_DELAY = 160;
 
 constexpr float THROTTLE_BLIP_DOWN = 0.02f;
 
@@ -92,12 +92,12 @@ int main() {
                              "assets/audio/tick_library/note_100.wav", "assets/audio/tick_library/note_101.wav", "assets/audio/tick_library/note_102.wav"});
 
     // Engine engineDef("Revuelto V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 7);
-    Engine engineDef("Diablo/Murci V12", Engine::getFiringOrderFromString("1-7-4-10-2-8-6-12-3-9-5-11"), 6);
+    // Engine engineDef("Diablo/Murci V12", Engine::getFiringOrderFromString("1-7-4-10-2-8-6-12-3-9-5-11"), 6);
     // Engine engineDef("Countach V12", Engine::getFiringOrderFromString("1 7 5 11 3 9 6 12 2 8 4 10"), 5);
     // Engine engineDef("BMW S70/2 V12", Engine::getFiringOrderFromString("1 7 5 11 3 9 6 12 2 8 4 10"), 6.2);
     // Engine engineDef("F1 V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 16);
     // Engine engineDef("Audi V10 FSI", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {90, 54, 90, 54, 90, 54, 90, 54, 90, 54}, 5);
-    // Engine engineDef("1LR-GUE V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, 5);
+    Engine engineDef("1LR-GUE V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, 5);
     // Engine engineDef("M80 V10",{0, 5, 4, 9, 1, 6, 2, 7, 3, 8},{70,74,70,74,70,74,70,74,70,74,70} , 5);
     // Engine engineDef("Random V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {72,73,74,75,76,77,78,79,80,81}, 5);
     // Engine engineDef("Mercedes AMG M156", Engine::getFiringOrderFromString("1-5-4-2-6-3-7-8"),4);
@@ -131,9 +131,9 @@ int main() {
     EngineSoundGenerator engineLowNote(mainSamples, engineDef, 1000.0f, 0.5f);
     EngineSoundGenerator engineHighNote(mainSamples, engineDef, 1000.0f, 0.5f);
     EngineSoundGenerator engineMechanicals(mainSamples, engineDef, 1000.0f, 0.5f);
-    engineLowNote.setNoteOffset(0);
-    engineHighNote.setNoteOffset(5);
-    engineMechanicals.setNoteOffset(10);
+    engineLowNote.setNoteOffset(0); // 0
+    engineHighNote.setNoteOffset(9); // 5 , 9, 19
+    engineMechanicals.setNoteOffset(11); // 8, 11, 16
 
     // EQ Tips:
     // 1. Filter out any harsh harmonics (extremes of hearing range)
@@ -175,6 +175,7 @@ int main() {
     AudioContext superchargerCtx("supercharger", {&supercharger});
     AudioContext context("root", {&engineCtx, &generalGen, &backfireCtx});
 
+    // Car simulator stuff
     Car car;
     std::atomic<bool> carRunning = true;
     std::thread carThread{manageCar, &car, &carRunning};
@@ -227,8 +228,8 @@ int main() {
     superchargerCtx.fx.addFilter(cut18100Hz);
     // Low ends
     engineCtx.fx.addFilter(Biquad(bq_type_peak, 120.0f / SAMPLE_RATE, 0.707f, 4.0f));
-    engineCtx.fx.addFilter(Biquad(bq_type_peak, 300 / SAMPLE_RATE, 1.0f, 2.0f));
-    engineCtx.fx.addFilter(Biquad(bq_type_peak, 500.0f / SAMPLE_RATE, 0.707f, 1.0f));
+    engineCtx.fx.addFilter(Biquad(bq_type_peak, 300 / SAMPLE_RATE, 1.0f, 3.0f));
+    engineCtx.fx.addFilter(Biquad(bq_type_peak, 500.0f / SAMPLE_RATE, 0.707f, 3.0f));
     // Mid range
     engineCtx.fx.addFilter(Biquad(bq_type_peak, 1700.0f / SAMPLE_RATE, 0.707f, 4.0f));
     engineCtx.fx.addFilter(Biquad(bq_type_peak, 3000.0f / SAMPLE_RATE, 0.707f, 4.0f));

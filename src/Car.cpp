@@ -55,7 +55,7 @@ void Car::controlIdle() {
 
 void Car::addEnergy() {
     if (rpm > 50) {
-        rpm += Torque * gearThrottleResponses[gear] * (1 + boostDamper.getAverage() / 350);
+        rpm += Torque * gearThrottleResponses[gear] * (1 + boostDamper.getAverage() / 950);
         if (ignition) {
             // Rev limiter thingy
             if (rpm <= revLimit) {
