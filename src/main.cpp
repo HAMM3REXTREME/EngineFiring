@@ -31,9 +31,9 @@ constexpr int WINDOW_X = 1080;
 constexpr int WINDOW_Y = 720;
 
 constexpr int DOWNSHIFT_DELAY = 150;
-constexpr int UPSHIFT_DELAY = 160;
+constexpr int UPSHIFT_DELAY = 60;
 
-constexpr float THROTTLE_BLIP_DOWN = 0.02f;
+constexpr float THROTTLE_BLIP_DOWN = 0.021f;
 
 // Function for the PortAudio audio callback
 int audio_callback(const void *, void *outputBuffer, unsigned long framesPerBuffer, const PaStreamCallbackTimeInfo *, PaStreamCallbackFlags, void *userData) {
@@ -106,7 +106,7 @@ int main() {
     // Engine engineDef("Inline 9 - Experimental", Engine::getFiringOrderFromString("1 2 4 6 8 9 7 5 3"), 5);
     // Engine engineDef("Flat plane V8", Engine::getFiringOrderFromString("1 5 3 7 4 8 2 6"), 4);
     // Engine engineDef("Mercedes M120 V12", Engine::getFiringOrderFromString("1-12-5-8-3-10-6-7-2-11-4-9"),7.6);
-    // Engine engineDef("Murican V8 +", Engine::getFiringOrderFromString("1-8-7-2-6-5-4-3"),3);
+    // Engine engineDef("Murican V8 +", Engine::getFiringOrderFromString("1-8-7-2-6 -5-4-3"),3.8);
     // Engine engineDef("2UR-GSE V8", Engine::getFiringOrderFromString("1-8-7-3-6-5-4-2"),4);
     // Engine engineDef("BMW N54", Engine::getFiringOrderFromString("1-5-3-6-2-4"), 3);
     // Engine engineDef("Diesel inline 6", Engine::getFiringOrderFromString("1-5-3-6-2-4"), 1);
@@ -131,9 +131,9 @@ int main() {
     EngineSoundGenerator engineLowNote(mainSamples, engineDef, 1000.0f, 0.5f);
     EngineSoundGenerator engineHighNote(mainSamples, engineDef, 1000.0f, 0.5f);
     EngineSoundGenerator engineMechanicals(mainSamples, engineDef, 1000.0f, 0.5f);
-    engineLowNote.setNoteOffset(0); // 0
-    engineHighNote.setNoteOffset(9); // 5 , 9, 19
-    engineMechanicals.setNoteOffset(11); // 8, 11, 16
+    engineLowNote.setNoteOffset(0); // 0,             3, 0
+    engineHighNote.setNoteOffset(23); // 5, 7, 9, 19, 20, 19, 19, 14, 22, 23
+    engineMechanicals.setNoteOffset(19); // 8, 10, 11, 16, 16, 11, 14, 11, 16, 19
 
     // EQ Tips:
     // 1. Filter out any harsh harmonics (extremes of hearing range)
@@ -180,7 +180,7 @@ int main() {
     std::atomic<bool> carRunning = true;
     std::thread carThread{manageCar, &car, &carRunning};
     car.ignition = false;
-    car.revLimiterCutTicks = 2;
+    car.revLimiterCutTicks = 1;
 
     // TODO: Shifting + Post process wrapper class
     float carRpm = 0;    // Processed RPM
@@ -451,6 +451,7 @@ int main() {
         carTorque = torqueFilter.process(car.getTorque());
         engineCtx.fx.biquads[0].setPeakGain(8.0f - (carTorque / 20.0f));
         engineCtx.setAmplitude(0.5f + carRpm / 20000.0f);
+        superchargerCtx.setAmplitude(0.3f + carRpm / 15000.0f);
         engineLowNote.setRPM(carRpm);
         engineHighNote.setRPM(carRpm);
         engineMechanicals.setRPM(carRpm);
@@ -462,8 +463,8 @@ int main() {
         turboShaft.setAmplitude(car.getBoost() / 200);
         turboShaft.setRPM(10000 + car.getBoost() * 200);
         // == Supercharger example:
-        // supercharger.setRPM(car.getRPM());
-        // supercharger.setAmplitude(carTorque / 300);
+        supercharger.setRPM(car.getRPM());
+        supercharger.setAmplitude(carTorque / 300);
         // == Gear whine example:
         // supercharger.setAmplitude(car.getGear() > 0 ? car.getWheelSpeed() / 500 : 0.0f);
         // supercharger.setRPM(carRpm * (car.gearRatios[car.getGear()] * 2) + 1000);
