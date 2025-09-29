@@ -31,7 +31,7 @@ constexpr int WINDOW_X = 1080;
 constexpr int WINDOW_Y = 720;
 
 constexpr int DOWNSHIFT_DELAY = 150;
-constexpr int UPSHIFT_DELAY = 60;
+constexpr int UPSHIFT_DELAY = 30;
 
 constexpr float THROTTLE_BLIP_DOWN = 0.021f;
 
@@ -91,16 +91,24 @@ int main() {
                              "assets/audio/tick_library/note_97.wav",  "assets/audio/tick_library/note_98.wav",  "assets/audio/tick_library/note_99.wav",
                              "assets/audio/tick_library/note_100.wav", "assets/audio/tick_library/note_101.wav", "assets/audio/tick_library/note_102.wav"});
 
-    // Engine engineDef("Revuelto V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 7);
+    // Engine engineDef("Revuelto V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 6.4);
+    // Engine engineDef("Ferrari V12", Engine::getFiringOrderFromString("1 7 5 11 3 9 6 12 2 8 4 10"), 6.3);
     // Engine engineDef("Diablo/Murci V12", Engine::getFiringOrderFromString("1-7-4-10-2-8-6-12-3-9-5-11"), 6);
     // Engine engineDef("Countach V12", Engine::getFiringOrderFromString("1 7 5 11 3 9 6 12 2 8 4 10"), 5);
+    // Engine engineDef("Countach V12 (Growl)", Engine::getFiringOrderFromString("1 10 5 14 3 12 6 15 2 11 4 13"), {58,58,58,58,58,58,0,0,0,62,62,62,62,62,62}, 4.8);
     // Engine engineDef("BMW S70/2 V12", Engine::getFiringOrderFromString("1 7 5 11 3 9 6 12 2 8 4 10"), 6.2);
     // Engine engineDef("F1 V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 16);
     // Engine engineDef("Audi V10 FSI", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {90, 54, 90, 54, 90, 54, 90, 54, 90, 54}, 5);
-    Engine engineDef("1LR-GUE V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, 5);
+    // Engine engineDef("Audi V10 FSI (Growl)", {0, 6, 4, 10, 1, 7, 2, 8, 3, 9}, {90, 54, 90, 54 ,90, 0, 54, 90, 54, 90, 54}, 5);
+    // Engine engineDef("1LR-GUE V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, 5);
+    // Engine engineDef("Growly V10", {0, 6, 4, 10, 1, 7, 2, 8, 3, 9}, {70,70,70,70,70,0,74,74,74,74,74}, 5);
     // Engine engineDef("M80 V10",{0, 5, 4, 9, 1, 6, 2, 7, 3, 8},{70,74,70,74,70,74,70,74,70,74,70} , 5);
     // Engine engineDef("Random V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {72,73,74,75,76,77,78,79,80,81}, 5);
     // Engine engineDef("Mercedes AMG M156", Engine::getFiringOrderFromString("1-5-4-2-6-3-7-8"),4);
+    // Engine engineDef("Mercedes AMG M156 (Growl)", Engine::getFiringOrderFromString("1-6-4-2-7-3-8-9"), {90,90,90,90,0,90,90,90,90},3.8);
+    // Engine engineDef("Mercedes AMG M156 (Growl Double)", Engine::getFiringOrderFromString("1-7-4-2-8-3-9-10"), {90,90,90,90,0,0,90,90,90,90},3.8);
+    // Engine engineDef("Mercedes AMG M156 (Growl Triple)", Engine::getFiringOrderFromString("1-8-4-2-9-3-10-11"), {90,90,90,90,0,0,0,90,90,90,90},3.8);
+    // Engine engineDef("Mercedes AMG M156 (Super Growl)", Engine::getFiringOrderFromString("1-10-4-2-11-3-12-13"), {86,86,86,86,0,0,0,0,0,94,94,94,94},3.5);
     // Engine engineDef("F1 V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, 12.5);
     // Engine engineDef("Bugatti W16", Engine::getFiringOrderFromString("1 14 9 4 7 12 15 6 13 8 3 16 11 2 5 10"), 8.2);
     // Engine engineDef("Inline 9 - Experimental", Engine::getFiringOrderFromString("1 2 4 6 8 9 7 5 3"), 5);
@@ -108,6 +116,7 @@ int main() {
     // Engine engineDef("Mercedes M120 V12", Engine::getFiringOrderFromString("1-12-5-8-3-10-6-7-2-11-4-9"),7.6);
     // Engine engineDef("Murican V8 +", Engine::getFiringOrderFromString("1-8-7-2-6 -5-4-3"),3.8);
     // Engine engineDef("2UR-GSE V8", Engine::getFiringOrderFromString("1-8-7-3-6-5-4-2"),4);
+    // Engine engineDef("2UR-GSE V8 (Growl)", Engine::getFiringOrderFromString("1-13-12-3-11-10-4-2"), {86,94,94,86,0,0,0,0,0,94,94,86,86}, 4);
     // Engine engineDef("BMW N54", Engine::getFiringOrderFromString("1-5-3-6-2-4"), 3);
     // Engine engineDef("Diesel inline 6", Engine::getFiringOrderFromString("1-5-3-6-2-4"), 1);
     // Engine engineDef("V Twin", Engine::getFiringOrderFromString("1-2"), {315,405},0.8);
@@ -122,6 +131,7 @@ int main() {
     // Engine engineDef("Ducati V4", Engine::getFiringOrderFromString("1-2-4-3"),{90,200,90,340}, 4);
     // Engine engineDef("Nissan VQ", Engine::getFiringOrderFromString("1-2-3-4-5-6"),3);
     // Engine engineDef("Nissan VQ - Unequal headers", Engine::getFiringOrderFromString("1-2-3-4-5-6"), {177,183,177,183,177,183}, 2.8);
+    Engine engineDef("Toyota 2GR-FKS - Unequal headers (Growl)", Engine::getFiringOrderFromString("1-2-3-6-7-8"), {177,183,177,0,0,183,177,183}, 2.8);
     // Engine engineDef("Ford 4.0L V6 / Honda C-series 90", Engine::getFiringOrderFromString("1-4-2-5-3-6"),3);
     // Engine engineDef("Ferrari V6", Engine::getFiringOrderFromString("1-6-3-4-2-5"),3.5);
     // Engine engineDef("F1 V6", Engine::getFiringOrderFromString("1-4-2-5-3-6"),6);
@@ -131,9 +141,9 @@ int main() {
     EngineSoundGenerator engineLowNote(mainSamples, engineDef, 1000.0f, 0.5f);
     EngineSoundGenerator engineHighNote(mainSamples, engineDef, 1000.0f, 0.5f);
     EngineSoundGenerator engineMechanicals(mainSamples, engineDef, 1000.0f, 0.5f);
-    engineLowNote.setNoteOffset(0); // 0,             3, 0
-    engineHighNote.setNoteOffset(23); // 5, 7, 9, 19, 20, 19, 19, 14, 22, 23
-    engineMechanicals.setNoteOffset(19); // 8, 10, 11, 16, 16, 11, 14, 11, 16, 19
+    engineLowNote.setNoteOffset(0); // 0,             3, 0                0to4
+    engineHighNote.setNoteOffset(19); // 5, 7, 9, 19, 20, 19, 19, 14, 22, 23, 17, 19, 26, 19 , 10, 19
+    engineMechanicals.setNoteOffset(11); // 8, 10, 11, 16, 16, 11, 14, 11, 16, 19, 16, 11, 20, 25, 14, 10
 
     // EQ Tips:
     // 1. Filter out any harsh harmonics (extremes of hearing range)
@@ -173,14 +183,14 @@ int main() {
     AudioContext engineCtx("engines", {&engineLowNote, &engineHighNote, &engineMechanicals});
     AudioContext backfireCtx("backfire", {&backfire});
     AudioContext superchargerCtx("supercharger", {&supercharger});
-    AudioContext context("root", {&engineCtx, &generalGen, &backfireCtx});
+    AudioContext context("root", {&engineCtx, &generalGen, &backfireCtx, &superchargerCtx});
 
     // Car simulator stuff
     Car car;
     std::atomic<bool> carRunning = true;
     std::thread carThread{manageCar, &car, &carRunning};
     car.ignition = false;
-    car.revLimiterCutTicks = 1;
+    car.revLimiterCutTicks = 2;
 
     // TODO: Shifting + Post process wrapper class
     float carRpm = 0;    // Processed RPM
@@ -245,7 +255,7 @@ int main() {
     backfireCtx.fx.addFilter(cut14600Hz);
     // backfireCtx.fx.addFilter(cut18100Hz);
     backfireCtx.fx.addFilter(boost2100Hz);
-    backfireCtx.fx.addFilter(backfireHighFilter);
+    // backfireCtx.fx.addFilter(backfireHighFilter); // Comment/uncomment for subtle or aggressive bangs and pops
     // backfireCtx.fx.addFilter(backfireHighFilter2);
 
     // SFML stuff for UI + input
@@ -451,7 +461,7 @@ int main() {
         carTorque = torqueFilter.process(car.getTorque());
         engineCtx.fx.biquads[0].setPeakGain(8.0f - (carTorque / 20.0f));
         engineCtx.setAmplitude(0.5f + carRpm / 20000.0f);
-        superchargerCtx.setAmplitude(0.3f + carRpm / 15000.0f);
+        // superchargerCtx.setAmplitude(0.3f + carRpm / 15000.0f);
         engineLowNote.setRPM(carRpm);
         engineHighNote.setRPM(carRpm);
         engineMechanicals.setRPM(carRpm);
@@ -463,11 +473,11 @@ int main() {
         turboShaft.setAmplitude(car.getBoost() / 200);
         turboShaft.setRPM(10000 + car.getBoost() * 200);
         // == Supercharger example:
-        supercharger.setRPM(car.getRPM());
-        supercharger.setAmplitude(carTorque / 300);
+        // supercharger.setRPM(car.getRPM());
+        // supercharger.setAmplitude(carTorque / 300);
         // == Gear whine example:
-        // supercharger.setAmplitude(car.getGear() > 0 ? car.getWheelSpeed() / 500 : 0.0f);
-        // supercharger.setRPM(carRpm * (car.gearRatios[car.getGear()] * 2) + 1000);
+        supercharger.setAmplitude(car.getGear() > 0 ? car.getWheelSpeed() / 500 : 0.0f);
+        supercharger.setRPM(carRpm * (car.gearRatios[car.getGear()] * 2) + 1000);
 
         // Update tachometer needle rotation according to rpm.
         tach.setRotation(sf::degrees(carRpm / 27.5 - 90));
