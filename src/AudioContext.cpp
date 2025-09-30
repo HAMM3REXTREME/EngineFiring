@@ -11,7 +11,9 @@ void AudioContext::addGenerator(SoundGenerator *generator) { generators.push_bac
 float AudioContext::getAllSamples() {
     float sample = 0.0f;
     for (auto *gen : generators) {
-        gen->update();
+        if (!no_update){
+            gen->update();
+        }
         sample += gen->getSample() * ctxAmplitude;
     }
     sample = fx.process(sample);
@@ -39,7 +41,7 @@ std::string AudioContext::getInfo(int depth) const {
     if (depth == 0) {
         oss << "Root ";
     }
-    oss << "AudioContext: id '" << id << "' amplitude " << ctxAmplitude << ", " << fx.biquads.size() << " biquad filters, " << generators.size()
+    oss << "AudioContext: id '" << id << "' amplitude " << ctxAmplitude << ", " << fx.filters.size() << " post filters, " << generators.size()
         << " generators:\n";
     for (auto *gen : generators) {
         oss << gen->getInfo(depth + 1);

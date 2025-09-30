@@ -19,9 +19,11 @@
 #ifndef Biquad_h
 #define Biquad_h
 
+#include "PostFilter.h"
+
 enum { bq_type_lowpass = 0, bq_type_highpass, bq_type_bandpass, bq_type_notch, bq_type_peak, bq_type_lowshelf, bq_type_highshelf };
 
-class Biquad {
+class Biquad: public PostFilter {
   public:
     Biquad();
     Biquad(int type, double Fc, double Q, double peakGainDB);
@@ -31,7 +33,7 @@ class Biquad {
     void setFc(double Fc);
     void setPeakGain(double peakGainDB);
     void setBiquad(int type, double Fc, double Q, double peakGainDB);
-    float process(float in);
+    float process(float in) override;
 
   protected:
     void calcBiquad(void);

@@ -1,18 +1,30 @@
 // EffectChain.h
 #pragma once
 #include "Biquad.h"
+#include "PostFilter.h"
 #include <vector>
 
 class EffectChain {
   public:
-    std::vector<Biquad> biquads;
-    void addFilter(const Biquad &biquad) { biquads.push_back(biquad); }
+      ~EffectChain() {
+        for (auto* f : filters) {
+            delete f;
+        }
+        filters.clear();
+    }
+    size_t size() const { return filters.size(); }
+    PostFilter* operator[](size_t i) { return filters[i]; }
+    const PostFilter* operator[](size_t i) const { return filters[i]; }
+    std::vector<PostFilter *> filters;
+    void addFilter(PostFilter* new_filter) {
+    filters.push_back(new_filter);
+}
 
-    void clear() { biquads.clear(); }
+    void clear() { filters.clear(); }
 
     float process(float sample) {
-        for (auto &biquad : biquads)
-            sample = biquad.process(sample);
+        for (auto &filter : filters)
+            sample = filter->process(sample);
         return sample;
     }
 };

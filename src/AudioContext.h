@@ -27,7 +27,7 @@ class AudioContext : public SoundGenerator {
     std::string id;
     void update() override {}
     void addGenerator(SoundGenerator *generator);
-    void addFilter(Biquad &biquad) { fx.addFilter(biquad); }
+    void addFilter(PostFilter* new_filter) { fx.addFilter(new_filter); }
     float getAllSamples();
     void getAllSamples(float *buffer, int numFrames, int numChannels);
     std::vector<SoundGenerator *> generators;
@@ -36,6 +36,7 @@ class AudioContext : public SoundGenerator {
     void setAmplitude(float amp) override;
     float getAmplitude() const override;
     std::string getInfo(int depth) const override;
+    bool no_update = false; // Set to true to simply use as a effect wrapper/ adding a layer 
 
   private:
     float ctxAmplitude;
