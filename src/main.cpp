@@ -91,7 +91,7 @@ int main() {
                              "assets/audio/tick_library/note_97.wav",  "assets/audio/tick_library/note_98.wav",  "assets/audio/tick_library/note_99.wav",
                              "assets/audio/tick_library/note_100.wav", "assets/audio/tick_library/note_101.wav", "assets/audio/tick_library/note_102.wav"});
 
-    // Engine engineDef("Revuelto V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 6.4);
+    Engine engineDef("Revuelto V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 6.4);
     // Engine engineDef("Ferrari V12", Engine::getFiringOrderFromString("1 7 5 11 3 9 6 12 2 8 4 10"), 6.3);
     // Engine engineDef("Diablo/Murci V12", Engine::getFiringOrderFromString("1-7-4-10-2-8-6-12-3-9-5-11"), 6);
     // Engine engineDef("Countach V12", Engine::getFiringOrderFromString("1 7 5 11 3 9 6 12 2 8 4 10"), 5);
@@ -100,7 +100,7 @@ int main() {
     // Engine engineDef("F1 V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 16);
     // Engine engineDef("Audi V10 FSI", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {90, 54, 90, 54, 90, 54, 90, 54, 90, 54}, 5);
     // Engine engineDef("Audi V10 FSI (Growl)", {0, 6, 4, 10, 1, 7, 2, 8, 3, 9}, {90, 54, 90, 54 ,90, 0, 54, 90, 54, 90, 54}, 5);
-    Engine engineDef("1LR-GUE V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, 5);
+    // Engine engineDef("1LR-GUE V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, 5);
     // Engine engineDef("Growly V10", {0, 6, 4, 10, 1, 7, 2, 8, 3, 9}, {70,70,70,70,70,0,74,74,74,74,74}, 5);
     // Engine engineDef("M80 V10",{0, 5, 4, 9, 1, 6, 2, 7, 3, 8},{70,74,70,74,70,74,70,74,70,74,70} , 5);
     // Engine engineDef("Random V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {72,73,74,75,76,77,78,79,80,81}, 5);
@@ -143,7 +143,7 @@ int main() {
     EngineSoundGenerator engineMechanicals(mainSamples, engineDef, 1000.0f, 0.5f);
     engineLowNote.setNoteOffset(3); // 0,             3, 0                0to4
     engineHighNote.setNoteOffset(24); // 5, 7, 9, 19, 20, 19, 19, 14, 22, 23, 17, 19, 26, 19 , 10, 19
-    engineMechanicals.setNoteOffset(4); // 8, 10, 11, 16, 16, 11, 14, 11, 16, 19, 16, 11, 20, 25, 14, 10
+    engineMechanicals.setNoteOffset(14); // 8, 10, 11, 16, 16, 11, 14, 11, 16, 19, 16, 11, 20, 25, 14, 10
 
     // EQ Tips:
     // 1. Filter out any harsh harmonics (extremes of hearing range)
@@ -184,7 +184,7 @@ int main() {
     AudioContext engineHarmonicCtx("engine harmonics", {&engineCtx});
     AudioContext backfireCtx("backfire", {&backfire});
     AudioContext superchargerCtx("supercharger", {&supercharger});
-    AudioContext context("root", {&engineHarmonicCtx, &generalGen});
+    AudioContext context("root", {&engineHarmonicCtx, &generalGen, &backfireCtx, &whoosh, &turboShaft});
 
     // Car simulator stuff
     Car car;
@@ -258,7 +258,8 @@ int main() {
     backfireCtx.fx.addFilter(new Biquad(boost2100Hz));
     // backfireCtx.fx.addFilter(backfireHighFilter); // Comment/uncomment for subtle or aggressive bangs and pops
     // backfireCtx.fx.addFilter(backfireHighFilter2);
-    engineHarmonicCtx.addFilter(new SecondOrderFilter(350.0f, 0.7f, 1.0f/48000.0f));
+    engineHarmonicCtx.addFilter(new SecondOrderFilter(3050.0f, 0.6f, 1.0f/48000.0f));
+    backfireCtx.addFilter(new SecondOrderFilter(350.0f, 0.5f, 1.0f/48000.0f));
     engineHarmonicCtx.no_update = true;
     //engineHarmonicCtx.no_update = true;
     // SFML stuff for UI + input
