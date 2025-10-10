@@ -31,7 +31,7 @@ constexpr int WINDOW_X = 1080;
 constexpr int WINDOW_Y = 720;
 
 constexpr int DOWNSHIFT_DELAY = 150;
-constexpr int UPSHIFT_DELAY = 30;
+constexpr int UPSHIFT_DELAY = 100;
 
 constexpr float THROTTLE_BLIP_DOWN = 0.021f;
 
@@ -143,8 +143,8 @@ int main() {
     EngineSoundGenerator engineLowNote(mainSamples, engineDef, 1000.0f, 0.5f);
     EngineSoundGenerator engineHighNote(mainSamples, engineDef, 1000.0f, 0.5f);
     EngineSoundGenerator engineMechanicals(mainSamples, engineDef, 1000.0f, 0.5f);
-    engineLowNote.setNoteOffset(1); // 0,             3, 0                0to4
-    engineHighNote.setNoteOffset(19); // 5, 7, 9, 19, 20, 19, 19, 14, 22, 23, 17, 19, 26, 19 , 10, 19
+    engineLowNote.setNoteOffset(2); // 0,             3, 0                0to4
+    engineHighNote.setNoteOffset(24); // 5, 7, 9, 19, 20, 19, 19, 14, 22, 23, 17, 19, 26, 19 , 10, 19
     engineMechanicals.setNoteOffset(11); // 8, 10, 11, 16, 16, 11, 14, 11, 16, 19, 16, 11, 20, 25, 14, 10
 
     // EQ Tips:
@@ -185,7 +185,7 @@ int main() {
     AudioContext engineCtx("engines", {&engineLowNote, &engineHighNote, &engineMechanicals});
     AudioContext backfireCtx("backfire", {&backfire});
     AudioContext superchargerCtx("supercharger", {&supercharger});
-    AudioContext context("root", {&engineCtx, &generalGen, &backfireCtx, &turboShaft, &whoosh});
+    AudioContext context("root", {&engineCtx, &generalGen, &backfireCtx});
 
     // Car simulator stuff
     Car car;
@@ -262,8 +262,9 @@ int main() {
     
     // engineCtx.addFilter(new SecondOrderFilter(3050.0f, 0.6f, 1.0f/48000.0f));
     engineCtx.addFilter(new SecondOrderFilter(350.0f, 0.6f, 1.0f/48000.0f)); // C63 AMG
+    engineCtx.addFilter(new SecondOrderFilter(200.0f, 0.3f, 1.0f/48000.0f)); // Huracan?
     backfireCtx.addFilter(new SecondOrderFilter(350.0f, 0.5f, 1.0f/48000.0f));
-    // backfireCtx.addFilter(new SecondOrderFilter(2050.0f, 0.3f, 1.0f/48000.0f));
+    backfireCtx.addFilter(new SecondOrderFilter(2050.0f, 0.3f, 1.0f/48000.0f));
     superchargerCtx.addFilter(new SecondOrderFilter(3050.0f, 0.4f, 1.0f/48000.0f));
 
     // SFML stuff for UI + input
