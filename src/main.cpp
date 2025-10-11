@@ -98,9 +98,9 @@ int main() {
     // Engine engineDef("Countach V12 (Growl)", Engine::getFiringOrderFromString("1 10 5 14 3 12 6 15 2 11 4 13"), {58,58,58,58,58,58,0,0,0,62,62,62,62,62,62}, 4.8);
     // Engine engineDef("BMW S70/2 V12", Engine::getFiringOrderFromString("1 7 5 11 3 9 6 12 2 8 4 10"), 6.2);
     // Engine engineDef("F1 V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 16);
-    // Engine engineDef("Audi V10 FSI", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {90, 54, 90, 54, 90, 54, 90, 54, 90, 54}, 5);
+    Engine engineDef("Audi V10 FSI", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {90, 54, 90, 54, 90, 54, 90, 54, 90, 54}, 5);
     // Engine engineDef("Audi V10 FSI (Growl)", {0, 6, 4, 10, 1, 7, 2, 8, 3, 9}, {90, 54, 90, 54 ,90, 0, 54, 90, 54, 90, 54}, 5);
-    Engine engineDef("1LR-GUE V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, 5.3);
+    // Engine engineDef("1LR-GUE V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, 5.3);
     // Engine engineDef("1LR-GUE V10 - LFA UL Headers", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {71,73,71,73,71,73,71,73,71,73,71},5);
     // Engine engineDef("Growly V10", {0, 6, 4, 10, 1, 7, 2, 8, 3, 9}, {70,70,70,70,70,0,74,74,74,74,74}, 5);
     // Engine engineDef("M80 V10",{0, 5, 4, 9, 1, 6, 2, 7, 3, 8},{70,74,70,74,70,74,70,74,70,74,70} , 5);
@@ -144,8 +144,8 @@ int main() {
     EngineSoundGenerator engineHighNote(mainSamples, engineDef, 1000.0f, 0.5f);
     EngineSoundGenerator engineMechanicals(mainSamples, engineDef, 1000.0f, 0.5f);
     engineLowNote.setNoteOffset(2); // 0,             3, 0                0to4
-    engineHighNote.setNoteOffset(25); // 5, 7, 9, 19, 20, 19, 19, 14, 22, 23, 17, 19, 26, 19 , 10, 19
-    engineMechanicals.setNoteOffset(8); // 8, 10, 11, 16, 16, 11, 14, 11, 16, 19, 16, 11, 20, 25, 14, 10
+    engineHighNote.setNoteOffset(24); // 5, 7, 9, 19, 20, 19, 19, 14, 22, 23, 17, 19, 26, 19 , 10, 19
+    engineMechanicals.setNoteOffset(11); // 8, 10, 11, 16, 16, 11, 14, 11, 16, 19, 16, 11, 20, 25, 14, 10
 
     // EQ Tips:
     // 1. Filter out any harsh harmonics (extremes of hearing range)
@@ -185,7 +185,7 @@ int main() {
     AudioContext engineCtx("engines", {&engineLowNote, &engineHighNote, &engineMechanicals});
     AudioContext backfireCtx("backfire", {&backfire});
     AudioContext superchargerCtx("supercharger", {&supercharger});
-    AudioContext context("root", {&engineCtx, &generalGen, &backfireCtx, &turboShaft, &whoosh});
+    AudioContext context("root", {&engineCtx, &generalGen, &backfireCtx, &turboShaft, &whoosh, &superchargerCtx});
 
     // Car simulator stuff
     Car car;
@@ -266,6 +266,7 @@ int main() {
     backfireCtx.addFilter(new SecondOrderFilter(350.0f, 0.5f, 1.0f/48000.0f));
     backfireCtx.addFilter(new SecondOrderFilter(2050.0f, 0.3f, 1.0f/48000.0f));
     superchargerCtx.addFilter(new SecondOrderFilter(3050.0f, 0.4f, 1.0f/48000.0f));
+    superchargerCtx.addFilter(new SecondOrderFilter(2120.0f, 0.3f, 1.0f/48000.0f));
 
     // SFML stuff for UI + input
     // Map user keyboard input to differen levels of throttle
