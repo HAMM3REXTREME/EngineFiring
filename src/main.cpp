@@ -145,7 +145,7 @@ int main() {
     EngineSoundGenerator engineMechanicals(mainSamples, engineDef, 1000.0f, 0.5f);
     engineLowNote.setNoteOffset(2); // 0,             3, 0                0to4
     engineHighNote.setNoteOffset(24); // 5, 7, 9, 19, 20, 19, 19, 14, 22, 23, 17, 19, 26, 19 , 10, 19
-    engineMechanicals.setNoteOffset(11); // 8, 10, 11, 16, 16, 11, 14, 11, 16, 19, 16, 11, 20, 25, 14, 10
+    engineMechanicals.setNoteOffset(8); // 8, 10, 11, 16, 16, 11, 14, 11, 16, 19, 16, 11, 20, 25, 14, 10
 
     // EQ Tips:
     // 1. Filter out any harsh harmonics (extremes of hearing range)
@@ -185,7 +185,7 @@ int main() {
     AudioContext engineCtx("engines", {&engineLowNote, &engineHighNote, &engineMechanicals});
     AudioContext backfireCtx("backfire", {&backfire});
     AudioContext superchargerCtx("supercharger", {&supercharger});
-    AudioContext context("root", {&engineCtx, &generalGen, &backfireCtx, &turboShaft, &whoosh, &superchargerCtx});
+    AudioContext context("root", {&engineCtx, &generalGen});
 
     // Car simulator stuff
     Car car;
