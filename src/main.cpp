@@ -30,8 +30,8 @@ constexpr float SAMPLE_RATE = 48000;
 constexpr int WINDOW_X = 1080;
 constexpr int WINDOW_Y = 720;
 
-constexpr int DOWNSHIFT_DELAY = 190;
-constexpr int UPSHIFT_DELAY = 100;
+constexpr int DOWNSHIFT_DELAY = 150;
+constexpr int UPSHIFT_DELAY = 120;
 
 constexpr float THROTTLE_BLIP_DOWN = 0.021f;
 
@@ -144,9 +144,9 @@ int main() {
     EngineSoundGenerator engineLowNote(mainSamples, engineDef, 1000.0f, 0.5f);
     EngineSoundGenerator engineHighNote(mainSamples, engineDef, 1000.0f, 0.5f);
     EngineSoundGenerator engineMechanicals(mainSamples, engineDef, 1000.0f, 0.5f);
-    engineLowNote.setNoteOffset(2); // 0,             3, 0                0to4
-    engineHighNote.setNoteOffset(22); // 5, 7, 9, 19, 20, 19, 19, 14, 22, 23, 17, 19, 26, 19 , 10, 19
-    engineMechanicals.setNoteOffset(8); // 8, 10, 11, 16, 16, 11, 14, 11, 16, 19, 16, 11, 20, 25, 14, 10
+    engineLowNote.setNoteOffset(1); // 0,             3, 0                0to4
+    engineHighNote.setNoteOffset(21); // 5, 7, 9, 19, 20, 19, 19, 14, 22, 23, 17, 19, 26, 19 , 10, 19
+    engineMechanicals.setNoteOffset(4); // 8, 10, 11, 16, 16, 11, 14, 11, 16, 19, 16, 11, 20, 25, 14, 10
 
     // EQ Tips:
     // 1. Filter out any harsh harmonics (extremes of hearing range)
@@ -261,7 +261,7 @@ int main() {
     backfireCtx.fx.addFilter(new Biquad(backfireHighFilter)); // Comment/uncomment for subtle or aggressive bangs and pops
     // backfireCtx.fx.addFilter(backfireHighFilter2);
     
-    engineCtx.addFilter(new SecondOrderFilter(3050.0f, 0.6f, 1.0f/48000.0f));
+    engineCtx.addFilter(new SecondOrderFilter(2950.0f, 0.6f, 1.0f/48000.0f));
     engineCtx.addFilter(new SecondOrderFilter(350.0f, 0.6f, 1.0f/48000.0f)); // C63 AMG
     engineCtx.addFilter(new SecondOrderFilter(200.0f, 0.3f, 1.0f/48000.0f)); // Huracan?
     backfireCtx.addFilter(new SecondOrderFilter(350.0f, 0.5f, 1.0f/48000.0f));
