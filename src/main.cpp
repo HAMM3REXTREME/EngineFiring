@@ -30,8 +30,8 @@ constexpr float SAMPLE_RATE = 48000;
 constexpr int WINDOW_X = 1080;
 constexpr int WINDOW_Y = 720;
 
-constexpr int DOWNSHIFT_DELAY = 150;
-constexpr int UPSHIFT_DELAY = 130;
+constexpr int DOWNSHIFT_DELAY = 190;
+constexpr int UPSHIFT_DELAY = 100;
 
 constexpr float THROTTLE_BLIP_DOWN = 0.021f;
 
@@ -100,8 +100,8 @@ int main() {
     // Engine engineDef("F1 V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 16);
     // Engine engineDef("Audi V10 FSI", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {90, 54, 90, 54, 90, 54, 90, 54, 90, 54}, 5);
     // Engine engineDef("Audi V10 FSI (Growl)", {0, 6, 4, 10, 1, 7, 2, 8, 3, 9}, {90, 54, 90, 54 ,90, 0, 54, 90, 54, 90, 54}, 5);
-    // Engine engineDef("1LR-GUE V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, 5.3);
-    Engine engineDef("1LR-GUE V10 - LFA UL Headers", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {71,73,71,73,71,73,71,73,71,73,71},5);
+    Engine engineDef("1LR-GUE V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, 5.3);
+    // Engine engineDef("1LR-GUE V10 - LFA UL Headers", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {71,73,71,73,71,73,71,73,71,73,71},5);
     // Engine engineDef("Growly V10", {0, 6, 4, 10, 1, 7, 2, 8, 3, 9}, {70,70,70,70,70,0,74,74,74,74,74}, 5);
     // Engine engineDef("M80 V10",{0, 5, 4, 9, 1, 6, 2, 7, 3, 8},{70,74,70,74,70,74,70,74,70,74,70} , 5);
     // Engine engineDef("Random V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {72,73,74,75,76,77,78,79,80,81}, 5);
@@ -128,6 +128,7 @@ int main() {
     // Engine engineDef("Audi i5", Engine::getFiringOrderFromString("1-2-4-5-3"),2);
     // Engine engineDef("Perfect Fifth i5", Engine::getFiringOrderFromString("1 3 5 2 4"), {120, 180, 120, 180, 120},3);
     // Engine engineDef("4 Banger", Engine::getFiringOrderFromString("1-3-4-2"),2);
+    // Engine engineDef("Boxer 4 (Growl)", Engine::getFiringOrderFromString("1-4-5-2"), {180, 182, 0, 182, 180}, 2);
     // Engine engineDef("Super Sport", Engine::getFiringOrderFromString("1-3-4-2"),4);
     // Engine engineDef("Cross plane i4 moto", Engine::getFiringOrderFromString("1-3-2-4"), {180,90,180,270},4);
     // Engine engineDef("Ducati V4", Engine::getFiringOrderFromString("1-2-4-3"),{90,200,90,340}, 4);
@@ -143,9 +144,9 @@ int main() {
     EngineSoundGenerator engineLowNote(mainSamples, engineDef, 1000.0f, 0.5f);
     EngineSoundGenerator engineHighNote(mainSamples, engineDef, 1000.0f, 0.5f);
     EngineSoundGenerator engineMechanicals(mainSamples, engineDef, 1000.0f, 0.5f);
-    engineLowNote.setNoteOffset(3); // 0,             3, 0                0to4
-    engineHighNote.setNoteOffset(16); // 5, 7, 9, 19, 20, 19, 19, 14, 22, 23, 17, 19, 26, 19 , 10, 19
-    engineMechanicals.setNoteOffset(11); // 8, 10, 11, 16, 16, 11, 14, 11, 16, 19, 16, 11, 20, 25, 14, 10
+    engineLowNote.setNoteOffset(2); // 0,             3, 0                0to4
+    engineHighNote.setNoteOffset(22); // 5, 7, 9, 19, 20, 19, 19, 14, 22, 23, 17, 19, 26, 19 , 10, 19
+    engineMechanicals.setNoteOffset(8); // 8, 10, 11, 16, 16, 11, 14, 11, 16, 19, 16, 11, 20, 25, 14, 10
 
     // EQ Tips:
     // 1. Filter out any harsh harmonics (extremes of hearing range)
@@ -185,7 +186,7 @@ int main() {
     AudioContext engineCtx("engines", {&engineLowNote, &engineHighNote, &engineMechanicals});
     AudioContext backfireCtx("backfire", {&backfire});
     AudioContext superchargerCtx("supercharger", {&supercharger});
-    AudioContext context("root", {&engineCtx, &generalGen});
+    AudioContext context("root", {&engineCtx, &generalGen, &backfireCtx});
 
     // Car simulator stuff
     Car car;
@@ -257,17 +258,15 @@ int main() {
     backfireCtx.fx.addFilter(new Biquad(cut14600Hz));
     // backfireCtx.fx.addFilter(cut18100Hz);
     backfireCtx.fx.addFilter(new Biquad(boost2100Hz));
-    // backfireCtx.fx.addFilter(backfireHighFilter); // Comment/uncomment for subtle or aggressive bangs and pops
+    backfireCtx.fx.addFilter(new Biquad(backfireHighFilter)); // Comment/uncomment for subtle or aggressive bangs and pops
     // backfireCtx.fx.addFilter(backfireHighFilter2);
     
-    // engineCtx.addFilter(new SecondOrderFilter(3050.0f, 0.6f, 1.0f/48000.0f));
-    // engineCtx.addFilter(new SecondOrderFilter(350.0f, 0.6f, 1.0f/48000.0f)); // C63 AMG
-    engineCtx.addFilter(new SecondOrderFilter(200.0f, 0.3f, 1.0f/48000.0f)); // Huracan V10?
-    engineCtx.addFilter(new SecondOrderFilter(3200.0f, 0.3f, 1.0f/48000.0f)); // LFA V10?
+    engineCtx.addFilter(new SecondOrderFilter(3050.0f, 0.6f, 1.0f/48000.0f));
+    engineCtx.addFilter(new SecondOrderFilter(350.0f, 0.6f, 1.0f/48000.0f)); // C63 AMG
+    engineCtx.addFilter(new SecondOrderFilter(200.0f, 0.3f, 1.0f/48000.0f)); // Huracan?
     backfireCtx.addFilter(new SecondOrderFilter(350.0f, 0.5f, 1.0f/48000.0f));
     backfireCtx.addFilter(new SecondOrderFilter(2050.0f, 0.3f, 1.0f/48000.0f));
     superchargerCtx.addFilter(new SecondOrderFilter(3050.0f, 0.4f, 1.0f/48000.0f));
-    superchargerCtx.addFilter(new SecondOrderFilter(2120.0f, 0.3f, 1.0f/48000.0f));
 
     // SFML stuff for UI + input
     // Map user keyboard input to differen levels of throttle
@@ -450,21 +449,21 @@ int main() {
         }
 
         // Simple supercharger state logic
-        if (car.getGas() <= 10 && !lifted) {
+        if (car.getTorque() <= 10 && !lifted) {
             lastLiftOff = frame;
             lifted = true;
             supercharger.setNoteOffset(10);
         }
-        if (car.getGas() >= 15) {
+        if (car.getTorque() >= 15) {
             lifted = false;
             supercharger.setNoteOffset(20);
         }
 
         // Simple backfire state logic
-        if (car.getGas() <= 10 && (lastLiftOff + 600 / deltaTime >= frame)) {
-            backfire.setIntensity(1.0f - ((frame - lastLiftOff) / (600 / deltaTime)));
+        if (car.getTorque() <= 10 && (lastLiftOff + 200 / deltaTime >= frame)) {
+            backfire.setIntensity(1.0f - ((frame - lastLiftOff) / (200 / deltaTime)));
         }
-        if (car.getRPM() <= 4000 || car.getGas() >= 25) {
+        if (car.getRPM() <= 4000 || car.getTorque() >= 25) {
             backfire.setIntensity(0);
         }
         // TODO: Seperation of concerns (Boost logic, shift styles etc.)
