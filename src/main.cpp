@@ -186,7 +186,7 @@ int main() {
     AudioContext engineCtx("engines", {&engineLowNote, &engineHighNote, &engineMechanicals});
     AudioContext backfireCtx("backfire", {&backfire});
     AudioContext superchargerCtx("supercharger", {&supercharger});
-    AudioContext context("root", {&engineCtx, &generalGen, &backfireCtx, &turboShaft, &whoosh, &superchargerCtx});
+    AudioContext context("root", {&engineCtx, &generalGen, &backfireCtx, &superchargerCtx});
 
     // Car simulator stuff
     Car car;
@@ -486,11 +486,11 @@ int main() {
         turboShaft.setAmplitude(car.getBoost() / 200);
         turboShaft.setRPM(10000 + car.getBoost() * 200);
         // == Supercharger example:
-        // supercharger.setRPM(car.getRPM());
-        // supercharger.setAmplitude(carTorque / 300);
+        supercharger.setRPM(car.getRPM());
+        supercharger.setAmplitude(carTorque / 300);
         // == Gear whine example:
-        supercharger.setAmplitude(car.getGear() > 0 ? car.getWheelSpeed() / 500 : 0.0f);
-        supercharger.setRPM(carRpm * (car.gearRatios[car.getGear()] * 2) + 1000);
+        // supercharger.setAmplitude(car.getGear() > 0 ? car.getWheelSpeed() / 500 : 0.0f);
+        // supercharger.setRPM(carRpm * (car.gearRatios[car.getGear()] * 2) + 1000);
 
         // Update tachometer needle rotation according to rpm.
         tach.setRotation(sf::degrees(carRpm / 27.5 - 90));
