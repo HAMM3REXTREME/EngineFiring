@@ -109,7 +109,7 @@ int main() {
     // Engine engineDef("Mercedes AMG M156 (Growl)", Engine::getFiringOrderFromString("1-6-4-2-7-3-8-9"), {90,90,90,90,0,90,90,90,90},3.8);
     // Engine engineDef("Mercedes AMG M156 (Growl Double)", Engine::getFiringOrderFromString("1-7-4-2-8-3-9-10"), {90,90,90,90,0,0,90,90,90,90},3.8);
     // Engine engineDef("Mercedes AMG M156 (Growl Triple)", Engine::getFiringOrderFromString("1-8-4-2-9-3-10-11"), {90,90,90,90,0,0,0,90,90,90,90},3.8);
-    Engine engineDef("Mercedes AMG M156 (Super Growl)", Engine::getFiringOrderFromString("1-10-4-2-11-3-12-13"), {86,86,86,86,0,0,0,0,0,94,94,94,94},3.5);
+    // Engine engineDef("Mercedes AMG M156 (Super Growl)", Engine::getFiringOrderFromString("1-10-4-2-11-3-12-13"), {86,86,86,86,0,0,0,0,0,94,94,94,94},3.5);
     // Engine engineDef("F1 V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, 12.5);
     // Engine engineDef("Bugatti W16", Engine::getFiringOrderFromString("1 14 9 4 7 12 15 6 13 8 3 16 11 2 5 10"), 8.2);
     // Engine engineDef("Inline 9 - Experimental", Engine::getFiringOrderFromString("1 2 4 6 8 9 7 5 3"), 5);
@@ -132,7 +132,7 @@ int main() {
     // Engine engineDef("Super Sport", Engine::getFiringOrderFromString("1-3-4-2"),4);
     // Engine engineDef("Cross plane i4 moto", Engine::getFiringOrderFromString("1-3-2-4"), {180,90,180,270},4);
     // Engine engineDef("Ducati V4", Engine::getFiringOrderFromString("1-2-4-3"),{90,200,90,340}, 4);
-    // Engine engineDef("Nissan VQ", Engine::getFiringOrderFromString("1-2-3-4-5-6"),3);
+    Engine engineDef("Nissan VQ", Engine::getFiringOrderFromString("1-2-3-4-5-6"),3);
     // Engine engineDef("Nissan VQ - Unequal headers", Engine::getFiringOrderFromString("1-2-3-4-5-6"), {177,183,177,183,177,183}, 2.8);
     // Engine engineDef("Toyota 2GR-FKS - Unequal headers (Growl)", Engine::getFiringOrderFromString("1-2-3-6-7-8"), {177,183,177,0,0,183,177,183}, 2.8);
     // Engine engineDef("Ford 4.0L V6 / Honda C-series 90", Engine::getFiringOrderFromString("1-4-2-5-3-6"),3);
@@ -145,8 +145,8 @@ int main() {
     EngineSoundGenerator engineHighNote(mainSamples, engineDef, 1000.0f, 0.5f);
     EngineSoundGenerator engineMechanicals(mainSamples, engineDef, 1000.0f, 0.5f);
     engineLowNote.setNoteOffset(2); // 0,             3, 0                0to4
-    engineHighNote.setNoteOffset(16); // 5, 7, 9, 19, 20, 19, 19, 14, 22, 23, 17, 19, 26, 19 , 10, 19
-    engineMechanicals.setNoteOffset(4); // 8, 10, 11, 16, 16, 11, 14, 11, 16, 19, 16, 11, 20, 25, 14, 10
+    engineHighNote.setNoteOffset(19); // 5, 7, 9, 19, 20, 19, 19, 14, 22, 23, 17, 19, 26, 19 , 10, 19
+    engineMechanicals.setNoteOffset(11); // 8, 10, 11, 16, 16, 11, 14, 11, 16, 19, 16, 11, 20, 25, 14, 10
 
     // EQ Tips:
     // 1. Filter out any harsh harmonics (extremes of hearing range)
@@ -186,7 +186,7 @@ int main() {
     AudioContext engineCtx("engines", {&engineLowNote, &engineHighNote, &engineMechanicals});
     AudioContext backfireCtx("backfire", {&backfire});
     AudioContext superchargerCtx("supercharger", {&supercharger});
-    AudioContext context("root", {&engineCtx, &generalGen, &backfireCtx, &superchargerCtx});
+    AudioContext context("root", {&engineCtx, &generalGen, &backfireCtx, &turboShaft, &whoosh});
 
     // Car simulator stuff
     Car car;
@@ -258,8 +258,9 @@ int main() {
     backfireCtx.fx.addFilter(new Biquad(cut14600Hz));
     // backfireCtx.fx.addFilter(cut18100Hz);
     backfireCtx.fx.addFilter(new Biquad(boost2100Hz));
-    backfireCtx.fx.addFilter(new Biquad(backfireHighFilter)); // Comment/uncomment for subtle or aggressive bangs and pops
+    // backfireCtx.fx.addFilter(new Biquad(backfireHighFilter)); // Comment/uncomment for subtle or aggressive bangs and pops
     // backfireCtx.fx.addFilter(backfireHighFilter2);
+    backfireCtx.addFilter(new Biquad(bq_type_lowshelf, 54.0f / SAMPLE_RATE, 0.707f, 5.0f)); // GT-R
     
     engineCtx.addFilter(new SecondOrderFilter(2950.0f, 0.6f, 1.0f/48000.0f));
     engineCtx.addFilter(new SecondOrderFilter(350.0f, 0.6f, 1.0f/48000.0f)); // C63 AMG
