@@ -11,9 +11,7 @@ void AudioContext::addGenerator(SoundGenerator *generator) { generators.push_bac
 float AudioContext::getAllSamples() {
     float sample = 0.0f;
     for (auto *gen : generators) {
-        if (!no_update){
-            gen->update();
-        }
+        gen->update();
         sample += gen->getSample() * ctxAmplitude;
     }
     sample = fx.process(sample);

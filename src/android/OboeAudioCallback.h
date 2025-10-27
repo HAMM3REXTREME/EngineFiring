@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <mutex>
 #include <oboe/Oboe.h>
 #include "AudioContext.h"
@@ -22,9 +23,10 @@ public:
 
 private:
     std::mutex mLock;
-    oboe::AudioStream* mStream;
-    AudioContext* mAudioContext;
+    std::shared_ptr<oboe::AudioStream> mStream;
+    std::shared_ptr<AudioContext> mMasterAudioContext;
 
+    // Stream params
     static constexpr int kChannelCount = 2;
     static constexpr int kSampleRate = 48000;
 };

@@ -43,7 +43,7 @@ int AudioVector::saveToWav(const std::string &filename) {
     format.container = drwav_container_riff;
     format.format = DR_WAVE_FORMAT_IEEE_FLOAT;
     format.channels = 1;
-    format.sampleRate = 44100;
+    format.sampleRate = 48000;
     format.bitsPerSample = 32;
 
     drwav wav;

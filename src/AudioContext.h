@@ -36,7 +36,7 @@ class AudioContext : public SoundGenerator {
     void setAmplitude(float amp) override;
     float getAmplitude() const override;
     std::string getInfo(int depth) const override;
-    bool no_update = false; // Set to true to simply use as a effect wrapper/ adding a layer 
+    // bool no_update = false; // Set to true to simply use as a effect wrapper/ adding a layer 
 
   private:
     float ctxAmplitude;
