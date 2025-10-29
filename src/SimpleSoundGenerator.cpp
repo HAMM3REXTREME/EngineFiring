@@ -13,7 +13,6 @@ void SimpleSoundGenerator::startPlayback(size_t sampleIndex, bool loop) {
         looping = loop;
     }
 }
-void setTempPause(bool new_pause) { paused = new_pause; }
 
 void SimpleSoundGenerator::stopPlayback() {
     currentSampleIndex = -1;
@@ -54,5 +53,5 @@ float SimpleSoundGenerator::getAmplitude() const { return gain; }
 
 bool SimpleSoundGenerator::isPlaying() const {
     return currentSampleIndex >= 0 && currentSampleIndex < static_cast<int>(soundBank.samples.size()) &&
-           (looping || playbackPosition < soundBank.samples[currentSampleIndex].samples.size());
+           (looping || playbackPosition < soundBank.samples[currentSampleIndex].samples.size()) && !paused;
 }

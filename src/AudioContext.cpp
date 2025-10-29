@@ -1,19 +1,19 @@
 #include "AudioContext.h"
 #include <sstream>
 
-AudioContext::AudioContext(std::vector<SoundGenerator *> generators) : id("no name"), generators(generators), ctxAmplitude(1.0f) {}
-AudioContext::AudioContext(const std::string &new_id, std::vector<SoundGenerator *> generators) : id(new_id), generators(generators), ctxAmplitude(1.0f) {}
-AudioContext::AudioContext() : id("no name"), ctxAmplitude(1.0f) {}
+AudioContext::AudioContext(std::vector<SoundGenerator*> generators) : id("no name"), sound_generators(generators), m_ctx_amplitude(1.0f) {}
+AudioContext::AudioContext(const std::string &new_id, std::vector<SoundGenerator*> generators) : id(new_id), sound_generators(generators), m_ctx_amplitude(1.0f) {}
+AudioContext::AudioContext() : id("no name"), m_ctx_amplitude(1.0f) {}
 
-void AudioContext::addGenerator(SoundGenerator *generator) { generators.push_back(generator); }
+void AudioContext::addGenerator(SoundGenerator *generator) { sound_generators.push_back(generator); }
 
 float AudioContext::getAllSamples() {
     float sample = 0.0f;
-    for (auto *gen : generators) {
+    for (auto& gen : sound_generators) {
         gen->update();
-        sample += gen->getSample() * ctxAmplitude;
+        sample += gen->getSample() * m_ctx_amplitude;
     }
-    sample = fx.process(sample);
+    sample = fx_chain.process(sample);
     return sample;
 }
 void AudioContext::getAllSamples(float *buffer, int numFrames, int numChannels) {
@@ -27,8 +27,8 @@ void AudioContext::getAllSamples(float *buffer, int numFrames, int numChannels) 
 
 float AudioContext::getSample() { return getAllSamples(); }
 
-void AudioContext::setAmplitude(float amp) { ctxAmplitude = amp; }
-float AudioContext::getAmplitude() const { return ctxAmplitude; }
+void AudioContext::setAmplitude(float amp) { m_ctx_amplitude = amp; }
+float AudioContext::getAmplitude() const { return m_ctx_amplitude; }
 
 std::string AudioContext::getInfo(int depth) const {
     std::ostringstream oss;
@@ -38,9 +38,9 @@ std::string AudioContext::getInfo(int depth) const {
     if (depth == 0) {
         oss << "Root ";
     }
-    oss << "AudioContext: id '" << id << "' amplitude " << ctxAmplitude << ", " << fx.filters.size() << " post filters, " << generators.size()
+    oss << "AudioContext: id '" << id << "' amplitude " << m_ctx_amplitude << ", " << fx_chain.size() << " post filters, " << sound_generators.size()
         << " generators:\n";
-    for (auto *gen : generators) {
+    for (auto *gen : sound_generators) {
         oss << gen->getInfo(depth + 1);
     }
     if (depth == 0) {

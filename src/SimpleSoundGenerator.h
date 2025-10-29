@@ -24,6 +24,8 @@ class SimpleSoundGenerator : public SoundGenerator {
     void setLooping(bool loop) { looping = loop; };
     bool isLooping() const { return looping; };
 
+    void setTempPause(bool new_pause) {paused = new_pause;};
+
     std::string getInfo(int depth) const override;
     bool isPlaying() const;
 

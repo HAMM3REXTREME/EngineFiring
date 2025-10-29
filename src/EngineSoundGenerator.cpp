@@ -28,7 +28,7 @@ void EngineSoundGenerator::update() {
 }
 void EngineSoundGenerator::setNoteOffset(int offset) { m_note_offset = offset; }
 int EngineSoundGenerator::getNoteOffset() const { return m_note_offset; }
-float EngineSoundGenerator::getRPM() { return m_audio_bpm / m_engine.m_firing_per_rev; }
+float EngineSoundGenerator::getRPM() { return m_audio_bpm / (m_engine.m_firing_per_rev * m_engine.getCylinderCount()); }
 void EngineSoundGenerator::setAmplitude(float amp) { m_amplitude = amp; }
 float EngineSoundGenerator::getAmplitude() const { return m_amplitude; }
 float EngineSoundGenerator::getSample() {

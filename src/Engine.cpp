@@ -7,8 +7,6 @@
 #include <string>
 #include <vector>
 
-#include "AudioVector.h"
-
 void Engine::setIntervalsFromDegrees(const std::vector<float> &firing_intervals_degrees, float full_firing_degrees) {
     // Must add up to 720 degrees for a 4 stroke
     float sum_intervals = std::accumulate(firing_intervals_degrees.begin(), firing_intervals_degrees.end(), 0.0f);

@@ -98,9 +98,8 @@ int main() {
     // Engine engineDef("Countach V12 (Growl)", Engine::getFiringOrderFromString("1 10 5 14 3 12 6 15 2 11 4 13"),
     // {58,58,58,58,58,58,0,0,0,62,62,62,62,62,62}, 4.8); Engine engineDef("BMW S70/2 V12", Engine::getFiringOrderFromString("1 7 5 11 3 9 6 12 2 8 4
     // 10"), 6.2); Engine engineDef("F1 V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 16); Engine engineDef("Audi V10 FSI", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {90,
-    // 54, 90, 54, 90, 54, 90, 54, 90, 54}, 5); Engine engineDef("Audi V10 FSI (Growl)", {0, 6, 4, 10, 1, 7, 2, 8, 3, 9}, {90, 54, 90, 54 ,90, 0, 54, 90, 54,
-    // 90, 54}, 5);
-    Engine engineDef("1LR-GUE V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, 5);
+    // 54, 90, 54, 90, 54, 90, 54, 90, 54}, 5); Engine engineDef("Audi V10 FSI (Growl)", {0, 6, 4, 10, 1, 7, 2, 8, 3, 9}, {90, 54, 90, 54 ,90, 0, 54, 90, 54,   90, 54}, 5);
+    Engine engineDef("1LR-GUE V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8});
     // Engine engineDef("1LR-GUE V10 - LFA UL Headers", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {71,73,71,73,71,73,71,73,71,73,71},5);
     // Engine engineDef("Growly V10", {0, 6, 4, 10, 1, 7, 2, 8, 3, 9}, {70,70,70,70,70,0,74,74,74,74,74}, 5);
     // Engine engineDef("M80 V10",{0, 5, 4, 9, 1, 6, 2, 7, 3, 8},{70,74,70,74,70,74,70,74,70,74,70} , 5);
@@ -212,63 +211,62 @@ int main() {
     bool shiftLock = false; // Only allow one type of shift at a time (upshift/downshift)
     Damper gasAvg(5);       // Smooth out gas inputs
 
-    // Biquad filters
-    Biquad lowShelfFilter(bq_type_lowshelf, 150.0f / SAMPLE_RATE, 0.707f, 0.0f);  // cut lows
-    Biquad midBoostFilter(bq_type_peak, 1500.0f / SAMPLE_RATE, 1.0f, 3.0f);       // boost mids
-    Biquad highShelfFilter(bq_type_highshelf, 2500.0f / SAMPLE_RATE, 1.0f, 8.0f); // boost highs
-    Biquad rumbleBoostFilter(bq_type_peak, 80.0f / SAMPLE_RATE, 0.5f, 10.1f);     // deep bass boost
-    // Cuts
-    Biquad cut22Hz(bq_type_peak, 22.0f / SAMPLE_RATE, 4.36f, -36.0f);
-    Biquad cut28Hz(bq_type_peak, 28.0f / SAMPLE_RATE, 4.36f, -16.0f);
-    Biquad cut18100Hz(bq_type_peak, 18100.0f / SAMPLE_RATE, 4.36f, -26.0f);
-    Biquad cut14600Hz(bq_type_peak, 14600.0f / SAMPLE_RATE, 4.36f, -14.0f);
-    // Boosts
-    Biquad boost2100Hz(bq_type_peak, 2100.0f / SAMPLE_RATE, 4.36f, +2.0f);
-    Biquad boost2600Hz(bq_type_peak, 2600.0f / SAMPLE_RATE, 4.36f, +2.0f);
-    Biquad boost3600Hz(bq_type_peak, 3600.0f / SAMPLE_RATE, 4.36f, +2.0f);
-    Biquad boost4000Hz(bq_type_peak, 4000.0f / SAMPLE_RATE, 4.36f, +2.0f);
-    // Adding some filters
-    engineCtx.addFilter(new Biquad(bq_type_peak, 1600.0f / SAMPLE_RATE, 0.707f, 0.0f)); // Example active filter (dB modulated later)
-    engineCtx.addFilter(new Biquad(midBoostFilter));
-    superchargerCtx.addFilter(new Biquad(rumbleBoostFilter));
-    // Filter out harsh sounds
-    engineCtx.addFilter(new Biquad(cut22Hz));
-    engineCtx.addFilter(new Biquad(cut28Hz));
-    engineCtx.addFilter(new Biquad(cut18100Hz));
-    engineCtx.addFilter(new Biquad(cut14600Hz));
-    superchargerCtx.fx.addFilter(new Biquad(cut22Hz));
-    superchargerCtx.fx.addFilter(new Biquad(cut28Hz));
-    superchargerCtx.fx.addFilter(new Biquad(cut18100Hz));
-    // Low ends
-    engineCtx.fx.addFilter(new Biquad(bq_type_peak, 120.0f / SAMPLE_RATE, 0.707f, 4.0f));
-    engineCtx.fx.addFilter(new Biquad(bq_type_peak, 300 / SAMPLE_RATE, 1.0f, 3.0f));
-    engineCtx.fx.addFilter(new Biquad(bq_type_peak, 500.0f / SAMPLE_RATE, 0.707f, 3.0f));
-    // Mid range
-    engineCtx.fx.addFilter(new Biquad(bq_type_peak, 1700.0f / SAMPLE_RATE, 0.707f, 4.0f));
-    engineCtx.fx.addFilter(new Biquad(bq_type_peak, 3000.0f / SAMPLE_RATE, 0.707f, 4.0f));
-    engineCtx.fx.addFilter(new Biquad(bq_type_peak, 8000.0f / SAMPLE_RATE, 0.707f, -2.0f)); // High note - crispyness
-    engineCtx.fx.addFilter(new Biquad(bq_type_peak, 9000.0f / SAMPLE_RATE, 0.707f, -3.0f));
-    // Backfire context
-    Biquad backfireFilter(bq_type_lowshelf, 150.0f / SAMPLE_RATE, 0.707f, 12.0f);
-    Biquad backfireHighFilter(bq_type_highshelf, 3000.0f / SAMPLE_RATE, 0.707f, -12.0f);
-    Biquad backfireHighFilter2(bq_type_peak, 4500.0f / SAMPLE_RATE, 0.3f, -12.0f);
-    backfireCtx.fx.addFilter(new Biquad(backfireFilter));
-    backfireCtx.fx.addFilter(new Biquad(rumbleBoostFilter));
-    backfireCtx.fx.addFilter(new Biquad(midBoostFilter));
-    backfireCtx.fx.addFilter(new Biquad(cut14600Hz));
-    // backfireCtx.fx.addFilter(cut18100Hz);
-    backfireCtx.fx.addFilter(new Biquad(boost2100Hz));
-    // backfireCtx.fx.addFilter(new Biquad(backfireHighFilter)); // Comment/uncomment for subtle or aggressive bangs and pops
-    // backfireCtx.fx.addFilter(backfireHighFilter2);
-    backfireCtx.addFilter(new Biquad(bq_type_lowshelf, 54.0f / SAMPLE_RATE, 0.707f, 5.0f)); // GT-R
+// Helper lambda for readability
+auto makeBiquad = [](int type, float freq, float q, float db) {
+    return std::make_unique<Biquad>(type, freq / SAMPLE_RATE, q, db);
+};
 
-    engineCtx.addFilter(new SecondOrderFilter(2950.0f, 0.6f, 1.0f / 48000.0f));
-    engineCtx.addFilter(new SecondOrderFilter(350.0f, 0.6f, 1.0f / 48000.0f)); // C63 AMG
-    engineCtx.addFilter(new SecondOrderFilter(200.0f, 0.3f, 1.0f / 48000.0f)); // Huracan?
-    backfireCtx.addFilter(new SecondOrderFilter(350.0f, 0.5f, 1.0f / 48000.0f));
-    backfireCtx.addFilter(new SecondOrderFilter(2050.0f, 0.3f, 1.0f / 48000.0f));
-    superchargerCtx.addFilter(new SecondOrderFilter(3050.0f, 0.4f, 1.0f / 48000.0f));
-    context.addFilter(new SineClipper());
+// Engine context filters
+engineCtx.addFilter(makeBiquad(bq_type_peak, 1600.0f, 0.707f, 0.0f)); // Example active filter
+engineCtx.addFilter(makeBiquad(bq_type_peak, 1500.0f, 1.0f, 3.0f));   // Mid boost
+engineCtx.addFilter(makeBiquad(bq_type_peak, 22.0f, 4.36f, -36.0f));
+engineCtx.addFilter(makeBiquad(bq_type_peak, 28.0f, 4.36f, -16.0f));
+engineCtx.addFilter(makeBiquad(bq_type_peak, 18100.0f, 4.36f, -26.0f));
+engineCtx.addFilter(makeBiquad(bq_type_peak, 14600.0f, 4.36f, -14.0f));
+engineCtx.addFilter(makeBiquad(bq_type_peak, 2100.0f, 4.36f, 2.0f));
+engineCtx.addFilter(makeBiquad(bq_type_peak, 2600.0f, 4.36f, 2.0f));
+engineCtx.addFilter(makeBiquad(bq_type_peak, 3600.0f, 4.36f, 2.0f));
+engineCtx.addFilter(makeBiquad(bq_type_peak, 4000.0f, 4.36f, 2.0f));
+
+// Low end
+engineCtx.addFilter(makeBiquad(bq_type_peak, 120.0f, 0.707f, 4.0f));
+engineCtx.addFilter(makeBiquad(bq_type_peak, 300.0f, 1.0f, 3.0f));
+engineCtx.addFilter(makeBiquad(bq_type_peak, 500.0f, 0.707f, 3.0f));
+
+// Mid range
+engineCtx.addFilter(makeBiquad(bq_type_peak, 1700.0f, 0.707f, 4.0f));
+engineCtx.addFilter(makeBiquad(bq_type_peak, 3000.0f, 0.707f, 4.0f));
+engineCtx.addFilter(makeBiquad(bq_type_peak, 8000.0f, 0.707f, -2.0f));
+engineCtx.addFilter(makeBiquad(bq_type_peak, 9000.0f, 0.707f, -3.0f));
+
+// Supercharger
+superchargerCtx.addFilter(makeBiquad(bq_type_peak, 80.0f, 0.5f, 10.1f));     // rumble boost
+superchargerCtx.addFilter(makeBiquad(bq_type_peak, 1500.0f, 1.0f, 3.0f));    // mid boost
+superchargerCtx.addFilter(makeBiquad(bq_type_peak, 22.0f, 4.36f, -36.0f));
+superchargerCtx.addFilter(makeBiquad(bq_type_peak, 28.0f, 4.36f, -16.0f));
+superchargerCtx.addFilter(makeBiquad(bq_type_peak, 18100.0f, 4.36f, -26.0f));
+
+// Backfire
+backfireCtx.addFilter(makeBiquad(bq_type_lowshelf, 150.0f, 0.707f, 12.0f));
+backfireCtx.addFilter(makeBiquad(bq_type_highshelf, 3000.0f, 0.707f, -12.0f));
+backfireCtx.addFilter(makeBiquad(bq_type_peak, 4500.0f, 0.3f, -12.0f));
+backfireCtx.addFilter(makeBiquad(bq_type_peak, 2100.0f, 4.36f, 2.0f));
+backfireCtx.addFilter(makeBiquad(bq_type_peak, 1500.0f, 1.0f, 3.0f));
+backfireCtx.addFilter(makeBiquad(bq_type_peak, 14600.0f, 4.36f, -14.0f));
+backfireCtx.addFilter(makeBiquad(bq_type_lowshelf, 54.0f, 0.707f, 5.0f)); // GT-R
+
+// Second-order filters
+engineCtx.addFilter(std::make_unique<SecondOrderFilter>(2950.0f, 0.6f, 1.0f / 48000.0f));
+engineCtx.addFilter(std::make_unique<SecondOrderFilter>(350.0f, 0.6f, 1.0f / 48000.0f));
+engineCtx.addFilter(std::make_unique<SecondOrderFilter>(200.0f, 0.3f, 1.0f / 48000.0f));
+
+backfireCtx.addFilter(std::make_unique<SecondOrderFilter>(350.0f, 0.5f, 1.0f / 48000.0f));
+backfireCtx.addFilter(std::make_unique<SecondOrderFilter>(2050.0f, 0.3f, 1.0f / 48000.0f));
+
+superchargerCtx.addFilter(std::make_unique<SecondOrderFilter>(3050.0f, 0.4f, 1.0f / 48000.0f));
+
+// Other effects
+context.addFilter(std::make_unique<SineClipper>());
 
     // SFML stuff for UI + input
     // Map user keyboard input to differen levels of throttle
@@ -471,10 +469,11 @@ int main() {
         // TODO: Seperation of concerns (Boost logic, shift styles etc.)
         carRpm = rpmFilter.update(car.getRPM());
         carTorque = torqueFilter.process(car.getTorque());
-        auto *biquad = dynamic_cast<Biquad *>(engineCtx.fx.filters[0]);
-        if (biquad) {
-            biquad->setPeakGain(8.0f - (carTorque / 20.0f));
-        }
+auto* biquad = dynamic_cast<Biquad*>(engineCtx.fx_chain[0]);
+if (biquad) {
+    biquad->setPeakGain(8.0f - (carTorque / 20.0f));
+
+}
         engineCtx.setAmplitude(0.5f + carRpm / 20000.0f);
         // superchargerCtx.setAmplitude(0.3f + carRpm / 15000.0f);
         engineLowNote.setRPM(carRpm);
