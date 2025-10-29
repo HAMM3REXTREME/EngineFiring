@@ -95,11 +95,11 @@ int main() {
     // Engine engineDef("Ferrari V12", Engine::getFiringOrderFromString("1 7 5 11 3 9 6 12 2 8 4 10"), 6.3);
     // Engine engineDef("Diablo/Murci V12", Engine::getFiringOrderFromString("1-7-4-10-2-8-6-12-3-9-5-11"), 6);
     // Engine engineDef("Countach V12", Engine::getFiringOrderFromString("1 7 5 11 3 9 6 12 2 8 4 10"), 5);
-    // Engine engineDef("Countach V12 (Growl)", Engine::getFiringOrderFromString("1 10 5 14 3 12 6 15 2 11 4 13"), {58,58,58,58,58,58,0,0,0,62,62,62,62,62,62}, 4.8);
-    // Engine engineDef("BMW S70/2 V12", Engine::getFiringOrderFromString("1 7 5 11 3 9 6 12 2 8 4 10"), 6.2);
-    // Engine engineDef("F1 V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 16);
-    // Engine engineDef("Audi V10 FSI", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {90, 54, 90, 54, 90, 54, 90, 54, 90, 54}, 5);
-    // Engine engineDef("Audi V10 FSI (Growl)", {0, 6, 4, 10, 1, 7, 2, 8, 3, 9}, {90, 54, 90, 54 ,90, 0, 54, 90, 54, 90, 54}, 5);
+    // Engine engineDef("Countach V12 (Growl)", Engine::getFiringOrderFromString("1 10 5 14 3 12 6 15 2 11 4 13"),
+    // {58,58,58,58,58,58,0,0,0,62,62,62,62,62,62}, 4.8); Engine engineDef("BMW S70/2 V12", Engine::getFiringOrderFromString("1 7 5 11 3 9 6 12 2 8 4
+    // 10"), 6.2); Engine engineDef("F1 V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 16); Engine engineDef("Audi V10 FSI", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {90,
+    // 54, 90, 54, 90, 54, 90, 54, 90, 54}, 5); Engine engineDef("Audi V10 FSI (Growl)", {0, 6, 4, 10, 1, 7, 2, 8, 3, 9}, {90, 54, 90, 54 ,90, 0, 54, 90, 54,
+    // 90, 54}, 5);
     Engine engineDef("1LR-GUE V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, 5);
     // Engine engineDef("1LR-GUE V10 - LFA UL Headers", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {71,73,71,73,71,73,71,73,71,73,71},5);
     // Engine engineDef("Growly V10", {0, 6, 4, 10, 1, 7, 2, 8, 3, 9}, {70,70,70,70,70,0,74,74,74,74,74}, 5);
@@ -144,8 +144,8 @@ int main() {
     EngineSoundGenerator engineLowNote(mainSamples, engineDef, 1000.0f, 0.5f);
     EngineSoundGenerator engineHighNote(mainSamples, engineDef, 1000.0f, 0.5f);
     EngineSoundGenerator engineMechanicals(mainSamples, engineDef, 1000.0f, 0.5f);
-    engineLowNote.setNoteOffset(2); // 0,             3, 0                0to4
-    engineHighNote.setNoteOffset(22); // 5, 7, 9, 19, 20, 19, 19, 14, 22, 23, 17, 19, 26, 19 , 10, 19
+    engineLowNote.setNoteOffset(2);      // 0,             3, 0                0to4
+    engineHighNote.setNoteOffset(22);    // 5, 7, 9, 19, 20, 19, 19, 14, 22, 23, 17, 19, 26, 19 , 10, 19
     engineMechanicals.setNoteOffset(11); // 8, 10, 11, 16, 16, 11, 14, 11, 16, 19, 16, 11, 20, 25, 14, 10
 
     // EQ Tips:
@@ -236,8 +236,8 @@ int main() {
     engineCtx.addFilter(new Biquad(cut28Hz));
     engineCtx.addFilter(new Biquad(cut18100Hz));
     engineCtx.addFilter(new Biquad(cut14600Hz));
-    superchargerCtx.fx.addFilter(new Biquad (cut22Hz));
-    superchargerCtx.fx.addFilter(new Biquad (cut28Hz));
+    superchargerCtx.fx.addFilter(new Biquad(cut22Hz));
+    superchargerCtx.fx.addFilter(new Biquad(cut28Hz));
     superchargerCtx.fx.addFilter(new Biquad(cut18100Hz));
     // Low ends
     engineCtx.fx.addFilter(new Biquad(bq_type_peak, 120.0f / SAMPLE_RATE, 0.707f, 4.0f));
@@ -261,13 +261,13 @@ int main() {
     // backfireCtx.fx.addFilter(new Biquad(backfireHighFilter)); // Comment/uncomment for subtle or aggressive bangs and pops
     // backfireCtx.fx.addFilter(backfireHighFilter2);
     backfireCtx.addFilter(new Biquad(bq_type_lowshelf, 54.0f / SAMPLE_RATE, 0.707f, 5.0f)); // GT-R
-    
-    engineCtx.addFilter(new SecondOrderFilter(2950.0f, 0.6f, 1.0f/48000.0f));
-    engineCtx.addFilter(new SecondOrderFilter(350.0f, 0.6f, 1.0f/48000.0f)); // C63 AMG
-    engineCtx.addFilter(new SecondOrderFilter(200.0f, 0.3f, 1.0f/48000.0f)); // Huracan?
-    backfireCtx.addFilter(new SecondOrderFilter(350.0f, 0.5f, 1.0f/48000.0f));
-    backfireCtx.addFilter(new SecondOrderFilter(2050.0f, 0.3f, 1.0f/48000.0f));
-    superchargerCtx.addFilter(new SecondOrderFilter(3050.0f, 0.4f, 1.0f/48000.0f));
+
+    engineCtx.addFilter(new SecondOrderFilter(2950.0f, 0.6f, 1.0f / 48000.0f));
+    engineCtx.addFilter(new SecondOrderFilter(350.0f, 0.6f, 1.0f / 48000.0f)); // C63 AMG
+    engineCtx.addFilter(new SecondOrderFilter(200.0f, 0.3f, 1.0f / 48000.0f)); // Huracan?
+    backfireCtx.addFilter(new SecondOrderFilter(350.0f, 0.5f, 1.0f / 48000.0f));
+    backfireCtx.addFilter(new SecondOrderFilter(2050.0f, 0.3f, 1.0f / 48000.0f));
+    superchargerCtx.addFilter(new SecondOrderFilter(3050.0f, 0.4f, 1.0f / 48000.0f));
     context.addFilter(new SineClipper());
 
     // SFML stuff for UI + input
@@ -471,7 +471,7 @@ int main() {
         // TODO: Seperation of concerns (Boost logic, shift styles etc.)
         carRpm = rpmFilter.update(car.getRPM());
         carTorque = torqueFilter.process(car.getTorque());
-        auto* biquad = dynamic_cast<Biquad*>(engineCtx.fx.filters[0]);
+        auto *biquad = dynamic_cast<Biquad *>(engineCtx.fx.filters[0]);
         if (biquad) {
             biquad->setPeakGain(8.0f - (carTorque / 20.0f));
         }

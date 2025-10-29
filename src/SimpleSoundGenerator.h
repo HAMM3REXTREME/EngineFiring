@@ -34,5 +34,4 @@ class SimpleSoundGenerator : public SoundGenerator {
     float gain;
     bool looping;
     bool paused;
-  
 };

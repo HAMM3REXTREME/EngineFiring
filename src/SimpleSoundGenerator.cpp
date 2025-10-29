@@ -13,9 +13,7 @@ void SimpleSoundGenerator::startPlayback(size_t sampleIndex, bool loop) {
         looping = loop;
     }
 }
-void setTempPause(bool new_pause){
-    paused = new_pause;
-}
+void setTempPause(bool new_pause) { paused = new_pause; }
 
 void SimpleSoundGenerator::stopPlayback() {
     currentSampleIndex = -1;

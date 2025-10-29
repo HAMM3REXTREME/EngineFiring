@@ -9,48 +9,51 @@
 
 #include "AudioVector.h"
 
-void Engine::setIntervalsFromDegrees(const std::vector<float> &degreesInterval) {
-    // Must add up to 720 degrees or it won't sound right
-    float sumIntervals = std::accumulate(degreesInterval.begin(), degreesInterval.end(), 0.0f);
-    if (std::fabs(sumIntervals - 720.0f) > 1e-4) {
-        std::cerr << "Firing order doesn't make any sense\n";
+void Engine::setIntervalsFromDegrees(const std::vector<float> &firing_intervals_degrees, float full_firing_degrees) {
+    // Must add up to 720 degrees for a 4 stroke
+    float sum_intervals = std::accumulate(firing_intervals_degrees.begin(), firing_intervals_degrees.end(), 0.0f);
+    if (std::fabs(sum_intervals - full_firing_degrees) > 1e-4) {
+        std::cerr << "Firing intervals dont add up to " << full_firing_degrees << " degrees\n";
     }
-    if (degreesInterval.size() != getCylinderCount()) {
-        std::cerr << "Firing order list doesn't match cylinder count\n";
+    if (firing_intervals_degrees.size() != getCylinderCount()) {
+        std::cerr << "Count of firing intervals doesn't match cylinder count\n";
     }
+
     // Calculate relative interval for each cylinder
-    float evenFireInterval = 720.0f / getCylinderCount();
-    firingIntervalFactors.clear();
+    float even_fire_interval = full_firing_degrees / getCylinderCount();
+    m_firing_interval_factors.clear();
     std::cout << "Firing factors: ";
-    for (float fireInterval : degreesInterval) {
-        firingIntervalFactors.push_back(fireInterval / evenFireInterval);
-        std::cout << fireInterval / evenFireInterval << "  ";
+    for (float fire_interval : firing_intervals_degrees) {
+        m_firing_interval_factors.push_back(fire_interval / even_fire_interval);
+        std::cout << fire_interval / even_fire_interval << "  ";
     }
     std::cout << "\n";
 }
-Engine::Engine(std::string m_name, const std::vector<int> &m_firingOrder, const std::vector<float> &m_degreesIntervals, float m_rpmFactor)
-    : name(m_name), firingOrder(m_firingOrder), audioRpmFactor(m_rpmFactor) {
-    std::cout << "New engine '" << name << "' with " << getCylinderCount() << " cylinders. ";
-    setIntervalsFromDegrees(m_degreesIntervals);
+
+Engine::Engine(std::string name, const std::vector<int> &firing_order, const std::vector<float> &firing_intervals_degrees, float firing_per_rev)
+    : m_name(name), m_firing_order(firing_order), m_firing_per_rev(firing_per_rev) {
+    std::cout << "New engine '" << m_name << "' with " << getCylinderCount() << " cylinders. ";
+    setIntervalsFromDegrees(firing_intervals_degrees);
 }
-Engine::Engine(std::string m_name, const std::vector<int> &m_firingOrder, float m_rpmFactor)
-    : name(m_name), firingOrder(m_firingOrder), audioRpmFactor(m_rpmFactor) {
-    std::cout << "New engine '" << name << "' with " << getCylinderCount() << " cylinders (even firing).\n";
-    firingIntervalFactors.assign(getCylinderCount(), 1); // Even-firing
+
+Engine::Engine(std::string name, const std::vector<int> &firing_order, float firing_per_rev)
+    : m_name(name), m_firing_order(firing_order), m_firing_per_rev(firing_per_rev) {
+    std::cout << "New engine '" << m_name << "' with " << getCylinderCount() << " cylinders (even firing).\n";
+    m_firing_interval_factors.assign(getCylinderCount(), 1); // Even-firing
 }
-// Assuming we numbered the cylinders in each bank sequentially (Audi, Ford, Porsche) - might sound sonically different for GM numbering
-std::vector<int> Engine::getFiringOrderFromString(const std::string &firingString) {
+
+std::vector<int> Engine::getFiringOrderFromString(const std::string &firing_order_str) {
     std::vector<int> result;
-    std::string cleanedInput = firingString;
+    std::string cleaned_input = firing_order_str;
 
     // Replace any non-digit characters with spaces
-    for (char &c : cleanedInput) {
+    for (char &c : cleaned_input) {
         if (!std::isdigit(c)) {
             c = ' ';
         }
     }
 
-    std::istringstream stream(cleanedInput);
+    std::istringstream stream(cleaned_input);
     int number;
     while (stream >> number) {
         result.push_back(number - 1); // Convert from 1-based to 0-based

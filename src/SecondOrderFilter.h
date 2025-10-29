@@ -1,9 +1,9 @@
 #pragma once
-#include <cmath>
 #include "PostFilter.h"
+#include <cmath>
 
 // Second Order filter: adds a bouncing effect to abrupt value changes (useful to post process rpm)
-class SecondOrderFilter: public PostFilter {
+class SecondOrderFilter : public PostFilter {
   public:
     SecondOrderFilter(float frequency, float dampingRatio, float dt)
         : omega_n(2.0f * M_PI * frequency), zeta(dampingRatio), dt(dt), y(0.0f), dy(0.0f), x_prev(0.0f) {}
@@ -21,7 +21,8 @@ class SecondOrderFilter: public PostFilter {
         return y;
     }
 
-    float process(float in) {return in+update(in); }
+    float process(float in) { return in + update(in); }
+
   private:
     float omega_n;
     float zeta;

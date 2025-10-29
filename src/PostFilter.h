@@ -1,6 +1,5 @@
 #pragma once
 class PostFilter {
-    public:
+  public:
     virtual float process(float in) = 0;
-
 };

@@ -1,24 +1,23 @@
 #pragma once
-#include <cmath>
 #include "PostFilter.h"
+#include <cmath>
 
 // Utility clamp
-inline float clampf(float x, float lo, float hi) {
-    return std::fmax(lo, std::fmin(hi, x));
-}
+inline float clampf(float x, float lo, float hi) { return std::fmax(lo, std::fmin(hi, x)); }
 
 //
 // 1️⃣ Warmth / Saturation
 //    Smooth soft clipping — adds even harmonics, “tube” warmth.
 //
 class SaturatorFilter : public PostFilter {
-public:
+  public:
     explicit SaturatorFilter(float drive = 1.0f) : drive(drive) {}
     float process(float in) override {
         float x = in * drive;
         return std::tanh(x) / std::tanh(drive);
     }
-private:
+
+  private:
     float drive;
 };
 
@@ -28,15 +27,10 @@ private:
 //    Adds "attack" to percussion or engine rev spikes.
 //
 class PunchFilter : public PostFilter {
-public:
-    PunchFilter(float cutoff = 80.0f, float sampleRate = 48000.0f)
-        : cutoff(cutoff), sampleRate(sampleRate), prev(0.0f), hp(0.0f) {
-        setCutoff(cutoff);
-    }
+  public:
+    PunchFilter(float cutoff = 80.0f, float sampleRate = 48000.0f) : cutoff(cutoff), sampleRate(sampleRate), prev(0.0f), hp(0.0f) { setCutoff(cutoff); }
 
-    void setCutoff(float f) {
-        alpha = std::exp(-2.0f * M_PI * f / sampleRate);
-    }
+    void setCutoff(float f) { alpha = std::exp(-2.0f * M_PI * f / sampleRate); }
 
     float process(float in) override {
         // 1-pole high-pass
@@ -45,7 +39,8 @@ public:
         // Slight saturation on peaks
         return std::tanh(hp * 1.5f);
     }
-private:
+
+  private:
     float cutoff, sampleRate, prev, hp, alpha;
 };
 
@@ -55,25 +50,25 @@ private:
 //    Adds harmonic "body" or resonance around a target frequency.
 //
 class ResonantBoostFilter : public PostFilter {
-public:
-    ResonantBoostFilter(float frequency, float q, float sampleRate)
-        : freq(frequency), q(q), sampleRate(sampleRate)
-    {
+  public:
+    ResonantBoostFilter(float frequency, float q, float sampleRate) : freq(frequency), q(q), sampleRate(sampleRate) { updateCoeffs(); }
+
+    void setParams(float frequency, float q) {
+        freq = frequency;
+        this->q = q;
         updateCoeffs();
     }
 
-    void setParams(float frequency, float q) {
-        freq = frequency; this->q = q; updateCoeffs();
-    }
-
     float process(float in) override {
-        float y = b0*in + b1*x1 + b2*x2 - a1*y1 - a2*y2;
-        x2 = x1; x1 = in;
-        y2 = y1; y1 = y;
+        float y = b0 * in + b1 * x1 + b2 * x2 - a1 * y1 - a2 * y2;
+        x2 = x1;
+        x1 = in;
+        y2 = y1;
+        y1 = y;
         return y;
     }
 
-private:
+  private:
     float freq, q, sampleRate;
     float a1{}, a2{}, b0{}, b1{}, b2{};
     float x1{}, x2{}, y1{}, y2{};
@@ -91,7 +86,11 @@ private:
         a1 = -2.0f * cosw0;
         a2 = 1.0f - alpha / boost;
 
-        b0/=a0; b1/=a0; b2/=a0; a1/=a0; a2/=a0;
+        b0 /= a0;
+        b1 /= a0;
+        b2 /= a0;
+        a1 /= a0;
+        a2 /= a0;
     }
 };
 
@@ -101,17 +100,16 @@ private:
 //    Great for complex tones — creates dynamic, natural richness.
 //
 class HarmonicEnricher : public PostFilter {
-public:
-    HarmonicEnricher(float mix = 0.5f, float drive = 1.2f)
-        : mix(mix), drive(drive) {}
+  public:
+    HarmonicEnricher(float mix = 0.5f, float drive = 1.2f) : mix(mix), drive(drive) {}
 
     float process(float in) override {
         float even = std::tanh(in * drive);
-        float odd  = std::tanh(in * drive * 0.5f) * in; // slightly asymmetric
+        float odd = std::tanh(in * drive * 0.5f) * in; // slightly asymmetric
         float out = (even * 0.7f + odd * 0.3f);
         return in * (1.0f - mix) + out * mix;
     }
 
-private:
+  private:
     float mix, drive;
 };

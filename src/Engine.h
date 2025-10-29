@@ -12,18 +12,18 @@
 
 class Engine {
   public:
-    Engine(std::string m_name, const std::vector<int> &m_firingOrder, const std::vector<float> &m_degreesIntervals, float m_rpmFactor);
-    Engine(std::string m_name, const std::vector<int> &m_firingOrder, float m_rpmFactor);
+    Engine(std::string name, const std::vector<int> &firing_order, const std::vector<float> &firing_intervals_degrees, float firing_per_rev = 0.5);
+    Engine(std::string name, const std::vector<int> &firing_order, float firing_per_rev = 0.5);
 
-    void setIntervalsFromDegrees(const std::vector<float> &degreesInterval);
-    static std::vector<int> getFiringOrderFromString(const std::string &firingString);
+    void setIntervalsFromDegrees(const std::vector<float> &firing_intervals_degrees, float full_firing_degrees = 720.0f);
+    static std::vector<int> getFiringOrderFromString(const std::string &firing_order_str);
 
-    std::string name;
-    std::vector<int> firingOrder;
-    std::vector<float> firingIntervalFactors;
-    float audioRpmFactor; // Beats per 360 degrees of crankshaft rev
+    std::string m_name;
+    std::vector<int> m_firing_order;
+    std::vector<float> m_firing_interval_factors;
+    float m_firing_per_rev; // 4-stroke: 360/720 = 0.5
 
-    int getCylinderCount() const { return firingOrder.size(); };
+    int getCylinderCount() const { return m_firing_order.size(); };
 };
 
 #endif // ENGINE_H
