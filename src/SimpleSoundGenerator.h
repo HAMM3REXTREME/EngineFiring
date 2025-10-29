@@ -25,6 +25,7 @@ class SimpleSoundGenerator : public SoundGenerator {
     bool isLooping() const { return looping; };
 
     std::string getInfo(int depth) const override;
+    bool isPlaying() const;
 
   private:
     SoundBank &soundBank;
@@ -32,5 +33,6 @@ class SimpleSoundGenerator : public SoundGenerator {
     size_t playbackPosition; // Position within the current sample
     float gain;
     bool looping;
-    bool isPlaying() const;
+    bool paused;
+  
 };

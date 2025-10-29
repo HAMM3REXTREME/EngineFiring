@@ -1,5 +1,4 @@
 #include "AudioContext.h"
-#include "Biquad.h"
 #include <sstream>
 
 AudioContext::AudioContext(std::vector<SoundGenerator *> generators) : id("no name"), generators(generators), ctxAmplitude(1.0f) {}
@@ -15,7 +14,7 @@ float AudioContext::getAllSamples() {
         sample += gen->getSample() * ctxAmplitude;
     }
     sample = fx.process(sample);
-    return std::clamp(sample, -1.0f, 1.0f);
+    return sample;
 }
 void AudioContext::getAllSamples(float *buffer, int numFrames, int numChannels) {
     for (int i = 0; i < numFrames; ++i) {

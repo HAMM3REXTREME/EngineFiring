@@ -31,12 +31,12 @@ class EngineSoundGenerator : public SoundGenerator {
   private:
     const Engine &engine;
     const SoundBank &pistonClicks;
-    float audioRpm; // Auditory rpm, refer to Engine.audioRpmFactor if it 'sounds' faster/slower than intended (Edit: This is basically beats per minute)
+    float audioBpm; // Beats per minute
     int noteOffset = 0;
     std::vector<std::pair<const std::vector<float> *, size_t>> active_firings;
     float interval;
     float interval_timer;
-    int phase; // Decides which piston is next
+    int fire_count;
     // Audio settings
     int sample_rate;
     int channels;

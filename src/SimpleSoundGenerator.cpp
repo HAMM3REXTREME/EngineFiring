@@ -3,7 +3,7 @@
 #include <iostream>
 #include <sstream>
 
-SimpleSoundGenerator::SimpleSoundGenerator(SoundBank &bank) : soundBank(bank), currentSampleIndex(-1), playbackPosition(0), gain(1.0f) {}
+SimpleSoundGenerator::SimpleSoundGenerator(SoundBank &bank) : soundBank(bank), currentSampleIndex(-1), playbackPosition(0), gain(1.0f), paused(false) {}
 
 // Call this to start playing a sample by its index in the SoundBank
 void SimpleSoundGenerator::startPlayback(size_t sampleIndex, bool loop) {
@@ -13,6 +13,10 @@ void SimpleSoundGenerator::startPlayback(size_t sampleIndex, bool loop) {
         looping = loop;
     }
 }
+void setTempPause(bool new_pause){
+    paused = new_pause;
+}
+
 void SimpleSoundGenerator::stopPlayback() {
     currentSampleIndex = -1;
     playbackPosition = 0;

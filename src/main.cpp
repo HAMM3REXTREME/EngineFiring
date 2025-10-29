@@ -22,6 +22,7 @@
 #include "EngineSoundGenerator.h"
 #include "SecondOrderFilter.h"
 #include "SimpleSoundGenerator.h"
+#include "SineClipper.h"
 #include "SoundBank.h"
 #include "TurboWhooshGenerator.h"
 
@@ -40,7 +41,7 @@ int audio_callback(const void *, void *outputBuffer, unsigned long framesPerBuff
     float *out = static_cast<float *>(outputBuffer);
 
     for (unsigned long i = 0; i < framesPerBuffer; ++i) {
-        *out++ = std::sin((M_PI / 2.0f) * audioContext->getAllSamples());
+        *out++ = audioContext->getAllSamples();
     }
 
     return paContinue;
@@ -90,7 +91,7 @@ int main() {
                              "assets/audio/tick_library/note_97.wav",  "assets/audio/tick_library/note_98.wav",  "assets/audio/tick_library/note_99.wav",
                              "assets/audio/tick_library/note_100.wav", "assets/audio/tick_library/note_101.wav", "assets/audio/tick_library/note_102.wav"});
 
-    Engine engineDef("Revuelto V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 6.4);
+    // Engine engineDef("Revuelto V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 6.4);
     // Engine engineDef("Ferrari V12", Engine::getFiringOrderFromString("1 7 5 11 3 9 6 12 2 8 4 10"), 6.3);
     // Engine engineDef("Diablo/Murci V12", Engine::getFiringOrderFromString("1-7-4-10-2-8-6-12-3-9-5-11"), 6);
     // Engine engineDef("Countach V12", Engine::getFiringOrderFromString("1 7 5 11 3 9 6 12 2 8 4 10"), 5);
@@ -99,7 +100,7 @@ int main() {
     // Engine engineDef("F1 V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 16);
     // Engine engineDef("Audi V10 FSI", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {90, 54, 90, 54, 90, 54, 90, 54, 90, 54}, 5);
     // Engine engineDef("Audi V10 FSI (Growl)", {0, 6, 4, 10, 1, 7, 2, 8, 3, 9}, {90, 54, 90, 54 ,90, 0, 54, 90, 54, 90, 54}, 5);
-    // Engine engineDef("1LR-GUE V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, 5.3);
+    Engine engineDef("1LR-GUE V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, 5);
     // Engine engineDef("1LR-GUE V10 - LFA UL Headers", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {71,73,71,73,71,73,71,73,71,73,71},5);
     // Engine engineDef("Growly V10", {0, 6, 4, 10, 1, 7, 2, 8, 3, 9}, {70,70,70,70,70,0,74,74,74,74,74}, 5);
     // Engine engineDef("M80 V10",{0, 5, 4, 9, 1, 6, 2, 7, 3, 8},{70,74,70,74,70,74,70,74,70,74,70} , 5);
@@ -143,9 +144,9 @@ int main() {
     EngineSoundGenerator engineLowNote(mainSamples, engineDef, 1000.0f, 0.5f);
     EngineSoundGenerator engineHighNote(mainSamples, engineDef, 1000.0f, 0.5f);
     EngineSoundGenerator engineMechanicals(mainSamples, engineDef, 1000.0f, 0.5f);
-    engineLowNote.setNoteOffset(4); // 0,             3, 0                0to4
-    engineHighNote.setNoteOffset(19); // 5, 7, 9, 19, 20, 19, 19, 14, 22, 23, 17, 19, 26, 19 , 10, 19
-    engineMechanicals.setNoteOffset(14); // 8, 10, 11, 16, 16, 11, 14, 11, 16, 19, 16, 11, 20, 25, 14, 10
+    engineLowNote.setNoteOffset(2); // 0,             3, 0                0to4
+    engineHighNote.setNoteOffset(22); // 5, 7, 9, 19, 20, 19, 19, 14, 22, 23, 17, 19, 26, 19 , 10, 19
+    engineMechanicals.setNoteOffset(11); // 8, 10, 11, 16, 16, 11, 14, 11, 16, 19, 16, 11, 20, 25, 14, 10
 
     // EQ Tips:
     // 1. Filter out any harsh harmonics (extremes of hearing range)
@@ -185,7 +186,7 @@ int main() {
     AudioContext engineCtx("engines", {&engineLowNote, &engineHighNote, &engineMechanicals});
     AudioContext backfireCtx("backfire", {&backfire});
     AudioContext superchargerCtx("supercharger", {&supercharger});
-    AudioContext context("root", {&engineCtx, &generalGen, &backfireCtx, &turboShaft, &whoosh});
+    AudioContext context("root", {&engineCtx, &generalGen});
 
     // Car simulator stuff
     Car car;
@@ -227,14 +228,14 @@ int main() {
     Biquad boost3600Hz(bq_type_peak, 3600.0f / SAMPLE_RATE, 4.36f, +2.0f);
     Biquad boost4000Hz(bq_type_peak, 4000.0f / SAMPLE_RATE, 4.36f, +2.0f);
     // Adding some filters
-    engineCtx.fx.addFilter(new Biquad(bq_type_peak, 1600.0f / SAMPLE_RATE, 0.707f, 0.0f)); // Example active filter (dB modulated later)
-    engineCtx.fx.addFilter(new Biquad(midBoostFilter));
-    superchargerCtx.fx.addFilter(new Biquad(rumbleBoostFilter));
+    engineCtx.addFilter(new Biquad(bq_type_peak, 1600.0f / SAMPLE_RATE, 0.707f, 0.0f)); // Example active filter (dB modulated later)
+    engineCtx.addFilter(new Biquad(midBoostFilter));
+    superchargerCtx.addFilter(new Biquad(rumbleBoostFilter));
     // Filter out harsh sounds
-    engineCtx.fx.addFilter(new Biquad(cut22Hz));
-    engineCtx.fx.addFilter(new Biquad(cut28Hz));
-    engineCtx.fx.addFilter(new Biquad(cut18100Hz));
-    engineCtx.fx.addFilter(new Biquad(cut14600Hz));
+    engineCtx.addFilter(new Biquad(cut22Hz));
+    engineCtx.addFilter(new Biquad(cut28Hz));
+    engineCtx.addFilter(new Biquad(cut18100Hz));
+    engineCtx.addFilter(new Biquad(cut14600Hz));
     superchargerCtx.fx.addFilter(new Biquad (cut22Hz));
     superchargerCtx.fx.addFilter(new Biquad (cut28Hz));
     superchargerCtx.fx.addFilter(new Biquad(cut18100Hz));
@@ -267,6 +268,7 @@ int main() {
     backfireCtx.addFilter(new SecondOrderFilter(350.0f, 0.5f, 1.0f/48000.0f));
     backfireCtx.addFilter(new SecondOrderFilter(2050.0f, 0.3f, 1.0f/48000.0f));
     superchargerCtx.addFilter(new SecondOrderFilter(3050.0f, 0.4f, 1.0f/48000.0f));
+    context.addFilter(new SineClipper());
 
     // SFML stuff for UI + input
     // Map user keyboard input to differen levels of throttle
