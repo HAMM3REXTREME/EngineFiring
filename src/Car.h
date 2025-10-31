@@ -54,18 +54,18 @@ class Car {
     float rpm = 0;      // Engine RPM
     float wheelRPM = 0; // Wheel RPM or speed does not really matter
     float boost = 0;    // Turbo boost
-    Damper boostDamper{50};
+    Damper boostDamper{0.039};
 
     float Torque = 0; // Immediate Torque
     int gear = 0;     // Current Gear
 
     float clutch = 0; // Difference of revs to 'smoothly' join
 
-    Damper rpmDamper{5};
-    Damper torqueDamper{1};
-    Damper wheelSpeedDamper{10};
+    Damper rpmDamper{0.333};
+    Damper torqueDamper{0.9};
+    Damper wheelSpeedDamper{0.182};
 
-    Damper idleValve{5};
+    Damper idleValve{0.333};
 
     void controlIdle();
     void addEnergy();

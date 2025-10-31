@@ -26,7 +26,6 @@ set(SRC_FILES
     src/AudioVector.cpp
     src/BackfireSoundGenerator.cpp
     src/Car.cpp
-    src/Damper.cpp
     src/Engine.cpp
     src/EngineSoundGenerator.cpp
     src/SimpleSoundGenerator.cpp

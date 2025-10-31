@@ -215,7 +215,7 @@ int main() {
     int downShiftFrame = 0;
     int lastLiftOff = 0;
     bool shiftLock = false; // Only allow one type of shift at a time (upshift/downshift)
-    Damper gasAvg(5);       // Smooth out gas inputs
+    Damper gasAvg(0.333);       // Smooth out gas inputs
 
 // Helper lambda for readability
 auto makeBiquad = [](int type, float freq, float q, float db) {
@@ -525,9 +525,11 @@ if (biquad) {
     // ==== EXIT ====
     carRunning = false;
     carThread.join();
+    std::cout << "Stopping PortAudio...";
     Pa_StopStream(stream);
     Pa_CloseStream(stream);
     Pa_Terminate();
+    std::cout << "Bye" << std::endl;
 
     return 0;
 }
