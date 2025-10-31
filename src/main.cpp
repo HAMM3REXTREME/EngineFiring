@@ -22,6 +22,7 @@
 #include "Damper.h"
 #include "Engine.h"
 #include "EngineSoundGenerator.h"
+#include "ForceSilenceFilter.h"
 #include "SaturatorFilter.h"
 #include "HardClamp.h"
 #include "SecondOrderFilter.h"
@@ -35,7 +36,7 @@ constexpr int WINDOW_X = 1080;
 constexpr int WINDOW_Y = 720;
 
 constexpr int DOWNSHIFT_DELAY = 150;
-constexpr int UPSHIFT_DELAY = 120;
+constexpr int UPSHIFT_DELAY = 60;
 
 constexpr float THROTTLE_BLIP_DOWN = 0.021f;
 
@@ -97,12 +98,12 @@ int main() {
 
     // Engine engineDef("Revuelto V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 6.4);
     // Engine engineDef("Ferrari V12", Engine::getFiringOrderFromString("1 7 5 11 3 9 6 12 2 8 4 10"), 6.3);
-    // Engine engineDef("Diablo/Murci V12", Engine::getFiringOrderFromString("1-7-4-10-2-8-6-12-3-9-5-11"), 6);
-    // Engine engineDef("Countach V12", Engine::getFiringOrderFromString("1 7 5 11 3 9 6 12 2 8 4 10"), 5);
+    // Engine engineDef("Diablo/Murci V12", Engine::getFiringOrderFromString("1-7-4-10-2-8-6-12-3-9-5-11"));
+    // Engine engineDef("Countach V12", Engine::getFiringOrderFromString("1 7 5 11 3 9 6 12 2 8 4 10"), 0.49);
     // Engine engineDef("Countach V12 (Growl)", Engine::getFiringOrderFromString("1 10 5 14 3 12 6 15 2 11 4 13"),{58,58,58,58,58,58,0,0,0,62,62,62,62,62,62}, 4.8); 
     // Engine engineDef("BMW S70/2 V12", Engine::getFiringOrderFromString("1 7 5 11 3 9 6 12 2 8 4 10"), 6.2);
     // Engine engineDef("F1 V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 16); 
-    // Engine engineDef("Audi V10 FSI", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {90,54, 90, 54, 90, 54, 90, 54, 90, 54}); 
+    Engine engineDef("Audi V10 FSI", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {90,54, 90, 54, 90, 54, 90, 54, 90, 54}); 
     // Engine engineDef("Audi V10 FSI (Growl)", {0, 6, 4, 10, 1, 7, 2, 8, 3, 9}, {90, 54, 90, 54 ,90, 0, 54, 90, 54,   90, 54}, 5);
     // Engine engineDef("1LR-GUE V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8});
     // Engine engineDef("1LR-GUE V10 - LFA UL Headers", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {71,73,71,73,71,73,71,73,71,73,71},5);
@@ -113,30 +114,30 @@ int main() {
     // Engine engineDef("Mercedes AMG M156 (Growl)", Engine::getFiringOrderFromString("1-6-4-2-7-3-8-9"), {90,90,90,90,0,90,90,90,90},3.8);
     // Engine engineDef("Mercedes AMG M156 (Growl Double)", Engine::getFiringOrderFromString("1-7-4-2-8-3-9-10"), {90,90,90,90,0,0,90,90,90,90},3.8);
     // Engine engineDef("Mercedes AMG M156 (Growl Triple)", Engine::getFiringOrderFromString("1-8-4-2-9-3-10-11"), {90,90,90,90,0,0,0,90,90,90,90},3.8);
-    // Engine engineDef("Mercedes AMG M156 (Super Growl)", Engine::getFiringOrderFromString("1-10-4-2-11-3-12-13"), {86,86,86,86,0,0,0,0,0,94,94,94,94},3.5);
+    // Engine engineDef("Mercedes AMG M156 (Super Growl)", Engine::getFiringOrderFromString("1-10-4-2-11-3-12-13"), {86,86,86,86,0,0,0,0,0,94,94,94,94});
     // Engine engineDef("F1 V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, 12.5);
-    // Engine engineDef("Bugatti W16", Engine::getFiringOrderFromString("1 14 9 4 7 12 15 6 13 8 3 16 11 2 5 10"), 8.2);
+    // Engine engineDef("Bugatti W16", Engine::getFiringOrderFromString("1 14 9 4 7 12 15 6 13 8 3 16 11 2 5 10"));
     // Engine engineDef("Inline 9 - Experimental", Engine::getFiringOrderFromString("1 2 4 6 8 9 7 5 3"), 5);
-    // Engine engineDef("Flat plane V8", Engine::getFiringOrderFromString("1 5 3 7 4 8 2 6"), 4);
+    // Engine engineDef("Flat plane V8", Engine::getFiringOrderFromString("1 5 3 7 4 8 2 6"));
     // Engine engineDef("inline 7", Engine::getFiringOrderFromString("1 2 4 6 7 5 3"), 3);
     // Engine engineDef("Mercedes M120 V12", Engine::getFiringOrderFromString("1-12-5-8-3-10-6-7-2-11-4-9"),7.6);
-    // Engine engineDef("Murican V8 +", Engine::getFiringOrderFromString("1-8-7-2-6 -5-4-3"),3.8);
+    // Engine engineDef("Murican V8 +", Engine::getFiringOrderFromString("1-8-7-2-6 -5-4-3"));
     // Engine engineDef("2UR-GSE V8", Engine::getFiringOrderFromString("1-8-7-3-6-5-4-2"),4);
     // Engine engineDef("2UR-GSE V8 (Growl)", Engine::getFiringOrderFromString("1-13-12-3-11-10-4-2"), {86,94,94,86,0,0,0,0,0,94,94,86,86}, 4);
-    // Engine engineDef("BMW N54", Engine::getFiringOrderFromString("1-5-3-6-2-4"), 3);
+    // Engine engineDef("BMW N54", Engine::getFiringOrderFromString("1-5-3-6-2-4"));
     // Engine engineDef("Diesel inline 6", Engine::getFiringOrderFromString("1-5-3-6-2-4"), 1);
     // Engine engineDef("V Twin", Engine::getFiringOrderFromString("1-2"), {315,405},0.8);
     // Engine engineDef("1 Cylinder", {0}, 0.5);
     // Engine engineDef("3 Cylinder Sport", Engine::getFiringOrderFromString("1-2-3"),2);
     // Engine engineDef("VR6", Engine::getFiringOrderFromString("1-5-3-6-2-4"), {120, 130, 110, 125, 115, 120}, 3);
-    // Engine engineDef("Audi i5", Engine::getFiringOrderFromString("1-2-4-5-3"),2);
+    // Engine engineDef("Audi i5", Engine::getFiringOrderFromString("1-2-4-5-3"));
     // Engine engineDef("Perfect Fifth i5", Engine::getFiringOrderFromString("1 3 5 2 4"), {120, 180, 120, 180, 120},3);
     // Engine engineDef("4 Banger", Engine::getFiringOrderFromString("1-3-4-2"),2);
-    // Engine engineDef("Boxer 4 (Growl)", Engine::getFiringOrderFromString("1-4-5-2"), {180, 182, 0, 182, 180}, 2);
+    // Engine engineDef("Boxer 4 (Growl)", Engine::getFiringOrderFromString("1-4-5-2"), {180, 182, 0, 182, 180});
     // Engine engineDef("Super Sport", Engine::getFiringOrderFromString("1-3-4-2"),4);
     // Engine engineDef("Cross plane i4 moto", Engine::getFiringOrderFromString("1-3-2-4"), {180,90,180,270},4);
     // Engine engineDef("Ducati V4", Engine::getFiringOrderFromString("1-2-4-3"),{90,200,90,340}, 4);
-    Engine engineDef("Nissan VQ", Engine::getFiringOrderFromString("1-2-3-4-5-6"));
+    // Engine engineDef("Nissan VQ", Engine::getFiringOrderFromString("1-2-3-4-5-6"));
     // Engine engineDef("Nissan VQ - Unequal headers", Engine::getFiringOrderFromString("1-2-3-4-5-6"), {177,183,177,183,177,183}, 2.8);
     // Engine engineDef("Toyota 2GR-FKS - Unequal headers (Growl)", Engine::getFiringOrderFromString("1-2-3-6-7-8"), {177,183,177,0,0,183,177,183}, 2.8);
     // Engine engineDef("Ford 4.0L V6 / Honda C-series 90", Engine::getFiringOrderFromString("1-4-2-5-3-6"),3);
@@ -144,12 +145,12 @@ int main() {
     // Engine engineDef("F1 V6", Engine::getFiringOrderFromString("1-4-2-5-3-6"),6);
     // Engine engineDef("Buick even firing V6", Engine::getFiringOrderFromString("1-6-5-4-3-2"),3);
     // Engine engineDef("Buick odd firing V6", Engine::getFiringOrderFromString("1-6-5-4-3-2"), {90,150,90,150,90,150},3);
-    // Engine engineDef("Porsche Flat 6", Engine::getFiringOrderFromString("1-6-2-4-3-5"), 3.6);
+    // Engine engineDef("Porsche Flat 6", Engine::getFiringOrderFromString("1-6-2-4-3-5"), 0.505);
     EngineSoundGenerator engineLowNote(mainSamples, engineDef, 1000.0f, 0.5f);
     EngineSoundGenerator engineHighNote(mainSamples, engineDef, 1000.0f, 0.5f);
     EngineSoundGenerator engineMechanicals(mainSamples, engineDef, 1000.0f, 0.5f);
     engineLowNote.setNoteOffset(2);      // 0,             3, 0                0to4
-    engineHighNote.setNoteOffset(22);    // 5, 7, 9, 19, 20, 19, 19, 14, 22, 23, 17, 19, 26, 19 , 10, 19
+    engineHighNote.setNoteOffset(23);    // 5, 7, 9, 19, 20, 19, 19, 14, 22, 23, 17, 19, 26, 19 , 10, 19
     engineMechanicals.setNoteOffset(11); // 8, 10, 11, 16, 16, 11, 14, 11, 16, 19, 16, 11, 20, 25, 14, 10
 
     // EQ Tips:
@@ -190,7 +191,7 @@ int main() {
     AudioContext engineCtx("engines", {&engineLowNote, &engineHighNote, &engineMechanicals});
     AudioContext backfireCtx("backfire", {&backfire});
     AudioContext superchargerCtx("supercharger", {&supercharger});
-    AudioContext context("root", {&engineCtx, &generalGen});
+    AudioContext context("root", {&engineCtx, &generalGen, &backfireCtx});
 
     // Car simulator stuff
     Car car;
@@ -254,7 +255,7 @@ superchargerCtx.addFilter(makeBiquad(bq_type_peak, 18100.0f, 4.36f, -26.0f));
 // Backfire
 backfireCtx.addFilter(makeBiquad(bq_type_lowshelf, 150.0f, 0.707f, 12.0f));
 backfireCtx.addFilter(makeBiquad(bq_type_highshelf, 3000.0f, 0.707f, -12.0f));
-backfireCtx.addFilter(makeBiquad(bq_type_peak, 4500.0f, 0.3f, -12.0f));
+// backfireCtx.addFilter(makeBiquad(bq_type_peak, 4500.0f, 0.3f, -12.0f));
 backfireCtx.addFilter(makeBiquad(bq_type_peak, 2100.0f, 4.36f, 2.0f));
 backfireCtx.addFilter(makeBiquad(bq_type_peak, 1500.0f, 1.0f, 3.0f));
 backfireCtx.addFilter(makeBiquad(bq_type_peak, 14600.0f, 4.36f, -14.0f));
@@ -271,9 +272,12 @@ backfireCtx.addFilter(std::make_unique<SecondOrderFilter>(2050.0f, 0.3f, 1.0f / 
 superchargerCtx.addFilter(std::make_unique<SecondOrderFilter>(3050.0f, 0.4f, 1.0f / 48000.0f));
 
 // Other effects
-context.addFilter(std::make_unique<SineClipper>());
-context.addFilter(std::make_unique<CubicClipper>());
-context.addFilter(std::make_unique<HardClamp>());
+engineCtx.addFilter(std::make_unique<SineClipper>());
+engineCtx.addFilter(std::make_unique<HardClamp>());
+engineCtx.addFilter(std::make_unique<CubicClipper>());
+backfireCtx.addFilter(std::make_unique<HardClamp>());
+// context.addFilter(std::make_unique<HardClamp>());
+// context.addFilter(std::make_unique<ForceSilenceFilter>());
 
     // SFML stuff for UI + input
     // Map user keyboard input to differen levels of throttle
@@ -481,12 +485,12 @@ if (biquad) {
     biquad->setPeakGain(8.0f - (carTorque / 20.0f));
 
 }
-        engineCtx.setAmplitude(0.5f + carRpm / 20000.0f);
+        engineCtx.setAmplitude(0.65f + carRpm / 40000.0f);
         // superchargerCtx.setAmplitude(0.3f + carRpm / 15000.0f);
         engineLowNote.setRPM(carRpm);
         engineHighNote.setRPM(carRpm);
         engineMechanicals.setRPM(carRpm);
-        engineLowNote.setAmplitude(carTorque / 250 + 0.08f);
+        engineLowNote.setAmplitude(carTorque / 250 + 0.1f);
         engineHighNote.setAmplitude((carRpm * carTorque) / 2000000);
         engineMechanicals.setAmplitude(carRpm / 110000);
         whoosh.setIntensity(car.getBoost() / 100);
