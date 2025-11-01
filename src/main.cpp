@@ -182,7 +182,7 @@ int main() {
     SoundBank turboSamples;
     turboSamples.addFromWavs({"assets/audio/extra/thump.wav", "assets/audio/extra/bov.wav"});
     SimpleSoundGenerator turboGen(turboSamples);
-    turboGen.setAmplitude(0.6f);
+    turboGen.setAmplitude(0.0f);
 
     // ==== BACKFIRE NOISE GENERATOR
     BackfireSoundGenerator backfire(SAMPLE_RATE);
@@ -464,6 +464,7 @@ backfireCtx.addFilter(std::make_unique<HardClamp>());
             turboGen.startPlayback(1);
             std::cout << "Turbo started to drop: " << drop << "\n";
         }
+        turboGen.setAmplitude(-drop/200.0f);
 
 
         // Simple supercharger state logic
