@@ -25,6 +25,7 @@
 #include "ForceSilenceFilter.h"
 #include "SaturatorFilter.h"
 #include "HardClamp.h"
+#include "DerivativeFilter.h"
 #include "SecondOrderFilter.h"
 #include "SimpleSoundGenerator.h"
 #include "SineClipper.h"
@@ -181,7 +182,7 @@ int main() {
     SoundBank turboSamples;
     turboSamples.addFromWavs({"assets/audio/extra/thump.wav", "assets/audio/extra/bov.wav"});
     SimpleSoundGenerator turboGen(turboSamples);
-    turboGen.setAmplitude(0.25f);
+    turboGen.setAmplitude(0.6f);
 
     // ==== BACKFIRE NOISE GENERATOR
     BackfireSoundGenerator backfire(SAMPLE_RATE);
@@ -191,7 +192,7 @@ int main() {
     AudioContext engineCtx("engines", {&engineLowNote, &engineHighNote, &engineMechanicals});
     AudioContext backfireCtx("backfire", {&backfire});
     AudioContext superchargerCtx("supercharger", {&supercharger});
-    AudioContext context("root", {&engineCtx, &generalGen, &backfireCtx, &turboShaft, &whoosh});
+    AudioContext context("root", {&engineCtx, &generalGen, &backfireCtx, &turboShaft, &whoosh, &turboGen});
 
     // Car simulator stuff
     Car car;
@@ -216,6 +217,7 @@ int main() {
     int lastLiftOff = 0;
     bool shiftLock = false; // Only allow one type of shift at a time (upshift/downshift)
     Damper gasAvg(0.333);       // Smooth out gas inputs
+    DerivativeFilter turboDrop(100);
 
 // Helper lambda for readability
 auto makeBiquad = [](int type, float freq, float q, float db) {
@@ -451,13 +453,18 @@ backfireCtx.addFilter(std::make_unique<HardClamp>());
         }
 
         // Simple turbocharger state logic
-        if (car.getGas() <= 10 && !blowoff) {
+        double drop = turboDrop.process(car.getBoost());
+        if (car.getGas() >= 10) {
+            blowoff = false; 
+            turboGen.setTempPause(true);
+        }
+        if (drop <= -50 && !blowoff){
             blowoff = true;
+            turboGen.setTempPause(false);
             turboGen.startPlayback(1);
+            std::cout << "Turbo started to drop: " << drop << "\n";
         }
-        if (car.getBoost() >= 100) {
-            blowoff = false;
-        }
+
 
         // Simple supercharger state logic
         if (car.getTorque() <= 10 && !lifted) {
