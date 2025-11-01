@@ -464,7 +464,7 @@ backfireCtx.addFilter(std::make_unique<HardClamp>());
             turboGen.startPlayback(1);
             std::cout << "Turbo started to drop: " << drop << "\n";
         }
-        turboGen.setAmplitude(-drop/200.0f);
+        turboGen.setAmplitude(-drop/300.0f);
 
 
         // Simple supercharger state logic
