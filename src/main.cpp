@@ -125,13 +125,13 @@ int main() {
     // Engine engineDef("Murican V8 +", Engine::getFiringOrderFromString("1-8-7-2-6 -5-4-3"));
     // Engine engineDef("2UR-GSE V8", Engine::getFiringOrderFromString("1-8-7-3-6-5-4-2"),4);
     // Engine engineDef("2UR-GSE V8 (Growl)", Engine::getFiringOrderFromString("1-13-12-3-11-10-4-2"), {86,94,94,86,0,0,0,0,0,94,94,86,86}, 4);
-    Engine engineDef("BMW N54", Engine::getFiringOrderFromString("1-5-3-6-2-4"));
+    // Engine engineDef("BMW N54", Engine::getFiringOrderFromString("1-5-3-6-2-4"));
     // Engine engineDef("Diesel inline 6", Engine::getFiringOrderFromString("1-5-3-6-2-4"), 1);
     // Engine engineDef("V Twin", Engine::getFiringOrderFromString("1-2"), {315,405},0.8);
     // Engine engineDef("1 Cylinder", {0}, 0.5);
     // Engine engineDef("3 Cylinder Sport", Engine::getFiringOrderFromString("1-2-3"),2);
     // Engine engineDef("VR6", Engine::getFiringOrderFromString("1-5-3-6-2-4"), {120, 130, 110, 125, 115, 120}, 3);
-    // Engine engineDef("Audi i5", Engine::getFiringOrderFromString("1-2-4-5-3"));
+    Engine engineDef("Audi i5", Engine::getFiringOrderFromString("1-2-4-5-3"));
     // Engine engineDef("Perfect Fifth i5", Engine::getFiringOrderFromString("1 3 5 2 4"), {120, 180, 120, 180, 120},3);
     // Engine engineDef("4 Banger", Engine::getFiringOrderFromString("1-3-4-2"),2);
     // Engine engineDef("Boxer 4 (Growl)", Engine::getFiringOrderFromString("1-4-5-2"), {180, 182, 0, 182, 180});
@@ -182,7 +182,7 @@ int main() {
     SoundBank turboSamples;
     turboSamples.addFromWavs({"assets/audio/extra/thump.wav", "assets/audio/extra/flutter.wav"});
     SimpleSoundGenerator turboGen(turboSamples);
-    turboGen.setAmplitude(0.0f);
+    turboGen.setAmplitude(0.32f);
 
     // ==== BACKFIRE NOISE GENERATOR
     BackfireSoundGenerator backfire(SAMPLE_RATE);
@@ -468,7 +468,7 @@ backfireCtx.addFilter(std::make_unique<HardClamp>());
             turboGen.setPlayhead(flutterStart);
             std::cout << "Flutter start @ playhead: " << flutterStart << "\n";
         }
-        turboGen.setAmplitude(-drop/300.0f);
+        // turboGen.setAmplitude(-drop/300.0f);
 
 
         // Simple supercharger state logic
