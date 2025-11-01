@@ -54,7 +54,7 @@ class Car {
     float rpm = 0;      // Engine RPM
     float wheelRPM = 0; // Wheel RPM or speed does not really matter
     float boost = 0;    // Turbo boost
-    Damper boostDamper{0.039};
+    Damper boostDamper{0.03};
 
     float Torque = 0; // Immediate Torque
     int gear = 0;     // Current Gear

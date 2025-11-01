@@ -36,7 +36,7 @@ constexpr int WINDOW_X = 1080;
 constexpr int WINDOW_Y = 720;
 
 constexpr int DOWNSHIFT_DELAY = 150;
-constexpr int UPSHIFT_DELAY = 60;
+constexpr int UPSHIFT_DELAY = 100;
 
 constexpr float THROTTLE_BLIP_DOWN = 0.021f;
 
@@ -103,7 +103,7 @@ int main() {
     // Engine engineDef("Countach V12 (Growl)", Engine::getFiringOrderFromString("1 10 5 14 3 12 6 15 2 11 4 13"),{58,58,58,58,58,58,0,0,0,62,62,62,62,62,62}, 4.8); 
     // Engine engineDef("BMW S70/2 V12", Engine::getFiringOrderFromString("1 7 5 11 3 9 6 12 2 8 4 10"), 6.2);
     // Engine engineDef("F1 V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 16); 
-    Engine engineDef("Audi V10 FSI", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {90,54, 90, 54, 90, 54, 90, 54, 90, 54}); 
+    // Engine engineDef("Audi V10 FSI", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {90,54, 90, 54, 90, 54, 90, 54, 90, 54}); 
     // Engine engineDef("Audi V10 FSI (Growl)", {0, 6, 4, 10, 1, 7, 2, 8, 3, 9}, {90, 54, 90, 54 ,90, 0, 54, 90, 54,   90, 54}, 5);
     // Engine engineDef("1LR-GUE V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8});
     // Engine engineDef("1LR-GUE V10 - LFA UL Headers", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {71,73,71,73,71,73,71,73,71,73,71},5);
@@ -124,7 +124,7 @@ int main() {
     // Engine engineDef("Murican V8 +", Engine::getFiringOrderFromString("1-8-7-2-6 -5-4-3"));
     // Engine engineDef("2UR-GSE V8", Engine::getFiringOrderFromString("1-8-7-3-6-5-4-2"),4);
     // Engine engineDef("2UR-GSE V8 (Growl)", Engine::getFiringOrderFromString("1-13-12-3-11-10-4-2"), {86,94,94,86,0,0,0,0,0,94,94,86,86}, 4);
-    // Engine engineDef("BMW N54", Engine::getFiringOrderFromString("1-5-3-6-2-4"));
+    Engine engineDef("BMW N54", Engine::getFiringOrderFromString("1-5-3-6-2-4"));
     // Engine engineDef("Diesel inline 6", Engine::getFiringOrderFromString("1-5-3-6-2-4"), 1);
     // Engine engineDef("V Twin", Engine::getFiringOrderFromString("1-2"), {315,405},0.8);
     // Engine engineDef("1 Cylinder", {0}, 0.5);
@@ -191,7 +191,7 @@ int main() {
     AudioContext engineCtx("engines", {&engineLowNote, &engineHighNote, &engineMechanicals});
     AudioContext backfireCtx("backfire", {&backfire});
     AudioContext superchargerCtx("supercharger", {&supercharger});
-    AudioContext context("root", {&engineCtx, &generalGen, &backfireCtx});
+    AudioContext context("root", {&engineCtx, &generalGen, &backfireCtx, &turboShaft, &whoosh});
 
     // Car simulator stuff
     Car car;
@@ -203,7 +203,7 @@ int main() {
     // TODO: Shifting + Post process wrapper class
     float carRpm = 0;    // Processed RPM
     float carTorque = 0; // Processed Torque
-    Biquad torqueFilter(bq_type_lowpass, 25.0f / 60.0f, 0.707f, 0.0f);
+    Biquad torqueFilter(bq_type_lowpass, 25.0f / 100.0f, 0.707f, 0.0f);
     SecondOrderFilter rpmFilter(5.0f, 0.26f, 0.01);
     bool isStarting = false;
     bool blowoff = false;
