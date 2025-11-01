@@ -74,6 +74,8 @@ void Car::addEnergy() {
             Torque = 0;
         }
     }
+    torqueDamper.addValue(Torque);
+    // Boost dummy
     if (getRPM() >= boostThreshold) {
         boostDamper.addValue(getTorque() * getRPM() / 8000);
     } else {
@@ -94,4 +96,4 @@ float Car::getBoost() { return boostDamper.getAverage(); }
 void Car::setWheelSpeed(float newSpeed) { wheelRPM = newSpeed; } // Sets wheelRPM for next tick
 float Car::getWheelSpeed() { return wheelSpeedDamper.getAverage(); }
 
-float Car::getTorque() { return Torque; }
+float Car::getTorque() { return torqueDamper.getAverage(); }
