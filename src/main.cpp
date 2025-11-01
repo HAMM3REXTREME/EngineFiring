@@ -464,7 +464,7 @@ backfireCtx.addFilter(std::make_unique<HardClamp>());
             turboGen.startPlayback(1);
             std::cout << "Turbo started to drop: " << drop << "\n";
             // Turbo flutter specific
-            size_t flutterStart = 100*(150-car.getBoost());
+            size_t flutterStart = std::clamp<int>(180*(110 - car.getBoost()), 0, 16000);
             turboGen.setPlayhead(flutterStart);
             std::cout << "Flutter start @ playhead: " << flutterStart << "\n";
         }
