@@ -180,7 +180,7 @@ int main() {
 
     // ==== TURBO FLUTTER AND BOV SOUNDS ETC.
     SoundBank turboSamples;
-    turboSamples.addFromWavs({"assets/audio/extra/thump.wav", "assets/audio/extra/bov.wav"});
+    turboSamples.addFromWavs({"assets/audio/extra/thump.wav", "assets/audio/extra/flutter.wav"});
     SimpleSoundGenerator turboGen(turboSamples);
     turboGen.setAmplitude(0.0f);
 
@@ -463,6 +463,10 @@ backfireCtx.addFilter(std::make_unique<HardClamp>());
             turboGen.setTempPause(false);
             turboGen.startPlayback(1);
             std::cout << "Turbo started to drop: " << drop << "\n";
+            // Turbo flutter specific
+            size_t flutterStart = 100*(150-car.getBoost());
+            turboGen.setPlayhead(flutterStart);
+            std::cout << "Flutter start @ playhead: " << flutterStart << "\n";
         }
         turboGen.setAmplitude(-drop/300.0f);
 

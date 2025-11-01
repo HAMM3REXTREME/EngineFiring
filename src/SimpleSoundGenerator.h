@@ -23,6 +23,7 @@ class SimpleSoundGenerator : public SoundGenerator {
 
     void setLooping(bool loop) { looping = loop; };
     bool isLooping() const { return looping; };
+    void setPlayhead(size_t index);
 
     void setTempPause(bool new_pause) {paused = new_pause;};
 

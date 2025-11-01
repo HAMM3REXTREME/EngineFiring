@@ -14,6 +14,10 @@ void SimpleSoundGenerator::startPlayback(size_t sampleIndex, bool loop) {
     }
 }
 
+void SimpleSoundGenerator::setPlayhead(size_t index){
+    playbackPosition = index;
+}
+
 void SimpleSoundGenerator::stopPlayback() {
     currentSampleIndex = -1;
     playbackPosition = 0;
