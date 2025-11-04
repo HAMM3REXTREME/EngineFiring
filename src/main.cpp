@@ -38,7 +38,7 @@ constexpr int WINDOW_X = 1080;
 constexpr int WINDOW_Y = 720;
 
 constexpr int DOWNSHIFT_DELAY = 150;
-constexpr int UPSHIFT_DELAY = 120;
+constexpr int UPSHIFT_DELAY = 320;
 
 constexpr float THROTTLE_BLIP_DOWN = 0.025f;
 
@@ -97,7 +97,7 @@ int main() {
 
     // Engine engineDef("Revuelto V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7});
     // Engine engineDef("Ferrari V12", Engine::getFiringOrderFromString("1 7 5 11 3 9 6 12 2 8 4 10"));
-    // Engine engineDef("Diablo/Murci V12", Engine::getFiringOrderFromString("1-7-4-10-2-8-6-12-3-9-5-11"));
+    Engine engineDef("Diablo/Murci V12", Engine::getFiringOrderFromString("1-7-4-10-2-8-6-12-3-9-5-11"));
     // Engine engineDef("Countach V12", Engine::getFiringOrderFromString("1 7 5 11 3 9 6 12 2 8 4 10"), 0.49);
     // Engine engineDef("Countach V12 (Growl)", Engine::getFiringOrderFromString("1 10 5 14 3 12 6 15 2 11 4 13"),{58,58,58,58,58,58,0,0,0,62,62,62,62,62,62}, 4.8); 
     // Engine engineDef("BMW S70/2 V12", Engine::getFiringOrderFromString("1 7 5 11 3 9 6 12 2 8 4 10"));
@@ -107,7 +107,7 @@ int main() {
     // Engine engineDef("1LR-GUE V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8});
     // Engine engineDef("1LR-GUE V10 - LFA UL Headers", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {71,73,71,73,71,73,71,73,71,73,71},5);
     // Engine engineDef("Growly V10", {0, 6, 4, 10, 1, 7, 2, 8, 3, 9}, {70,70,70,70,70,0,74,74,74,74,74}, 5);
-    Engine engineDef("M80 V10",{0, 5, 4, 9, 1, 6, 2, 7, 3, 8},{70,74,70,74,70,74,70,74,70,74,70});
+    // Engine engineDef("M80 V10",{0, 5, 4, 9, 1, 6, 2, 7, 3, 8},{70,74,70,74,70,74,70,74,70,74,70});
     // Engine engineDef("Random V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {72,73,74,75,76,77,78,79,80,81}, 5);
     // Engine engineDef("Mercedes AMG M156", Engine::getFiringOrderFromString("1-5-4-2-6-3-7-8"),4);
     // Engine engineDef("Mercedes AMG M156 (Growl)", Engine::getFiringOrderFromString("1-6-4-2-7-3-8-9"), {90,90,90,90,0,90,90,90,90},3.8);
@@ -511,7 +511,7 @@ if (biquad) {
         engineLowNote.setRPM(carRpm);
         engineHighNote.setRPM(carRpm);
         engineMechanicals.setRPM(carRpm);
-        engineLowNote.setAmplitude(std::clamp(carTorque / 250 - 1.5f * engineHighNote.getAmplitude(), 0.0f, 1.0f));
+        engineLowNote.setAmplitude(std::clamp(carTorque / 350 - 1.5f * engineHighNote.getAmplitude(), 0.0f, 1.0f));
         engineHighNote.setAmplitude((carRpm * carTorque) / 4500000);
         engineMechanicals.setAmplitude(carRpm / 190000);
         whoosh.setIntensity(car.getBoost() / 100);
