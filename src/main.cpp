@@ -189,7 +189,7 @@ int main() {
     AudioContext engineCtx("engines", {&engineLowNote, &engineHighNote, &engineMechanicals});
     AudioContext backfireCtx("backfire", {&backfire});
     AudioContext superchargerCtx("supercharger", {&supercharger});
-    AudioContext context("root", {&engineCtx, &generalGen, &backfireCtx});
+    AudioContext context("root", {&engineCtx, &generalGen, &backfireCtx, &turboShaft, &whoosh, &turboGen});
 
     // Car simulator stuff
     Car car;
@@ -511,7 +511,7 @@ if (biquad) {
         engineLowNote.setRPM(carRpm);
         engineHighNote.setRPM(carRpm);
         engineMechanicals.setRPM(carRpm);
-        engineLowNote.setAmplitude(std::clamp(carTorque / 350 - 1.5f * engineHighNote.getAmplitude(), 0.0f, 1.0f));
+        engineLowNote.setAmplitude(std::clamp(carTorque / 350 - 1.2f * engineHighNote.getAmplitude(), 0.0f, 1.0f));
         engineHighNote.setAmplitude((carRpm * carTorque) / 4500000);
         engineMechanicals.setAmplitude(carRpm / 190000);
         whoosh.setIntensity(car.getBoost() / 100);
