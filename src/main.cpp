@@ -242,8 +242,8 @@ engineCtx.addFilter(makeBiquad(bq_type_peak, 500.0f, 0.707f, 3.0f));
 // Mid range
 engineCtx.addFilter(makeBiquad(bq_type_peak, 1700.0f, 0.707f, 4.0f));
 engineCtx.addFilter(makeBiquad(bq_type_peak, 3000.0f, 0.707f, 4.0f));
-engineCtx.addFilter(makeBiquad(bq_type_peak, 8000.0f, 0.707f, -2.0f));
-engineCtx.addFilter(makeBiquad(bq_type_peak, 9000.0f, 0.707f, -3.0f));
+engineCtx.addFilter(makeBiquad(bq_type_peak, 8000.0f, 0.707f, 2.0f));
+engineCtx.addFilter(makeBiquad(bq_type_peak, 9000.0f, 0.707f, -1.0f));
 
 
 // Supercharger
