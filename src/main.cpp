@@ -95,9 +95,9 @@ int main() {
                              "assets/audio/tick_library/note_97.wav",  "assets/audio/tick_library/note_98.wav",  "assets/audio/tick_library/note_99.wav",
                              "assets/audio/tick_library/note_100.wav", "assets/audio/tick_library/note_101.wav", "assets/audio/tick_library/note_102.wav"});
 
-    // Engine engineDef("Revuelto V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7});
+    Engine engineDef("Revuelto V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7});
     // Engine engineDef("Ferrari V12", Engine::getFiringOrderFromString("1 7 5 11 3 9 6 12 2 8 4 10"));
-    Engine engineDef("Diablo/Murci V12", Engine::getFiringOrderFromString("1-7-4-10-2-8-6-12-3-9-5-11"), 0.45);
+    // Engine engineDef("Diablo/Murci V12", Engine::getFiringOrderFromString("1-7-4-10-2-8-6-12-3-9-5-11"));
     // Engine engineDef("Countach V12", Engine::getFiringOrderFromString("1 7 5 11 3 9 6 12 2 8 4 10"), 0.49);
     // Engine engineDef("Countach V12 (Growl)", Engine::getFiringOrderFromString("1 10 5 14 3 12 6 15 2 11 4 13"),{58,58,58,58,58,58,0,0,0,62,62,62,62,62,62}, 4.8); 
     // Engine engineDef("BMW S70/2 V12", Engine::getFiringOrderFromString("1 7 5 11 3 9 6 12 2 8 4 10"));
@@ -150,7 +150,7 @@ int main() {
     EngineSoundGenerator engineMechanicals(mainSamples, engineDef, 1000.0f, 0.5f);
     engineLowNote.setNoteOffset(14);      // 0,             3, 0                0to4
     engineHighNote.setNoteOffset(24);    // 5, 7, 9, 19, 20, 19, 19, 14, 22, 23, 17, 19, 26, 19 , 10, 19
-    engineMechanicals.setNoteOffset(6); // 8, 10, 11, 16, 16, 11, 14, 11, 16, 19, 16, 11, 20, 25, 14, 10
+    engineMechanicals.setNoteOffset(8); // 8, 10, 11, 16, 16, 11, 14, 11, 16, 19, 16, 11, 20, 25, 14, 10
 
     // EQ Tips:
     // 1. Filter out any harsh harmonics (extremes of hearing range)
@@ -242,8 +242,8 @@ engineCtx.addFilter(makeBiquad(bq_type_peak, 500.0f, 0.707f, 3.0f));
 // Mid range
 engineCtx.addFilter(makeBiquad(bq_type_peak, 1700.0f, 0.707f, 4.0f));
 engineCtx.addFilter(makeBiquad(bq_type_peak, 3000.0f, 0.707f, 4.0f));
-engineCtx.addFilter(makeBiquad(bq_type_peak, 8000.0f, 0.707f, 2.0f));
-engineCtx.addFilter(makeBiquad(bq_type_peak, 9000.0f, 0.707f, -1.0f));
+engineCtx.addFilter(makeBiquad(bq_type_peak, 8000.0f, 0.707f, -2.0f));
+engineCtx.addFilter(makeBiquad(bq_type_peak, 9000.0f, 0.707f, -3.0f));
 
 
 // Supercharger
@@ -279,12 +279,6 @@ engineCtx.addFilter(std::make_unique<CubicClipper>());
 backfireCtx.addFilter(std::make_unique<HardClamp>());
 // context.addFilter(std::make_unique<HardClamp>());
 // context.addFilter(std::make_unique<ForceSilenceFilter>());
-engineCtx.addFilter(makeBiquad(bq_type_peak, 53.0f, 4.36f, 15.7f));
-engineCtx.addFilter(makeBiquad(bq_type_peak, 7600.0f, 4.36f, 4.24f));
-engineCtx.addFilter(makeBiquad(bq_type_peak, 9400.0f, 4.36f, 10.0f));
-engineCtx.addFilter(makeBiquad(bq_type_peak, 11700.0f, 4.36f, 7.2f));
-engineCtx.addFilter(makeBiquad(bq_type_peak, 14600.0f, 4.36f, 4.24f));
-engineCtx.addFilter(makeBiquad(bq_type_peak, 18100.0f, 4.36f, 17.36f));
 
     // SFML stuff for UI + input
     // Map user keyboard input to differen levels of throttle
@@ -517,7 +511,7 @@ if (biquad) {
         engineLowNote.setRPM(carRpm);
         engineHighNote.setRPM(carRpm);
         engineMechanicals.setRPM(carRpm);
-        engineLowNote.setAmplitude((carTorque / 1050)/(carRpm/9000));
+        engineLowNote.setAmplitude(std::clamp(carTorque / 250 - 1.5f * engineHighNote.getAmplitude(), 0.0f, 1.0f));
         engineHighNote.setAmplitude((carRpm * carTorque) / 4500000);
         engineMechanicals.setAmplitude(carRpm / 190000);
         whoosh.setIntensity(car.getBoost() / 100);
