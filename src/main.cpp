@@ -23,6 +23,7 @@
 #include "Engine.h"
 #include "EngineSoundGenerator.h"
 #include "ForceSilenceFilter.h"
+#include "Graph.h"
 #include "SaturatorFilter.h"
 #include "HardClamp.h"
 #include "DerivativeFilter.h"
@@ -94,7 +95,7 @@ int main() {
                              "assets/audio/tick_library/note_97.wav",  "assets/audio/tick_library/note_98.wav",  "assets/audio/tick_library/note_99.wav",
                              "assets/audio/tick_library/note_100.wav", "assets/audio/tick_library/note_101.wav", "assets/audio/tick_library/note_102.wav"});
 
-    // Engine engineDef("Revuelto V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7});
+    Engine engineDef("Revuelto V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7});
     // Engine engineDef("Ferrari V12", Engine::getFiringOrderFromString("1 7 5 11 3 9 6 12 2 8 4 10"));
     // Engine engineDef("Diablo/Murci V12", Engine::getFiringOrderFromString("1-7-4-10-2-8-6-12-3-9-5-11"));
     // Engine engineDef("Countach V12", Engine::getFiringOrderFromString("1 7 5 11 3 9 6 12 2 8 4 10"), 0.49);
@@ -118,7 +119,7 @@ int main() {
     // Engine engineDef("Inline 9 - Experimental", Engine::getFiringOrderFromString("1 2 4 6 8 9 7 5 3"));
     // Engine engineDef("Flat plane V8", Engine::getFiringOrderFromString("1 5 3 7 4 8 2 6"));
     // Engine engineDef("inline 7", Engine::getFiringOrderFromString("1 2 4 6 7 5 3"), 3);
-    Engine engineDef("Mercedes M120 V12", Engine::getFiringOrderFromString("1-12-5-8-3-10-6-7-2-11-4-9"));
+    // Engine engineDef("Mercedes M120 V12", Engine::getFiringOrderFromString("1-12-5-8-3-10-6-7-2-11-4-9"));
     // Engine engineDef("Murican V8 +", Engine::getFiringOrderFromString("1-8-7-2-6 -5-4-3"));
     // Engine engineDef("2UR-GSE V8", Engine::getFiringOrderFromString("1-8-7-3-6-5-4-2"),4);
     // Engine engineDef("2UR-GSE V8 (Growl)", Engine::getFiringOrderFromString("1-13-12-3-11-10-4-2"), {86,94,94,86,0,0,0,0,0,94,94,86,86}, 4);
@@ -149,7 +150,7 @@ int main() {
     EngineSoundGenerator engineMechanicals(mainSamples, engineDef, 1000.0f, 0.5f);
     engineLowNote.setNoteOffset(4);      // 0,             3, 0                0to4
     engineHighNote.setNoteOffset(24);    // 5, 7, 9, 19, 20, 19, 19, 14, 22, 23, 17, 19, 26, 19 , 10, 19
-    engineMechanicals.setNoteOffset(11); // 8, 10, 11, 16, 16, 11, 14, 11, 16, 19, 16, 11, 20, 25, 14, 10
+    engineMechanicals.setNoteOffset(6); // 8, 10, 11, 16, 16, 11, 14, 11, 16, 19, 16, 11, 20, 25, 14, 10
 
     // EQ Tips:
     // 1. Filter out any harsh harmonics (extremes of hearing range)
@@ -237,11 +238,13 @@ engineCtx.addFilter(makeBiquad(bq_type_peak, 120.0f, 0.707f, 4.0f));
 engineCtx.addFilter(makeBiquad(bq_type_peak, 300.0f, 1.0f, 3.0f));
 engineCtx.addFilter(makeBiquad(bq_type_peak, 500.0f, 0.707f, 3.0f));
 
+
 // Mid range
 engineCtx.addFilter(makeBiquad(bq_type_peak, 1700.0f, 0.707f, 4.0f));
 engineCtx.addFilter(makeBiquad(bq_type_peak, 3000.0f, 0.707f, 4.0f));
-engineCtx.addFilter(makeBiquad(bq_type_peak, 8000.0f, 0.707f, -2.0f));
-engineCtx.addFilter(makeBiquad(bq_type_peak, 9000.0f, 0.707f, -3.0f));
+engineCtx.addFilter(makeBiquad(bq_type_peak, 8000.0f, 0.707f, 2.0f));
+engineCtx.addFilter(makeBiquad(bq_type_peak, 9000.0f, 0.707f, -1.0f));
+
 
 // Supercharger
 superchargerCtx.addFilter(makeBiquad(bq_type_peak, 80.0f, 0.5f, 10.1f));     // rumble boost
@@ -261,7 +264,7 @@ backfireCtx.addFilter(makeBiquad(bq_type_lowshelf, 54.0f, 0.707f, 5.0f)); // GT-
 
 // Second-order filters
 engineCtx.addFilter(std::make_unique<SecondOrderFilter>(2950.0f, 0.6f, 1.0f / 48000.0f));
-engineCtx.addFilter(std::make_unique<SecondOrderFilter>(350.0f, 0.6f, 1.0f / 48000.0f));
+// engineCtx.addFilter(std::make_unique<SecondOrderFilter>(350.0f, 0.6f, 1.0f / 48000.0f));
 engineCtx.addFilter(std::make_unique<SecondOrderFilter>(200.0f, 0.3f, 1.0f / 48000.0f));
 
 backfireCtx.addFilter(std::make_unique<SecondOrderFilter>(350.0f, 0.5f, 1.0f / 48000.0f));
@@ -271,11 +274,17 @@ superchargerCtx.addFilter(std::make_unique<SecondOrderFilter>(3050.0f, 0.4f, 1.0
 
 // Other effects
 engineCtx.addFilter(std::make_unique<SineClipper>());
-engineCtx.addFilter(std::make_unique<HardClamp>());
+// engineCtx.addFilter(std::make_unique<HardClamp>());
 engineCtx.addFilter(std::make_unique<CubicClipper>());
 backfireCtx.addFilter(std::make_unique<HardClamp>());
 // context.addFilter(std::make_unique<HardClamp>());
 // context.addFilter(std::make_unique<ForceSilenceFilter>());
+engineCtx.addFilter(makeBiquad(bq_type_peak, 53.0f, 4.36f, 15.7f));
+engineCtx.addFilter(makeBiquad(bq_type_peak, 7600.0f, 4.36f, 4.24f));
+engineCtx.addFilter(makeBiquad(bq_type_peak, 9400.0f, 4.36f, 10.0f));
+engineCtx.addFilter(makeBiquad(bq_type_peak, 11700.0f, 4.36f, 7.2f));
+engineCtx.addFilter(makeBiquad(bq_type_peak, 14600.0f, 4.36f, 4.24f));
+engineCtx.addFilter(makeBiquad(bq_type_peak, 18100.0f, 4.36f, 17.36f));
 
     // SFML stuff for UI + input
     // Map user keyboard input to differen levels of throttle
@@ -326,6 +335,15 @@ backfireCtx.addFilter(std::make_unique<HardClamp>());
     sf::Text debugText(font, "Debug text", 16);
     debugText.setFillColor(sf::Color::Green);
     debugText.setPosition({25.f, 25.f});
+
+    Graph example;
+    if (!example.loadFromFile("assets/graphs/data.xy")) {
+        std::cerr << "Failed to load data.\n";
+        return 1;
+    }
+        std::cout << "Loaded points:\n";
+    example.print();
+    std::cout << example.getValue(8000.0) << "\n";
 
     // PortAudio for live audio playback
     Pa_Initialize();
@@ -499,9 +517,9 @@ if (biquad) {
         engineLowNote.setRPM(carRpm);
         engineHighNote.setRPM(carRpm);
         engineMechanicals.setRPM(carRpm);
-        engineLowNote.setAmplitude((carTorque / 650)/(carRpm/9000));
-        engineHighNote.setAmplitude((carRpm * carTorque) / 2000000);
-        engineMechanicals.setAmplitude(carRpm / 110000);
+        engineLowNote.setAmplitude((carTorque / 1050)/(carRpm/9000));
+        engineHighNote.setAmplitude((carRpm * carTorque) / 4500000);
+        engineMechanicals.setAmplitude(carRpm / 190000);
         whoosh.setIntensity(car.getBoost() / 100);
         whoosh.setAmplitude(car.getBoost() / 2000);
         turboShaft.setAmplitude(car.getBoost() / 200);
