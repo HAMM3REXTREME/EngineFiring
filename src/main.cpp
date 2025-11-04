@@ -37,7 +37,7 @@ constexpr int WINDOW_X = 1080;
 constexpr int WINDOW_Y = 720;
 
 constexpr int DOWNSHIFT_DELAY = 150;
-constexpr int UPSHIFT_DELAY = 10;
+constexpr int UPSHIFT_DELAY = 120;
 
 constexpr float THROTTLE_BLIP_DOWN = 0.021f;
 
@@ -94,14 +94,14 @@ int main() {
                              "assets/audio/tick_library/note_97.wav",  "assets/audio/tick_library/note_98.wav",  "assets/audio/tick_library/note_99.wav",
                              "assets/audio/tick_library/note_100.wav", "assets/audio/tick_library/note_101.wav", "assets/audio/tick_library/note_102.wav"});
 
-    // Engine engineDef("Revuelto V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7});
+    Engine engineDef("Revuelto V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7});
     // Engine engineDef("Ferrari V12", Engine::getFiringOrderFromString("1 7 5 11 3 9 6 12 2 8 4 10"));
     // Engine engineDef("Diablo/Murci V12", Engine::getFiringOrderFromString("1-7-4-10-2-8-6-12-3-9-5-11"));
     // Engine engineDef("Countach V12", Engine::getFiringOrderFromString("1 7 5 11 3 9 6 12 2 8 4 10"), 0.49);
     // Engine engineDef("Countach V12 (Growl)", Engine::getFiringOrderFromString("1 10 5 14 3 12 6 15 2 11 4 13"),{58,58,58,58,58,58,0,0,0,62,62,62,62,62,62}, 4.8); 
     // Engine engineDef("BMW S70/2 V12", Engine::getFiringOrderFromString("1 7 5 11 3 9 6 12 2 8 4 10"));
     // Engine engineDef("F1 V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 1); 
-    Engine engineDef("Audi V10 FSI", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {90,54, 90, 54, 90, 54, 90, 54, 90, 54}); 
+    // Engine engineDef("Audi V10 FSI", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {90,54, 90, 54, 90, 54, 90, 54, 90, 54}); 
     // Engine engineDef("Audi V10 FSI (Growl)", {0, 6, 4, 10, 1, 7, 2, 8, 3, 9}, {90, 54, 90, 54 ,90, 0, 54, 90, 54,   90, 54}, 5);
     // Engine engineDef("1LR-GUE V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8});
     // Engine engineDef("1LR-GUE V10 - LFA UL Headers", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {71,73,71,73,71,73,71,73,71,73,71},5);
@@ -147,9 +147,9 @@ int main() {
     EngineSoundGenerator engineLowNote(mainSamples, engineDef, 1000.0f, 0.5f);
     EngineSoundGenerator engineHighNote(mainSamples, engineDef, 1000.0f, 0.5f);
     EngineSoundGenerator engineMechanicals(mainSamples, engineDef, 1000.0f, 0.5f);
-    engineLowNote.setNoteOffset(2);      // 0,             3, 0                0to4
+    engineLowNote.setNoteOffset(10);      // 0,             3, 0                0to4
     engineHighNote.setNoteOffset(22);    // 5, 7, 9, 19, 20, 19, 19, 14, 22, 23, 17, 19, 26, 19 , 10, 19
-    engineMechanicals.setNoteOffset(14); // 8, 10, 11, 16, 16, 11, 14, 11, 16, 19, 16, 11, 20, 25, 14, 10
+    engineMechanicals.setNoteOffset(16); // 8, 10, 11, 16, 16, 11, 14, 11, 16, 19, 16, 11, 20, 25, 14, 10
 
     // EQ Tips:
     // 1. Filter out any harsh harmonics (extremes of hearing range)
@@ -201,7 +201,7 @@ int main() {
     float carRpm = 0;    // Processed RPM
     float carTorque = 0; // Processed Torque
     Biquad torqueFilter(bq_type_lowpass, 25.0f / 100.0f, 0.707f, 0.0f);
-    SecondOrderFilter rpmFilter(5.0f, 0.26f, 0.01);
+    SecondOrderFilter rpmFilter(5.0f, 0.22f, 0.01);
     bool isStarting = false;
     bool blowoff = false;
     bool lifted = false;
@@ -499,7 +499,7 @@ if (biquad) {
         engineLowNote.setRPM(carRpm);
         engineHighNote.setRPM(carRpm);
         engineMechanicals.setRPM(carRpm);
-        engineLowNote.setAmplitude(carTorque / 250 + 0.1f);
+        engineLowNote.setAmplitude((carTorque / 650)/(carRpm/9000));
         engineHighNote.setAmplitude((carRpm * carTorque) / 2000000);
         engineMechanicals.setAmplitude(carRpm / 110000);
         whoosh.setIntensity(car.getBoost() / 100);
