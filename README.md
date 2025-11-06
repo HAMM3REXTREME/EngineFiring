@@ -1,17 +1,14 @@
 # Engine Firing
 
-A Simple C++ program (and JNI library) that generates realistic engine audio samples using simple but effective techniques.
+Simple C++ classes and tooling to generates realistic engine sounds in real time.
 
 ## Building
 
 **Make sure you have the following prerequisites:**
 
 - A modern C++ compiler + CMake
-- SWIG (For JNI shared library)
-- Android NDK (For Android JNI lib)
 - SFML 3 (For C++ desktop program)
 - PortAudio (For C++ desktop program)
-- Lua (for making engines with unique behaviours at runtime)
 
 ```bash
 git clone --recursive https://github.com/HAMM3REXTREME/EngineFiring
@@ -22,7 +19,7 @@ cd EngineFiring
 
 1) Simply run `./build.sh` to build the C++ program and the JNI shared library.
 
-### Android
+### Android (Depreciated)
 
 1) Build Lua for Android (using the NDK), place the resulting `liblua.a` file inside `lua/lib/{ANDROID_ABI}/`.
 2) Edit `./build-android.sh` to point to your Android NDK installation path, optionally edit the target ABI.

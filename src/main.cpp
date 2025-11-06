@@ -242,8 +242,8 @@ engineCtx.addFilter(makeBiquad(bq_type_peak, 500.0f, 0.707f, 3.0f));
 // Mid range
 engineCtx.addFilter(makeBiquad(bq_type_peak, 1700.0f, 0.707f, 4.0f));
 engineCtx.addFilter(makeBiquad(bq_type_peak, 3000.0f, 0.707f, 4.0f));
-engineCtx.addFilter(makeBiquad(bq_type_peak, 8000.0f, 0.707f, -2.0f));
-engineCtx.addFilter(makeBiquad(bq_type_peak, 9000.0f, 0.707f, -3.0f));
+engineCtx.addFilter(makeBiquad(bq_type_peak, 8000.0f, 0.707f, -1.0f));
+engineCtx.addFilter(makeBiquad(bq_type_peak, 9000.0f, 0.707f, -2.0f));
 
 
 // Supercharger
@@ -511,7 +511,7 @@ if (biquad) {
         engineLowNote.setRPM(carRpm);
         engineHighNote.setRPM(carRpm);
         engineMechanicals.setRPM(carRpm);
-        engineLowNote.setAmplitude(std::clamp(carTorque / 350 - 0.8f * engineHighNote.getAmplitude(), 0.0f, 1.0f));
+        engineLowNote.setAmplitude(std::clamp(carTorque / 350 - 0.75f * engineHighNote.getAmplitude(), 0.0f, 1.0f));
         engineHighNote.setAmplitude((carRpm * carTorque) / 4500000);
         engineMechanicals.setAmplitude(carRpm / 190000);
         whoosh.setIntensity(car.getRPM() * car.getTorque()/ 1500000);
