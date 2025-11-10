@@ -11,7 +11,7 @@
 float BackfireSoundGenerator::getAmplitude() const { return amplitude; }
 void BackfireSoundGenerator::setAmplitude(float g) { amplitude = std::max(0.0f, g); }
 
-BackfireSoundGenerator::BackfireSoundGenerator(float sampleRate) : sampleRate(sampleRate), amplitude(0.6f), intensity(0.0f) {
+BackfireSoundGenerator::BackfireSoundGenerator(float sampleRate) : sampleRate(sampleRate), amplitude(1.0f), intensity(0.0f) {
     srand(static_cast<unsigned>(time(nullptr)));
 }
 

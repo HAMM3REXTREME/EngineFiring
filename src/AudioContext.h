@@ -24,6 +24,7 @@ class AudioContext : public SoundGenerator {
     AudioContext(std::vector<SoundGenerator *> generators);
     AudioContext(const std::string &new_id, std::vector<SoundGenerator *> generators);
     AudioContext();
+    ~AudioContext() {sound_generators.clear();}
     std::string id;
     void update() override {}
     void addGenerator(SoundGenerator *generator);

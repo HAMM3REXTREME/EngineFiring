@@ -12,12 +12,12 @@
 
 class Engine {
   public:
-    Engine(std::string name, const std::vector<int> &firing_order, const std::vector<float> &firing_intervals_degrees, float firing_per_rev = 0.5);
-    Engine(std::string name, const std::vector<int> &firing_order, float firing_per_rev = 0.5);
+    Engine(const std::string &name, const std::vector<int> &firing_order, const std::vector<float> &firing_intervals_degrees, float firing_per_rev = 0.5);
+    Engine(const std::string &name, const std::vector<int> &firing_order, float firing_per_rev = 0.5);
 
     void setIntervalsFromDegrees(const std::vector<float> &firing_intervals_degrees, float full_firing_degrees = 720.0f);
     static std::vector<int> getFiringOrderFromString(const std::string &firing_order_str);
-
+    static std::vector<float> getFiringIntervalFromString(const std::string &firing_interval_str);
     std::string m_name;
     std::vector<int> m_firing_order;
     std::vector<float> m_firing_interval_factors;

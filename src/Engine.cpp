@@ -28,13 +28,13 @@ void Engine::setIntervalsFromDegrees(const std::vector<float> &firing_intervals_
     std::cout << "\n";
 }
 
-Engine::Engine(std::string name, const std::vector<int> &firing_order, const std::vector<float> &firing_intervals_degrees, float firing_per_rev)
+Engine::Engine(const std::string& name, const std::vector<int> &firing_order, const std::vector<float> &firing_intervals_degrees, float firing_per_rev)
     : m_name(name), m_firing_order(firing_order), m_firing_per_rev(firing_per_rev) {
     std::cout << "New engine '" << m_name << "' with " << getCylinderCount() << " cylinders. ";
     setIntervalsFromDegrees(firing_intervals_degrees);
 }
 
-Engine::Engine(std::string name, const std::vector<int> &firing_order, float firing_per_rev)
+Engine::Engine(const std::string& name, const std::vector<int> &firing_order, float firing_per_rev)
     : m_name(name), m_firing_order(firing_order), m_firing_per_rev(firing_per_rev) {
     std::cout << "New engine '" << m_name << "' with " << getCylinderCount() << " cylinders (even firing).\n";
     m_firing_interval_factors.assign(getCylinderCount(), 1); // Even-firing
@@ -55,6 +55,26 @@ std::vector<int> Engine::getFiringOrderFromString(const std::string &firing_orde
     int number;
     while (stream >> number) {
         result.push_back(number - 1); // Convert from 1-based to 0-based
+    }
+
+    return result;
+}
+
+std::vector<float> Engine::getFiringIntervalFromString(const std::string& firing_interval_str) {
+    std::vector<float> result;
+    std::string cleaned_input = firing_interval_str;
+
+    // Replace any character that is NOT a digit or '.' with space
+    for (char& c : cleaned_input) {
+        if (!std::isdigit(static_cast<unsigned char>(c)) && c != '.') {
+            c = ' ';
+        }
+    }
+
+    std::istringstream stream(cleaned_input);
+    double number;
+    while (stream >> number) {
+        result.push_back(number);
     }
 
     return result;
