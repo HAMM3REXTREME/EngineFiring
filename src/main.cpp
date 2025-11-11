@@ -86,8 +86,7 @@ int main() {
     scene.newAudioCtx("engines_ctx");
     scene.addToAudioCtx("engines_ctx", "engine_regular_note");
     scene.addToMainCtx("engines_ctx");
-    auto caller = scene.selectCall("engines_ctx.setAmplitude");
-    caller->call(1.0);
+    scene.selectCall("engines_ctx.setAmplitude")->call({0.0});
     // scene.loadedSoundGenerators["engines_regular_note"]->setAmplitude(float amp)
     std::cout << scene.getMainCtx().getInfo(0);
     // ==== THE ENGINE

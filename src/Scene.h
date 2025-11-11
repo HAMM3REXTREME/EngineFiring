@@ -20,9 +20,49 @@ class Scene {
         std::string name;
         bool operator<(const MethodKey &other) const { return type == other.type ? name < other.name : type < other.type; }
     };
-    struct BoundMethod {
-        std::function<void(float)> call;
+struct BoundMethod {
+    std::function<void(const std::vector<float>&)> call;
+};
+
+std::optional<BoundMethod> selectCall(const std::string &command) {
+    size_t dot = command.find('.');
+    if (dot == std::string::npos)
+        return std::nullopt;
+
+    std::string objName = command.substr(0, dot);
+    std::string method = command.substr(dot + 1);
+
+    // lookup object
+    auto it = loadedSoundGenerators.find(objName);
+    if (it == loadedSoundGenerators.end())
+        return std::nullopt;
+
+    SoundGenerator* obj = it->second.get();
+    std::type_index type = typeid(*obj);
+
+    // lookup method in registry
+    MethodKey mk{type, method};
+    auto mit = methodRegistry.find(mk);
+    if (mit == methodRegistry.end()) {
+        mk = {typeid(SoundGenerator), method};
+        mit = methodRegistry.find(mk);
+        if (mit == methodRegistry.end())
+            return std::nullopt;
+    }
+
+    auto fn = mit->second; // function(SoundGenerator*, const vector<float>&)
+
+    BoundMethod bound;
+    // Pre-allocate vector outside lambda to avoid allocation each call
+    std::vector<float> argsBuffer;
+
+    bound.call = [obj, fn, argsBuffer = std::move(argsBuffer)](const std::vector<float>& values) mutable {
+        argsBuffer = values;   // copy values into pre-allocated buffer
+        fn(obj, argsBuffer);
     };
+
+    return bound;
+}
     std::unordered_map<std::string, float> vehicle_input;
 
     std::unordered_map<std::string, std::unique_ptr<SoundBank>> loadedSoundBanks;
@@ -33,45 +73,6 @@ class Scene {
         for (const auto &[key, value] : loadedSoundGenerators) {
             std::cout << "SoundGenerators: '" << key << "' with info " << value->getInfo(0) << "\n";
         }
-    }
-    std::optional<BoundMethod> selectCall(const std::string &command) {
-        std::istringstream iss(command);
-        std::string key, method;
-        iss >> key;
-
-        size_t dot = key.find('.');
-        if (dot == std::string::npos)
-            return std::nullopt;
-
-        std::string objName = key.substr(0, dot);
-        method = key.substr(dot + 1);
-
-        // lookup object
-        auto it = loadedSoundGenerators.find(objName);
-        if (it == loadedSoundGenerators.end())
-            return std::nullopt;
-
-        SoundGenerator *obj = it->second.get();
-        std::type_index type = typeid(*obj);
-
-        // lookup method
-        MethodKey mk{type, method};
-        auto mit = methodRegistry.find(mk);
-        if (mit == methodRegistry.end()) {
-            mk = {typeid(SoundGenerator), method};
-            mit = methodRegistry.find(mk);
-            if (mit == methodRegistry.end())
-                return std::nullopt;
-        }
-
-        auto fn = mit->second; // function(SoundGenerator*, const vector<float>&)
-        BoundMethod bound;
-        bound.call = [obj, fn](float value) {
-            std::vector<float> args{value};
-            fn(obj, args);
-        };
-
-        return bound;
     }
     static std::vector<std::string> loadRelativePaths(const std::filesystem::path &listFilePath) {
         std::vector<std::string> result;
