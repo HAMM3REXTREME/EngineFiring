@@ -1,11 +1,12 @@
 #include "AudioContext.h"
 #include <sstream>
 
-AudioContext::AudioContext(std::vector<SoundGenerator*> generators) : id("no name"), sound_generators(generators), m_ctx_amplitude(1.0f) {}
-AudioContext::AudioContext(const std::string &new_id, std::vector<SoundGenerator*> generators) : id(new_id), sound_generators(generators), m_ctx_amplitude(1.0f) {}
-AudioContext::AudioContext() : id("no name"), m_ctx_amplitude(1.0f) {}
+AudioContext::AudioContext(std::vector<std::unique_ptr<SoundGenerator>> generators, float ctx_amp) : sound_generators(std::move(generators)), m_ctx_amplitude(ctx_amp) {}
+AudioContext::AudioContext(float ctx_amp) : m_ctx_amplitude(ctx_amp) {}
 
-void AudioContext::addGenerator(SoundGenerator *generator) { sound_generators.push_back(generator); }
+void AudioContext::addGenerator(std::unique_ptr<SoundGenerator> generator) {
+        sound_generators.push_back(std::move(generator));
+    }
 
 float AudioContext::getAllSamples() {
     float sample = 0.0f;
@@ -38,9 +39,9 @@ std::string AudioContext::getInfo(int depth) const {
     if (depth == 0) {
         oss << "Root ";
     }
-    oss << "AudioContext: id '" << id << "' amplitude " << m_ctx_amplitude << ", " << fx_chain.size() << " post filters, " << sound_generators.size()
+    oss << "AudioContext: amplitude " << m_ctx_amplitude << ", " << fx_chain.size() << " post filters, " << sound_generators.size()
         << " generators:\n";
-    for (auto *gen : sound_generators) {
+    for (auto& gen : sound_generators) {
         oss << gen->getInfo(depth + 1);
     }
     if (depth == 0) {

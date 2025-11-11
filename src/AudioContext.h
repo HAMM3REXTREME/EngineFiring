@@ -21,17 +21,18 @@
 
 class AudioContext : public SoundGenerator {
   public:
-    AudioContext(std::vector<SoundGenerator *> generators);
-    AudioContext(const std::string &new_id, std::vector<SoundGenerator *> generators);
-    AudioContext();
-    ~AudioContext() {sound_generators.clear();}
-    std::string id;
+    AudioContext(std::vector<std::unique_ptr<SoundGenerator>> generators, float ctx_amp = 1.0f);
+    AudioContext(float ctx_amp = 1.0f);
+    ~AudioContext() {
+        fx_chain.clear();
+        sound_generators.clear();
+    }
     void update() override {}
-    void addGenerator(SoundGenerator *generator);
+    void addGenerator(std::unique_ptr<SoundGenerator> generator);
     void addFilter(std::unique_ptr<PostFilter> new_filter) { fx_chain.addFilter(std::move(new_filter)); }
     float getAllSamples();
     void getAllSamples(float *buffer, int numFrames, int numChannels);
-    std::vector<SoundGenerator *> sound_generators;
+    std::vector<std::unique_ptr<SoundGenerator>> sound_generators;
     EffectChain fx_chain;
     float getSample() override;
     void setAmplitude(float amp) override;
