@@ -5,12 +5,25 @@
 #include "SoundBank.h"
 #include "SoundGenerator.h"
 #include <filesystem>
+#include <functional>
+#include <map>
 #include <memory>
+#include <optional>
+#include <typeindex>
 #include <unordered_map>
 class Scene {
   public:
-    float rpm = 0.0f;
-    float load = 0.0f;
+    Scene() { registerMethods(); }
+
+    struct MethodKey {
+        std::type_index type;
+        std::string name;
+        bool operator<(const MethodKey &other) const { return type == other.type ? name < other.name : type < other.type; }
+    };
+    struct BoundMethod {
+        std::function<void(float)> call;
+    };
+    std::unordered_map<std::string, float> vehicle_input;
 
     std::unordered_map<std::string, std::unique_ptr<SoundBank>> loadedSoundBanks;
     std::unordered_map<std::string, std::unique_ptr<Engine>> engineDefinitions;
@@ -21,7 +34,46 @@ class Scene {
             std::cout << "SoundGenerators: '" << key << "' with info " << value->getInfo(0) << "\n";
         }
     }
-    std::vector<std::string> loadRelativePaths(const std::filesystem::path &listFilePath) {
+    std::optional<BoundMethod> selectCall(const std::string &command) {
+        std::istringstream iss(command);
+        std::string key, method;
+        iss >> key;
+
+        size_t dot = key.find('.');
+        if (dot == std::string::npos)
+            return std::nullopt;
+
+        std::string objName = key.substr(0, dot);
+        method = key.substr(dot + 1);
+
+        // lookup object
+        auto it = loadedSoundGenerators.find(objName);
+        if (it == loadedSoundGenerators.end())
+            return std::nullopt;
+
+        SoundGenerator *obj = it->second.get();
+        std::type_index type = typeid(*obj);
+
+        // lookup method
+        MethodKey mk{type, method};
+        auto mit = methodRegistry.find(mk);
+        if (mit == methodRegistry.end()) {
+            mk = {typeid(SoundGenerator), method};
+            mit = methodRegistry.find(mk);
+            if (mit == methodRegistry.end())
+                return std::nullopt;
+        }
+
+        auto fn = mit->second; // function(SoundGenerator*, const vector<float>&)
+        BoundMethod bound;
+        bound.call = [obj, fn](float value) {
+            std::vector<float> args{value};
+            fn(obj, args);
+        };
+
+        return bound;
+    }
+    static std::vector<std::string> loadRelativePaths(const std::filesystem::path &listFilePath) {
         std::vector<std::string> result;
         std::ifstream file(listFilePath);
 
@@ -29,7 +81,7 @@ class Scene {
             throw std::runtime_error("Failed to open " + listFilePath.string());
         }
 
-        std::filesystem::path baseDir = listFilePath.parent_path();
+        std::filesystem::path SoundGeneratorDir = listFilePath.parent_path();
         std::string line;
 
         while (std::getline(file, line)) {
@@ -41,8 +93,8 @@ class Scene {
             if (!line.empty() && line.back() == '\r')
                 line.pop_back();
 
-            // Combine base directory + relative path
-            std::filesystem::path fullPath = baseDir / line;
+            // Combine SoundGenerator directory + relative path
+            std::filesystem::path fullPath = SoundGeneratorDir / line;
             result.push_back(fullPath.lexically_normal().string());
         }
 
@@ -80,5 +132,21 @@ class Scene {
                 std::cerr << "Warning: audio context not found.\n";
             }
         }
+    }
+
+  private:
+    // maps (type, methodName) → callable(SoundGenerator*, args)
+    std::map<MethodKey, std::function<void(SoundGenerator *, const std::vector<float> &)>> methodRegistry;
+    void registerMethods() {
+        methodRegistry[{typeid(SoundGenerator), "setAmplitude"}] = [](SoundGenerator *obj, const std::vector<float> &args) {
+            if (!args.empty())
+                obj->setAmplitude(args[0]);
+        };
+        methodRegistry[{typeid(EngineSoundGenerator), "setRPM"}] = [](SoundGenerator *obj, const std::vector<float> &args) {
+            auto *d = dynamic_cast<EngineSoundGenerator *>(obj);
+            if (!d || args.empty())
+                return;
+            d->setAmplitude(args[0]);
+        };
     }
 };
