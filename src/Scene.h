@@ -20,49 +20,53 @@ class Scene {
         std::string name;
         bool operator<(const MethodKey &other) const { return type == other.type ? name < other.name : type < other.type; }
     };
-struct BoundMethod {
-    std::function<void(const std::vector<float>&)> call;
-};
-
-std::optional<BoundMethod> selectCall(const std::string &command) {
-    size_t dot = command.find('.');
-    if (dot == std::string::npos)
-        return std::nullopt;
-
-    std::string objName = command.substr(0, dot);
-    std::string method = command.substr(dot + 1);
-
-    // lookup object
-    auto it = loadedSoundGenerators.find(objName);
-    if (it == loadedSoundGenerators.end())
-        return std::nullopt;
-
-    SoundGenerator* obj = it->second.get();
-    std::type_index type = typeid(*obj);
-
-    // lookup method in registry
-    MethodKey mk{type, method};
-    auto mit = methodRegistry.find(mk);
-    if (mit == methodRegistry.end()) {
-        mk = {typeid(SoundGenerator), method};
-        mit = methodRegistry.find(mk);
-        if (mit == methodRegistry.end())
-            return std::nullopt;
-    }
-
-    auto fn = mit->second; // function(SoundGenerator*, const vector<float>&)
-
-    BoundMethod bound;
-    // Pre-allocate vector outside lambda to avoid allocation each call
-    std::vector<float> argsBuffer;
-
-    bound.call = [obj, fn, argsBuffer = std::move(argsBuffer)](const std::vector<float>& values) mutable {
-        argsBuffer = values;   // copy values into pre-allocated buffer
-        fn(obj, argsBuffer);
+    struct BoundMethod {
+        std::function<void(const std::vector<float> &)> call;
     };
 
-    return bound;
-}
+    void callMethod(const std::string &command, const std::vector<float> &args){
+        selectCall(command)->call(args);
+    }
+    std::optional<BoundMethod> selectCall(const std::string &command) {
+        size_t dot = command.find('.');
+        if (dot == std::string::npos)
+            return std::nullopt;
+
+        std::string objName = command.substr(0, dot);
+        std::string method = command.substr(dot + 1);
+
+        // lookup object
+        auto it = loadedSoundGenerators.find(objName);
+        if (it == loadedSoundGenerators.end())
+            return std::nullopt;
+
+        SoundGenerator *obj = it->second.get();
+        std::type_index type = typeid(*obj);
+
+        // lookup method in registry
+        MethodKey mk{type, method};
+        auto mit = methodRegistry.find(mk);
+        if (mit == methodRegistry.end()) {
+            mk = {typeid(SoundGenerator), method};
+            mit = methodRegistry.find(mk);
+            if (mit == methodRegistry.end())
+                return std::nullopt;
+        }
+
+        auto fn = mit->second; // function(SoundGenerator*, const vector<float>&)
+
+        BoundMethod bound;
+        // Pre-allocate vector outside lambda to avoid allocation each call
+        std::vector<float> argsBuffer;
+
+        bound.call = [obj, fn, argsBuffer = std::move(argsBuffer)](const std::vector<float> &values) mutable {
+            argsBuffer = values; // copy values into pre-allocated buffer
+            fn(obj, argsBuffer);
+        };
+
+        return bound;
+    }
+
     std::unordered_map<std::string, float> vehicle_input;
 
     std::unordered_map<std::string, std::unique_ptr<SoundBank>> loadedSoundBanks;
@@ -112,6 +116,7 @@ std::optional<BoundMethod> selectCall(const std::string &command) {
             std::cerr << e.what() << "\n";
         }
     }
+
     void newEngineDef(const std::string &name, const std::string &firing_order, float firing_per_rev = 0.5) {
         engineDefinitions.emplace(name, std::make_unique<Engine>(name, Engine::getFiringOrderFromString(firing_order), firing_per_rev));
     }
@@ -140,14 +145,16 @@ std::optional<BoundMethod> selectCall(const std::string &command) {
     std::map<MethodKey, std::function<void(SoundGenerator *, const std::vector<float> &)>> methodRegistry;
     void registerMethods() {
         methodRegistry[{typeid(SoundGenerator), "setAmplitude"}] = [](SoundGenerator *obj, const std::vector<float> &args) {
-            if (!args.empty())
-                obj->setAmplitude(args[0]);
+            if (args.empty()){return;}
+            obj->setAmplitude(args[0]);
+            std::cout << "Dynamically set amplitude to " << args[0] << "\n";
         };
         methodRegistry[{typeid(EngineSoundGenerator), "setRPM"}] = [](SoundGenerator *obj, const std::vector<float> &args) {
             auto *d = dynamic_cast<EngineSoundGenerator *>(obj);
-            if (!d || args.empty())
+            if (!d || args.empty()){
                 return;
-            d->setAmplitude(args[0]);
+            }
+            d->setRPM(args[0]);
         };
     }
 };
