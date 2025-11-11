@@ -80,10 +80,14 @@ int main() {
     sf::Clock deltaClock;
     bool showDebug = false;
     Scene scene;
-    scene.loadSoundBank("assets/audio/tick_library.sb");
-    scene.newEngineDef("Example scene V6", "1-2-3-4-5-6");
-    scene.newEngineSoundGenerator(0, 0);
-    scene.addToMainCtx(0);
+    scene.loadSoundBank("main_samples","assets/audio/tick_library.sb");
+    scene.newEngineDef("example_v6", "1-2-3-4-5-6");
+    scene.newEngineSoundGenerator("engine_regular_note","main_samples", "example_v6");
+    scene.newAudioCtx("engines_ctx");
+    scene.addToAudioCtx("engines_ctx", "engine_regular_note");
+    scene.addToMainCtx("engines_ctx");
+    // scene.loadedSoundGenerators["engines_regular_note"]->setAmplitude(float amp)
+    std::cout << scene.getMainCtx().getInfo(0);
     // ==== THE ENGINE
     // Engine engineDef("Revuelto V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7});
     // Engine engineDef("Ferrari V12", Engine::getFiringOrderFromString("1 7 5 11 3 9 6 12 2 8 4 10"));
@@ -135,9 +139,9 @@ int main() {
     // Engine engineDef("Buick even firing V6", Engine::getFiringOrderFromString("1-6-5-4-3-2"),3);
     // Engine engineDef("Buick odd firing V6", Engine::getFiringOrderFromString("1-6-5-4-3-2"), {90,150,90,150,90,150},3);
     // Engine engineDef("Porsche Flat 6", Engine::getFiringOrderFromString("1-6-2-4-3-5"), 0.505);
-    EngineSoundGenerator engineLowNote(*scene.loadedSoundBanks[0], engineDef, 1000.0f, 0.5f);
-    EngineSoundGenerator engineHighNote(*scene.loadedSoundBanks[0], engineDef, 1000.0f, 0.5f);
-    EngineSoundGenerator engineMechanicals(*scene.loadedSoundBanks[0], engineDef, 1000.0f, 0.5f);
+    EngineSoundGenerator engineLowNote(*scene.loadedSoundBanks["main_samples"], engineDef, 1000.0f, 0.5f);
+    EngineSoundGenerator engineHighNote(*scene.loadedSoundBanks["main_samples"], engineDef, 1000.0f, 0.5f);
+    EngineSoundGenerator engineMechanicals(*scene.loadedSoundBanks["main_samples"], engineDef, 1000.0f, 0.5f);
     engineLowNote.setNoteOffset(6);      // 0,             3, 0                0to4 , 11, 8
     engineHighNote.setNoteOffset(24);    // 5, 7, 9, 19, 20, 19, 19, 14, 22, 23, 17, 19, 26, 19 , 10, 19 , 23, 23
     engineMechanicals.setNoteOffset(11); // 8, 10, 11, 16, 16, 11, 14, 11, 16, 19, 16, 11, 20, 25, 14, 10, 8, 9
@@ -149,7 +153,7 @@ int main() {
 
     // ==== SUPERCHARGER (Just a high revving 1 cylinder)
     Engine superchargerDef("Supercharger", {0}, 8.0f);
-    EngineSoundGenerator supercharger(*scene.loadedSoundBanks[0], superchargerDef, 1000.0f, 0.7f);
+    EngineSoundGenerator supercharger(*scene.loadedSoundBanks["main_samples"], superchargerDef, 1000.0f, 0.7f);
     supercharger.setAmplitude(0.5f);
     supercharger.setNoteOffset(20);
 
@@ -160,7 +164,7 @@ int main() {
 
     // ==== TURBOCHARGER SHAFT (Sounds like a faint supercharger)
     Engine turboshaftDef("BorgWarner K04 - Shaft", {0}, 8.0f);
-    EngineSoundGenerator turboShaft(*scene.loadedSoundBanks[0], turboshaftDef, 1000.0f, 0.05f);
+    EngineSoundGenerator turboShaft(*scene.loadedSoundBanks["main_samples"], turboshaftDef, 1000.0f, 0.05f);
 
     // ==== TURBO WHOOSH NOISE GENERATOR
     TurboWhooshGenerator whoosh(SAMPLE_RATE);
@@ -176,10 +180,10 @@ int main() {
     backfire.setAmplitude(0.4f);
 
     // Audio sample generators that get summed up and played together
-    AudioContext engineCtx("engines", {&engineLowNote, &engineHighNote, &engineMechanicals});
-    AudioContext backfireCtx("backfire", {&backfire});
-    AudioContext superchargerCtx("supercharger", {&supercharger});
-    AudioContext context("root", {&engineCtx, &generalGen, &backfireCtx, &turboShaft, &whoosh, &turboGen});
+    AudioContext engineCtx({&engineLowNote, &engineHighNote, &engineMechanicals});
+    AudioContext backfireCtx( {&backfire});
+    AudioContext superchargerCtx({&supercharger});
+    AudioContext context({&engineCtx, &generalGen, &backfireCtx, &turboShaft, &whoosh, &turboGen});
 
     // Car simulator stuff
     Car car;
@@ -498,6 +502,10 @@ if (biquad) {
 }
         engineCtx.setAmplitude(0.65f + carRpm / 40000.0f);
         // superchargerCtx.setAmplitude(0.3f + carRpm / 15000.0f);
+        EngineSoundGenerator* e = dynamic_cast<EngineSoundGenerator*>(scene.loadedSoundGenerators["engine_regular_note"].get());
+        e->setRPM(carRpm);
+
+        scene.loadedSoundGenerators["engine_regular_note"]->setAmplitude(carTorque / 350);
         engineLowNote.setRPM(carRpm);
         engineHighNote.setRPM(carRpm);
         engineMechanicals.setRPM(carRpm);

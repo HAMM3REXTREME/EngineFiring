@@ -1,11 +1,11 @@
 #include "AudioContext.h"
 #include <sstream>
 
-AudioContext::AudioContext(std::vector<std::unique_ptr<SoundGenerator>> generators, float ctx_amp) : sound_generators(std::move(generators)), m_ctx_amplitude(ctx_amp) {}
+AudioContext::AudioContext(std::vector<SoundGenerator*> generators, float ctx_amp) : sound_generators(generators), m_ctx_amplitude(ctx_amp) {}
 AudioContext::AudioContext(float ctx_amp) : m_ctx_amplitude(ctx_amp) {}
 
-void AudioContext::addGenerator(std::unique_ptr<SoundGenerator> generator) {
-        sound_generators.push_back(std::move(generator));
+void AudioContext::addGenerator(SoundGenerator* generator) {
+        sound_generators.push_back(generator);
     }
 
 float AudioContext::getAllSamples() {
