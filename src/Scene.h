@@ -207,5 +207,12 @@ class AudioSceneManager {
             }
             d->setRPM(args[0]);
         };
+                methodRegistry[{typeid(EngineSoundGenerator), "setNoteOffset"}] = [](SoundGenerator *obj, const std::vector<float> &args) {
+            auto *d = dynamic_cast<EngineSoundGenerator *>(obj);
+            if (!d || args.empty()) {
+                return;
+            }
+            d->setNoteOffset(args[0]);
+        };
     }
 };

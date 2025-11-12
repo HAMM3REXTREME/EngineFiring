@@ -90,19 +90,22 @@ int main() {
     // test2d.addPoint(0.0, 1.0, 0.0);
     // test2d.addPoint(9000.0, 0.0, 1.0);
     // test2d.addPoint(9000.0, 1.0, 1.0);
-    scene.importMapCollection( "assets/audio/example.mcl");
+    scene.importMapCollection( "assets/map2d/example_v6.mcl");
     scene.loadSoundBank("main_samples","assets/audio/tick_library.sb");
-    scene.newEngineDef("example_v6", "1-2-3-4-5-6");
-    scene.newEngineSoundGenerator("engine_regular_note","main_samples", "example_v6");
+    scene.newEngineDef("example_v6", "1-2-4-5-3");
+    scene.newEngineSoundGenerator("engine_lo_note","main_samples", "example_v6");
+    scene.newEngineSoundGenerator("engine_hi_note","main_samples", "example_v6");
+    scene.newEngineSoundGenerator("engine_mech_note","main_samples", "example_v6");
     scene.newAudioCtx("engines_ctx");
-    scene.addToAudioCtx("engines_ctx", "engine_regular_note");
+    scene.addToAudioCtx("engines_ctx", "engine_lo_note");
+    scene.addToAudioCtx("engines_ctx", "engine_hi_note");
+    scene.addToAudioCtx("engines_ctx", "engine_mech_note");
     scene.addToMainCtx("engines_ctx");
+    scene.callMethod("engine_hi_note.setNoteOffset", {5});
+    scene.callMethod("engine_mech_note.setNoteOffset", {2});
     // scene.loadedSoundGenerators["engines_regular_note"]->setAmplitude(float amp)
     std::cout << scene.getMainCtx().getInfo(0);
-    scene.applyMap2D("engine_1_rpm_load");
 
-    scene.loadedMap2Ds["engine_1_rpm_load"]->print();
-    std::cout << scene.loadedMap2Ds["engine_1_rpm_load"]->getValue(9000, 1.0) << "\n";
     // ==== THE ENGINE
     // Engine engineDef("Revuelto V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7});
     // Engine engineDef("Ferrari V12", Engine::getFiringOrderFromString("1 7 5 11 3 9 6 12 2 8 4 10"));

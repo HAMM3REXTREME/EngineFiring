@@ -1,0 +1,9 @@
+# Example 1:1 engine rpm map
+# xString yString zString
+rpm load engine_lo_note.setRPM
+\      0.0      20000
+0.0    0.0      20000
+200.0  0.0      20000
+
+
+
