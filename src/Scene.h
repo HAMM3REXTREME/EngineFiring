@@ -3,6 +3,7 @@
 #include "AudioContext.h"
 #include "EngineSoundGenerator.h"
 #include "Map2D.h"
+#include "SineClipper.h"
 #include "SoundBank.h"
 #include "SoundGenerator.h"
 #include <filesystem>
@@ -131,8 +132,8 @@ class AudioSceneManager {
         std::cout << "Apply map: " << callArgs[0] << "\n";
         callMethod(callCommand, callArgs);
     }
-    void applyAll2DMaps(){
-        for (const auto &[key, value] : loadedMap2Ds){
+    void applyAll2DMaps() {
+        for (const auto &[key, value] : loadedMap2Ds) {
             applyMap2D(key);
         }
     }
@@ -207,12 +208,66 @@ class AudioSceneManager {
             }
             d->setRPM(args[0]);
         };
-                methodRegistry[{typeid(EngineSoundGenerator), "setNoteOffset"}] = [](SoundGenerator *obj, const std::vector<float> &args) {
+        methodRegistry[{typeid(EngineSoundGenerator), "setNoteOffset"}] = [](SoundGenerator *obj, const std::vector<float> &args) {
             auto *d = dynamic_cast<EngineSoundGenerator *>(obj);
             if (!d || args.empty()) {
                 return;
             }
             d->setNoteOffset(args[0]);
+        };
+        // New biquad filter command
+        methodRegistry[{typeid(AudioContext), "addBiquad"}] = [](SoundGenerator *obj, const std::vector<float> &args) {
+            auto *ctx = dynamic_cast<AudioContext *>(obj);
+            if (!ctx || args.size() < 5) {
+                std::cerr << "Invalid addBiquad args.\n";
+                return;
+            }
+
+            int type = static_cast<int>(args[0]); // your Biquad type enum
+            float freq = args[1];
+            float q = args[2];
+            float db = args[3];
+            float sample_rate = args[4];
+
+            ctx->addFilter(std::make_unique<Biquad>(type, freq / sample_rate, q, db));
+        };
+        methodRegistry[{typeid(AudioContext), "addSineClipper"}] = [](SoundGenerator *obj, const std::vector<float> &args) {
+            auto *ctx = dynamic_cast<AudioContext *>(obj);
+            if (!ctx || args.size() != 0) {
+                std::cerr << "Invalid addSineClipper args.\n";
+                return;
+            }
+
+            ctx->addFilter(std::make_unique<SineClipper>());
+        };
+        methodRegistry[{typeid(AudioContext), "setBiquadParam"}] = [](SoundGenerator *obj, const std::vector<float> &args) {
+            auto *ctx = dynamic_cast<AudioContext *>(obj);
+            if (!ctx || (args.size() < 3 || (args.size() < 4 && (int)args[1]==0)))
+                return;
+
+            size_t index = (size_t)args[0];
+            int paramId = (int)args[1]; // 0=freq, 1=Q, 2=dB
+            float value = args[2];
+            float sample_rate=48000;
+            if (paramId==0) {sample_rate = args[3];}
+
+            auto *biquad = ctx->getFilterAs<Biquad>(index);
+            if (!biquad)
+                return;
+
+            switch (paramId) {
+            case 0:
+                biquad->setFc(value/sample_rate);
+                break;
+            case 1:
+                biquad->setQ(value);
+                break;
+            case 2:
+                biquad->setPeakGain(value);
+                break;
+            default:
+                break;
+            }
         };
     }
 };

@@ -103,6 +103,9 @@ int main() {
     scene.addToMainCtx("engines_ctx");
     scene.callMethod("engine_hi_note.setNoteOffset", {5});
     scene.callMethod("engine_mech_note.setNoteOffset", {2});
+    scene.callMethod("engines_ctx.addBiquad",{4,1500,0.707, -12, 48000});
+    scene.callMethod("engines_ctx.setBiquadParam", {0, 2, 120});
+    scene.callMethod("engines_ctx.addSineClipper", {});
     // scene.loadedSoundGenerators["engines_regular_note"]->setAmplitude(float amp)
     std::cout << scene.getMainCtx().getInfo(0);
 

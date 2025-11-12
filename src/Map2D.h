@@ -21,7 +21,7 @@ class Map2D {
     std::vector<std::vector<float>> zData; // z[y][x]
 
     std::string xString, yString, zString;
-    InterpolationMode currentInterpolation = InterpolationMode::Bilinear;
+    InterpolationMode currentInterpolation = InterpolationMode::Bicubic;
 
     // Add/edit/remove ---------------------------------
 
