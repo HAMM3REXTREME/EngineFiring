@@ -9,4 +9,7 @@ void SoundBank::addFromWavs(const std::vector<std::string> &filenames) {
 SoundBank::SoundBank(const std::vector<std::string> &filenames){
     addFromWavs(filenames);
 }
+SoundBank::SoundBank(const std::string& sbFilename){
+    addFromWavList(sbFilename);
+}
 void SoundBank::clearAll() { samples.clear(); }

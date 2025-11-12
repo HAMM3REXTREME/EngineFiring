@@ -24,6 +24,7 @@
 #include "EngineSoundGenerator.h"
 #include "ForceSilenceFilter.h"
 #include "Graph.h"
+#include "Map2D.h"
 #include "SaturatorFilter.h"
 #include "HardClamp.h"
 #include "DerivativeFilter.h"
@@ -79,16 +80,29 @@ int main() {
     sf::RenderWindow window(sf::VideoMode({WINDOW_X, WINDOW_Y}), "Engine Firing Simulator");
     sf::Clock deltaClock;
     bool showDebug = false;
-    Scene scene;
+    AudioSceneManager scene;
+    scene.vehicle_input["rpm"] = 9000.0;
+    scene.vehicle_input["load"] = 1.0;
+    // test2d.xString = "rpm";
+    // test2d.yString = "load";
+    // test2d.zString = "engine_regular_note.setAmplitude";
+    // test2d.addPoint(0.0, 0.0, 0.0);
+    // test2d.addPoint(0.0, 1.0, 0.0);
+    // test2d.addPoint(9000.0, 0.0, 1.0);
+    // test2d.addPoint(9000.0, 1.0, 1.0);
+    scene.importMapCollection( "assets/audio/example.mcl");
     scene.loadSoundBank("main_samples","assets/audio/tick_library.sb");
     scene.newEngineDef("example_v6", "1-2-3-4-5-6");
     scene.newEngineSoundGenerator("engine_regular_note","main_samples", "example_v6");
     scene.newAudioCtx("engines_ctx");
     scene.addToAudioCtx("engines_ctx", "engine_regular_note");
     scene.addToMainCtx("engines_ctx");
-    scene.callMethod("engines_ctx.setAmplitude", {0.0});
     // scene.loadedSoundGenerators["engines_regular_note"]->setAmplitude(float amp)
     std::cout << scene.getMainCtx().getInfo(0);
+    scene.applyMap2D("engine_1_rpm_load");
+
+    scene.loadedMap2Ds["engine_1_rpm_load"]->print();
+    std::cout << scene.loadedMap2Ds["engine_1_rpm_load"]->getValue(9000, 1.0) << "\n";
     // ==== THE ENGINE
     // Engine engineDef("Revuelto V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7});
     // Engine engineDef("Ferrari V12", Engine::getFiringOrderFromString("1 7 5 11 3 9 6 12 2 8 4 10"));
@@ -325,15 +339,6 @@ backfireCtx.addFilter(std::make_unique<HardClamp>());
     debugText.setFillColor(sf::Color::Green);
     debugText.setPosition({25.f, 25.f});
 
-    Graph example;
-    if (!example.loadFromFile("assets/graphs/data.xy")) {
-        std::cerr << "Failed to load data.\n";
-        return 1;
-    }
-        std::cout << "Loaded points:\n";
-    example.print();
-    std::cout << example.getValue(8000.0) << "\n";
-
     // PortAudio for live audio playback
     Pa_Initialize();
     PaStream *stream;
@@ -503,10 +508,11 @@ if (biquad) {
 }
         engineCtx.setAmplitude(0.65f + carRpm / 40000.0f);
         // superchargerCtx.setAmplitude(0.3f + carRpm / 15000.0f);
-        EngineSoundGenerator* e = dynamic_cast<EngineSoundGenerator*>(scene.loadedSoundGenerators["engine_regular_note"].get());
-        e->setRPM(carRpm);
+        scene.vehicle_input["rpm"] = carRpm;
+        scene.vehicle_input["load"] = carTorque;
+        scene.applyAll2DMaps();
 
-        scene.loadedSoundGenerators["engine_regular_note"]->setAmplitude(carTorque / 350);
+        //scene.loadedSoundGenerators["engine_regular_note"]->setAmplitude(carTorque / 350);
         engineLowNote.setRPM(carRpm);
         engineHighNote.setRPM(carRpm);
         engineMechanicals.setRPM(carRpm);

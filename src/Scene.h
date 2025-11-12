@@ -2,6 +2,7 @@
 
 #include "AudioContext.h"
 #include "EngineSoundGenerator.h"
+#include "Map2D.h"
 #include "SoundBank.h"
 #include "SoundGenerator.h"
 #include <filesystem>
@@ -11,9 +12,9 @@
 #include <optional>
 #include <typeindex>
 #include <unordered_map>
-class Scene {
+class AudioSceneManager {
   public:
-    Scene() { registerMethods(); }
+    AudioSceneManager() { registerMethods(); }
 
     struct MethodKey {
         std::type_index type;
@@ -24,9 +25,58 @@ class Scene {
         std::function<void(const std::vector<float> &)> call;
     };
 
-    void callMethod(const std::string &command, const std::vector<float> &args){
-        selectCall(command)->call(args);
+    struct FileEntry {
+        std::string path;
+        std::string name; // optional
+    };
+
+    static std::vector<FileEntry> loadRelativePathsWithNames(const std::filesystem::path &listFilePath) {
+        std::vector<FileEntry> result;
+        std::ifstream file(listFilePath);
+
+        if (!file.is_open()) {
+            throw std::runtime_error("Failed to open " + listFilePath.string());
+        }
+
+        std::filesystem::path importFileDir = listFilePath.parent_path();
+        std::string line;
+
+        while (std::getline(file, line)) {
+            // Skip empty lines or lines that start with '#'
+            if (line.empty() || line[0] == '#')
+                continue;
+
+            // Trim potential trailing \r (Windows files)
+            if (!line.empty() && line.back() == '\r')
+                line.pop_back();
+
+            // Trim leading/trailing whitespace
+            line.erase(0, line.find_first_not_of(" \t"));
+            line.erase(line.find_last_not_of(" \t") + 1);
+
+            if (line.empty())
+                continue;
+
+            // Split line into path + optional name
+            std::istringstream iss(line);
+            std::string relPath;
+            iss >> relPath;
+
+            std::string optionalName;
+            std::getline(iss, optionalName);
+            optionalName.erase(0, optionalName.find_first_not_of(" \t"));
+
+            FileEntry entry;
+            entry.path = (importFileDir / relPath).lexically_normal().string();
+            entry.name = optionalName;
+
+            result.push_back(entry);
+        }
+
+        return result;
     }
+
+    void callMethod(const std::string &command, const std::vector<float> &args) { selectCall(command)->call(args); }
     std::optional<BoundMethod> selectCall(const std::string &command) {
         size_t dot = command.find('.');
         if (dot == std::string::npos)
@@ -69,6 +119,24 @@ class Scene {
 
     std::unordered_map<std::string, float> vehicle_input;
 
+    std::unordered_map<std::string, std::unique_ptr<Map2D>> loadedMap2Ds;
+
+    void applyMap2D(const std::string &map2d_id) {
+        std::string xKey = loadedMap2Ds[map2d_id]->xString;
+        std::string yKey = loadedMap2Ds[map2d_id]->yString;
+        std::string callCommand = loadedMap2Ds[map2d_id]->zString;
+        std::vector<float> callArgs(1);
+        std::cout << "ApplyMap: X: " << vehicle_input[xKey] << " Y: " << vehicle_input[yKey] << "\n";
+        callArgs[0] = (loadedMap2Ds[map2d_id]->getValue(vehicle_input[xKey], vehicle_input[yKey]));
+        std::cout << "Apply map: " << callArgs[0] << "\n";
+        callMethod(callCommand, callArgs);
+    }
+    void applyAll2DMaps(){
+        for (const auto &[key, value] : loadedMap2Ds){
+            applyMap2D(key);
+        }
+    }
+
     std::unordered_map<std::string, std::unique_ptr<SoundBank>> loadedSoundBanks;
     std::unordered_map<std::string, std::unique_ptr<Engine>> engineDefinitions;
     std::unordered_map<std::string, std::unique_ptr<SoundGenerator>> loadedSoundGenerators;
@@ -78,40 +146,12 @@ class Scene {
             std::cout << "SoundGenerators: '" << key << "' with info " << value->getInfo(0) << "\n";
         }
     }
-    static std::vector<std::string> loadRelativePaths(const std::filesystem::path &listFilePath) {
-        std::vector<std::string> result;
-        std::ifstream file(listFilePath);
-
-        if (!file.is_open()) {
-            throw std::runtime_error("Failed to open " + listFilePath.string());
-        }
-
-        std::filesystem::path SoundGeneratorDir = listFilePath.parent_path();
-        std::string line;
-
-        while (std::getline(file, line)) {
-            // Skip empty lines or lines that start with '#'
-            if (line.empty() || line[0] == '#')
-                continue;
-
-            // Trim potential trailing \r (Windows files)
-            if (!line.empty() && line.back() == '\r')
-                line.pop_back();
-
-            // Combine SoundGenerator directory + relative path
-            std::filesystem::path fullPath = SoundGeneratorDir / line;
-            result.push_back(fullPath.lexically_normal().string());
-        }
-
-        return result;
-    }
     AudioContext &getMainCtx() { return mainCtx; }
     const AudioContext &getMainCtx() const { return mainCtx; }
-    void loadSoundBank(const std::string &name, const std::string &importFilename) {
+    void loadSoundBank(const std::string &name, const std::string &sbFilename) {
         try {
-            auto paths = loadRelativePaths(importFilename); // "assets/audio/tick_library.sb"
-            loadedSoundBanks.emplace(name, std::make_unique<SoundBank>(paths));
-            std::cout << "Loaded soundbank from " << importFilename << "\n";
+            loadedSoundBanks.emplace(name, std::make_unique<SoundBank>(sbFilename));
+            std::cout << "Loaded soundbank from " << sbFilename << "\n";
         } catch (const std::exception &e) {
             std::cerr << e.what() << "\n";
         }
@@ -127,6 +167,15 @@ class Scene {
     void newEngineSoundGenerator(const std::string &name, const std::string &soundbank_id, const std::string &engine_id) {
         loadedSoundGenerators.emplace(name, std::make_unique<EngineSoundGenerator>(*loadedSoundBanks[soundbank_id], *engineDefinitions[engine_id]));
     }
+    void importMap2D(const std::string &name, const std::string &filename) { loadedMap2Ds.emplace(name, std::make_unique<Map2D>(filename)); }
+    void importMapCollection(const std::string &mclFilename) {
+        auto files = loadRelativePathsWithNames(mclFilename);
+        for (const auto &f : files) {
+            importMap2D(f.name, f.path);
+            std::cout << f.path << " | " << f.name << "\n";
+        }
+    }
+
     void addToMainCtx(const std::string &generator_id) { mainCtx.addGenerator(loadedSoundGenerators[generator_id].get()); }
     void newAudioCtx(const std::string &name, float amplitude = 1.0f) { loadedSoundGenerators.emplace(name, std::make_unique<AudioContext>(amplitude)); }
     void addToAudioCtx(const std::string &ctx_id, const std::string &generator_id) {
@@ -145,13 +194,15 @@ class Scene {
     std::map<MethodKey, std::function<void(SoundGenerator *, const std::vector<float> &)>> methodRegistry;
     void registerMethods() {
         methodRegistry[{typeid(SoundGenerator), "setAmplitude"}] = [](SoundGenerator *obj, const std::vector<float> &args) {
-            if (args.empty()){return;}
+            if (args.empty()) {
+                return;
+            }
             obj->setAmplitude(args[0]);
             std::cout << "Dynamically set amplitude to " << args[0] << "\n";
         };
         methodRegistry[{typeid(EngineSoundGenerator), "setRPM"}] = [](SoundGenerator *obj, const std::vector<float> &args) {
             auto *d = dynamic_cast<EngineSoundGenerator *>(obj);
-            if (!d || args.empty()){
+            if (!d || args.empty()) {
                 return;
             }
             d->setRPM(args[0]);
