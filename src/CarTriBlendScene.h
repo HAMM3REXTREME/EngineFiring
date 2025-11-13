@@ -20,12 +20,12 @@ class CarTriBlendScene : public CarBlendScene {
     SoundBank engine_samples;
     std::unique_ptr<Engine> main_engine_def;
 
-    float SAMPLE_RATE = 48000;
+    float sample_rate = 48000;
     Engine superchargerEngine;
 
     std::unordered_map<std::string, float> input_values;
 
-    TurboWhooshGenerator whoosh{SAMPLE_RATE};
+    TurboWhooshGenerator whoosh{sample_rate};
     std::unique_ptr<Map2D> whoosh_am;
     std::unique_ptr<Map2D> whoosh_intensity;
 
@@ -77,44 +77,70 @@ class CarTriBlendScene : public CarBlendScene {
         std::cout << "base dir: " << base_dir << "\n";
         cfg.load(cfgFile);
 
+        soundBanksInit();
+        enginesInit();
+        generatorsInit();
+        map2dInit();
+        audioCtxInit();
+        filtersInit();
+    }
+
+  private:
+    void soundBanksInit() {
         // Main SoundBank
         engine_samples.addFromWavList(cfg.getString("engine_samples_path"));
+    }
+    void enginesInit() {
         // Main Engine
-        std::string firing_order = cfg.getString("engine_firing_order", "1-2-3-4-5-6");
+        std::string firing_order = cfg.getString("engine_firing_order", "1");
         main_engine_def = std::make_unique<Engine>(cfg.getString("engine_name"), Engine::getFiringOrderFromString(firing_order));
         if (cfg.hasKey("engine_firing_interval")) {
             std::string firing_interval = cfg.getString("engine_firing_interval");
             main_engine_def->setIntervalsFromDegrees(Engine::getFiringIntervalFromString(firing_interval));
         }
 
+        // Supercharger
+        superchargerEngine = Engine("supercharger", {0}, 1.0f);
+    }
+    void generatorsInit() {
         // Tri EngineSoundGenerators
         engine_lo_note = std::make_unique<EngineSoundGenerator>(engine_samples, *main_engine_def, 1000.0f, 0.0f);
         engine_hi_note = std::make_unique<EngineSoundGenerator>(engine_samples, *main_engine_def, 1000.0f, 0.0f);
         engine_mech_note = std::make_unique<EngineSoundGenerator>(engine_samples, *main_engine_def, 1000.0f, 0.0f);
-
+        // Note offsets
         engine_lo_note->setNoteOffset(cfg.getInt("note_offset_engine_lo"));
         engine_hi_note->setNoteOffset(cfg.getInt("note_offset_engine_hi"));
         engine_mech_note->setNoteOffset(cfg.getInt("note_offset_engine_mech"));
 
+        supercharger = std::make_unique<EngineSoundGenerator>(engine_samples, superchargerEngine, 1000.0f, 0.0f);
+        // Turbo
+        turbo_shaft = std::make_unique<EngineSoundGenerator>(engine_samples, superchargerEngine, 1000.0f, 0.0f);
+        turbo_shaft->setNoteOffset(cfg.getInt("note_offset_turbo"));
+    }
+    void map2dInit() {
+        // Tri engines mapping
         engine_lo_am = std::make_unique<Map2D>(base_dir + "/e_lo_amp.map");
         engine_hi_am = std::make_unique<Map2D>(base_dir + "/e_hi_amp.map");
         engine_mech_am = std::make_unique<Map2D>(base_dir + "/e_mech_amp.map");
 
+        // TurboShaft mapping
         turbo_shaft_am = std::make_unique<Map2D>(base_dir + "/turbo_shaft_amp.map");
         turbo_shaft_rpm = std::make_unique<Map2D>(base_dir + "/turbo_shaft_rpm.map");
         whoosh_am = std::make_unique<Map2D>(base_dir + "/whoosh_amp.map");
         whoosh_intensity = std::make_unique<Map2D>(base_dir + "/whoosh_intensity.map");
-        // Supercharger
-        superchargerEngine = Engine("supercharger", {0}, 1.0f);
-        supercharger = std::make_unique<EngineSoundGenerator>(engine_samples, superchargerEngine, 1000.0f, 0.0f);
-        turbo_shaft = std::make_unique<EngineSoundGenerator>(engine_samples, superchargerEngine, 1000.0f, 0.0f);
-        turbo_shaft->setNoteOffset(cfg.getInt("note_offset_turbo"));
-        std:: cout << turbo_shaft->getInfo(0);
+    }
+    void audioCtxInit() {
         engine_ctx = std::make_unique<AudioContext>(std::vector<SoundGenerator *>{engine_lo_note.get(), engine_hi_note.get(), engine_mech_note.get()});
-        main_ctx = std::make_unique<AudioContext>(std::vector<SoundGenerator *>{ engine_ctx.get(),turbo_shaft.get(), &whoosh});
+        main_ctx = std::make_unique<AudioContext>(std::vector<SoundGenerator *>{engine_ctx.get()});
+        if (cfg.getBool("enable_turbo", false)) {
+            main_ctx->addGenerator(turbo_shaft.get());
+            main_ctx->addGenerator(&whoosh);
+        }
+    }
 
+    void filtersInit() {
         // Helper lambda for readability
-        auto makeBiquad = [this](int type, float freq, float q, float db) { return std::make_unique<Biquad>(type, freq / SAMPLE_RATE, q, db); };
+        auto makeBiquad = [this](int type, float freq, float q, float db) { return std::make_unique<Biquad>(type, freq / sample_rate, q, db); };
 
         // Engine context filters
         engine_ctx->addFilter(makeBiquad(bq_type_peak, 1600.0f, 0.707f, 0.0f)); // Example active filter
