@@ -95,7 +95,7 @@ int main() {
     // Engine engineDef("Countach V12 (Growl)", Engine::getFiringOrderFromString("1 10 5 14 3 12 6 15 2 11 4 13"),{58,58,58,58,58,58,0,0,0,62,62,62,62,62,62}, 4.8); 
     // Engine engineDef("BMW S70/2 V12", Engine::getFiringOrderFromString("1 7 5 11 3 9 6 12 2 8 4 10"));
     // Engine engineDef("F1 V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 1); 
-    Engine engineDef("Audi V10 FSI", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {90,54, 90, 54, 90, 54, 90, 54, 90, 54}); 
+    // Engine engineDef("Audi V10 FSI", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {90,54, 90, 54, 90, 54, 90, 54, 90, 54}); 
     // Engine engineDef("Dodge Viper V10 (Growl)", {0, 6, 4, 10, 1, 7, 2, 8, 3, 9}, {90, 54, 90, 54 ,90, 0, 54, 90, 54, 90, 54});
     // Engine engineDef("1LR-GUE V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8});
     // Engine engineDef("1LR-GUE V10 - LFA UL Headers", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {71,73,71,73,71,73,71,73,71,73,71});
@@ -122,7 +122,7 @@ int main() {
     // Engine engineDef("1 Cylinder", {0}, 0.5);
     // Engine engineDef("3 Cylinder Sport", Engine::getFiringOrderFromString("1-2-3"),2);
     // Engine engineDef("VR6", Engine::getFiringOrderFromString("1-5-3-6-2-4"), {120, 130, 110, 125, 115, 120}, 3);
-    // Engine engineDef("Audi i5", Engine::getFiringOrderFromString("1-2-4-5-3"));
+    Engine engineDef("Audi i5", Engine::getFiringOrderFromString("1-2-4-5-3"));
     // Engine engineDef("Perfect Fifth i5", Engine::getFiringOrderFromString("1 3 5 2 4"), {120, 180, 120, 180, 120},3);
     // Engine engineDef("4 Banger", Engine::getFiringOrderFromString("1-3-4-2"));
     // Engine engineDef("Boxer 4 (Growl)", Engine::getFiringOrderFromString("1-4-5-2"), {180, 182, 0, 182, 180});
@@ -182,7 +182,7 @@ int main() {
     AudioContext engineCtx({&engineLowNote, &engineHighNote, &engineMechanicals});
     AudioContext backfireCtx( {&backfire});
     AudioContext superchargerCtx({&supercharger});
-    AudioContext context({&engineCtx, &generalGen, &backfireCtx, &turboShaft, &whoosh, &turboGen});
+    AudioContext context({&engineCtx, &turboShaft, &whoosh});
 
     // Car simulator stuff
     Car car;
@@ -492,6 +492,7 @@ if (biquad) {
 }
 example.input_values["rpm"] = carRpm;
 example.input_values["load"] = carTorque;
+example.input_values["boost"] = car.getBoost();
 example.tick();
         engineCtx.setAmplitude(0.65f + carRpm / 40000.0f);
         // superchargerCtx.setAmplitude(0.3f + carRpm / 15000.0f);
