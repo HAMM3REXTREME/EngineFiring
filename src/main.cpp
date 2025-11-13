@@ -18,6 +18,7 @@
 #include "BackfireSoundGenerator.h"
 #include "Biquad.h"
 #include "Car.h"
+#include "CarTriBlendScene.h"
 #include "CubicClipper.h"
 #include "Damper.h"
 #include "Engine.h"
@@ -80,36 +81,13 @@ int main() {
     sf::RenderWindow window(sf::VideoMode({WINDOW_X, WINDOW_Y}), "Engine Firing Simulator");
     sf::Clock deltaClock;
     bool showDebug = false;
-    AudioSceneManager scene;
-    scene.vehicle_input["rpm"] = 9000.0;
-    scene.vehicle_input["load"] = 1.0;
-    // test2d.xString = "rpm";
-    // test2d.yString = "load";
-    // test2d.zString = "engine_regular_note.setAmplitude";
-    // test2d.addPoint(0.0, 0.0, 0.0);
-    // test2d.addPoint(0.0, 1.0, 0.0);
-    // test2d.addPoint(9000.0, 0.0, 1.0);
-    // test2d.addPoint(9000.0, 1.0, 1.0);
-    scene.importMapCollection( "assets/map2d/example_v6.mcl");
-    scene.loadSoundBank("main_samples","assets/audio/tick_library.sb");
-    scene.newEngineDef("example_v6", "1-2-4-5-3");
-    scene.newEngineSoundGenerator("engine_lo_note","main_samples", "example_v6");
-    scene.newEngineSoundGenerator("engine_hi_note","main_samples", "example_v6");
-    scene.newEngineSoundGenerator("engine_mech_note","main_samples", "example_v6");
-    scene.newAudioCtx("engines_ctx");
-    scene.addToAudioCtx("engines_ctx", "engine_lo_note");
-    scene.addToAudioCtx("engines_ctx", "engine_hi_note");
-    scene.addToAudioCtx("engines_ctx", "engine_mech_note");
-    scene.addToMainCtx("engines_ctx");
-    scene.callMethod("engine_hi_note.setNoteOffset", {5});
-    scene.callMethod("engine_mech_note.setNoteOffset", {2});
-    scene.callMethod("engines_ctx.addBiquad",{4,1500,0.707, -12, 48000});
-    scene.callMethod("engines_ctx.setBiquadParam", {0, 2, 120});
-    scene.callMethod("engines_ctx.addSineClipper", {});
-    // scene.loadedSoundGenerators["engines_regular_note"]->setAmplitude(float amp)
-    std::cout << scene.getMainCtx().getInfo(0);
+
+    CarTriBlendScene example;
+    example.buildFromCfg("assets/cars/example/example.cfg");
 
     // ==== THE ENGINE
+    SoundBank mainSamples;
+    mainSamples.addFromWavList("assets/soundbanks/tick_library.sb");
     // Engine engineDef("Revuelto V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7});
     // Engine engineDef("Ferrari V12", Engine::getFiringOrderFromString("1 7 5 11 3 9 6 12 2 8 4 10"));
     // Engine engineDef("Diablo/Murci V12", Engine::getFiringOrderFromString("1-7-4-10-2-8-6-12-3-9-5-11"));
@@ -117,7 +95,7 @@ int main() {
     // Engine engineDef("Countach V12 (Growl)", Engine::getFiringOrderFromString("1 10 5 14 3 12 6 15 2 11 4 13"),{58,58,58,58,58,58,0,0,0,62,62,62,62,62,62}, 4.8); 
     // Engine engineDef("BMW S70/2 V12", Engine::getFiringOrderFromString("1 7 5 11 3 9 6 12 2 8 4 10"));
     // Engine engineDef("F1 V12", {0, 11, 3, 8, 1, 10, 5, 6, 2, 9, 4, 7}, 1); 
-    // Engine engineDef("Audi V10 FSI", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {90,54, 90, 54, 90, 54, 90, 54, 90, 54}); 
+    Engine engineDef("Audi V10 FSI", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {90,54, 90, 54, 90, 54, 90, 54, 90, 54}); 
     // Engine engineDef("Dodge Viper V10 (Growl)", {0, 6, 4, 10, 1, 7, 2, 8, 3, 9}, {90, 54, 90, 54 ,90, 0, 54, 90, 54, 90, 54});
     // Engine engineDef("1LR-GUE V10", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8});
     // Engine engineDef("1LR-GUE V10 - LFA UL Headers", {0, 5, 4, 9, 1, 6, 2, 7, 3, 8}, {71,73,71,73,71,73,71,73,71,73,71});
@@ -138,7 +116,7 @@ int main() {
     // Engine engineDef("Murican V8 +", Engine::getFiringOrderFromString("1-8-7-2-6 -5-4-3"));
     // Engine engineDef("2UR-GSE V8", Engine::getFiringOrderFromString("1-8-7-3-6-5-4-2"),4);
     // Engine engineDef("2UR-GSE V8 (Growl)", Engine::getFiringOrderFromString("1-13-12-3-11-10-4-2"), {86,94,94,86,0,0,0,0,0,94,94,86,86}, 4);
-    Engine engineDef("BMW B58", Engine::getFiringOrderFromString("1-5-3-6-2-4"));
+    // Engine engineDef("BMW B58", Engine::getFiringOrderFromString("1-5-3-6-2-4"));
     // Engine engineDef("Diesel inline 6", Engine::getFiringOrderFromString("1-5-3-6-2-4"), 1);
     // Engine engineDef("V Twin", Engine::getFiringOrderFromString("1-2"), {315,405});
     // Engine engineDef("1 Cylinder", {0}, 0.5);
@@ -160,11 +138,11 @@ int main() {
     // Engine engineDef("Buick even firing V6", Engine::getFiringOrderFromString("1-6-5-4-3-2"),3);
     // Engine engineDef("Buick odd firing V6", Engine::getFiringOrderFromString("1-6-5-4-3-2"), {90,150,90,150,90,150},3);
     // Engine engineDef("Porsche Flat 6", Engine::getFiringOrderFromString("1-6-2-4-3-5"), 0.505);
-    EngineSoundGenerator engineLowNote(*scene.loadedSoundBanks["main_samples"], engineDef, 1000.0f, 0.5f);
-    EngineSoundGenerator engineHighNote(*scene.loadedSoundBanks["main_samples"], engineDef, 1000.0f, 0.5f);
-    EngineSoundGenerator engineMechanicals(*scene.loadedSoundBanks["main_samples"], engineDef, 1000.0f, 0.5f);
-    engineLowNote.setNoteOffset(6);      // 0,             3, 0                0to4 , 11, 8
-    engineHighNote.setNoteOffset(24);    // 5, 7, 9, 19, 20, 19, 19, 14, 22, 23, 17, 19, 26, 19 , 10, 19 , 23, 23
+    EngineSoundGenerator engineLowNote(mainSamples, engineDef, 1000.0f, 0.5f);
+    EngineSoundGenerator engineHighNote(mainSamples, engineDef, 1000.0f, 0.5f);
+    EngineSoundGenerator engineMechanicals(mainSamples, engineDef, 1000.0f, 0.5f);
+    engineLowNote.setNoteOffset(5);      // 0,             3, 0                0to4 , 11, 8
+    engineHighNote.setNoteOffset(23);    // 5, 7, 9, 19, 20, 19, 19, 14, 22, 23, 17, 19, 26, 19 , 10, 19 , 23, 23
     engineMechanicals.setNoteOffset(11); // 8, 10, 11, 16, 16, 11, 14, 11, 16, 19, 16, 11, 20, 25, 14, 10, 8, 9
 
     // EQ Tips:
@@ -174,25 +152,25 @@ int main() {
 
     // ==== SUPERCHARGER (Just a high revving 1 cylinder)
     Engine superchargerDef("Supercharger", {0}, 8.0f);
-    EngineSoundGenerator supercharger(*scene.loadedSoundBanks["main_samples"], superchargerDef, 1000.0f, 0.7f);
+    EngineSoundGenerator supercharger(mainSamples, superchargerDef, 1000.0f, 0.7f);
     supercharger.setAmplitude(0.5f);
     supercharger.setNoteOffset(20);
 
     // ==== GENERAL SOUND SAMPLES
     SoundBank generalSamples;
-    generalSamples.addFromWavs({"assets/audio/extra/boom.wav", "assets/audio/extra/starter.wav", "assets/audio/extra/dsg.wav"});
+    generalSamples.addFromWavs({"assets/soundbanks/extra/boom.wav", "assets/soundbanks/extra/starter.wav", "assets/soundbanks/extra/dsg.wav"});
     SimpleSoundGenerator generalGen(generalSamples);
 
     // ==== TURBOCHARGER SHAFT (Sounds like a faint supercharger)
     Engine turboshaftDef("BorgWarner K04 - Shaft", {0}, 8.0f);
-    EngineSoundGenerator turboShaft(*scene.loadedSoundBanks["main_samples"], turboshaftDef, 1000.0f, 0.05f);
+    EngineSoundGenerator turboShaft(mainSamples, turboshaftDef, 1000.0f, 0.05f);
 
     // ==== TURBO WHOOSH NOISE GENERATOR
     TurboWhooshGenerator whoosh(SAMPLE_RATE);
 
     // ==== TURBO FLUTTER AND BOV SOUNDS ETC.
     SoundBank turboSamples;
-    turboSamples.addFromWavs({"assets/audio/extra/thump.wav", "assets/audio/extra/flutter.wav"});
+    turboSamples.addFromWavs({"assets/soundbanks/extra/thump.wav", "assets/soundbanks/extra/flutter.wav"});
     SimpleSoundGenerator turboGen(turboSamples);
     turboGen.setAmplitude(0.28f);
 
@@ -348,7 +326,7 @@ backfireCtx.addFilter(std::make_unique<HardClamp>());
     // PortAudio for live audio playback
     Pa_Initialize();
     PaStream *stream;
-    Pa_OpenDefaultStream(&stream, 0, 1, paFloat32, SAMPLE_RATE, 256, audio_callback, &scene.getMainCtx());
+    Pa_OpenDefaultStream(&stream, 0, 1, paFloat32, SAMPLE_RATE, 256, audio_callback, example.main_ctx.get());
     Pa_StartStream(stream);
 
     //  ==== APPLICATION MAIN LOOP ====
@@ -512,13 +490,11 @@ if (biquad) {
     biquad->setPeakGain(8.0f - (carTorque / 20.0f));
 
 }
+example.input_values["rpm"] = carRpm;
+example.input_values["load"] = carTorque;
+example.tick();
         engineCtx.setAmplitude(0.65f + carRpm / 40000.0f);
         // superchargerCtx.setAmplitude(0.3f + carRpm / 15000.0f);
-        scene.vehicle_input["rpm"] = carRpm;
-        scene.vehicle_input["load"] = carTorque;
-        scene.applyAll2DMaps();
-
-        //scene.loadedSoundGenerators["engine_regular_note"]->setAmplitude(carTorque / 350);
         engineLowNote.setRPM(carRpm);
         engineHighNote.setRPM(carRpm);
         engineMechanicals.setRPM(carRpm);

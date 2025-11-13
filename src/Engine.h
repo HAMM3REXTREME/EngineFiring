@@ -12,6 +12,7 @@
 
 class Engine {
   public:
+    Engine() {};
     Engine(const std::string &name, const std::vector<int> &firing_order, const std::vector<float> &firing_intervals_degrees, float firing_per_rev = 0.5);
     Engine(const std::string &name, const std::vector<int> &firing_order, float firing_per_rev = 0.5);
 

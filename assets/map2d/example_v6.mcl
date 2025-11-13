@@ -1,9 +1,0 @@
-# engine high note amplitude modulation
-hi_amp.map engine_hi_amp
-# engine high note rpm modulation 1:1 for us
-hi_rpm.map engine_hi_rpm
-lo_amp.map engine_lo_amp
-lo_rpm.map engine_lo_rpm
-mech_amp.map engine_mech_amp
-mech_rpm.map engine_mech_rpm
-

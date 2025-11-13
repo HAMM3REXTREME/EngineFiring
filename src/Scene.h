@@ -15,17 +15,6 @@
 #include <unordered_map>
 class AudioSceneManager {
   public:
-    AudioSceneManager() { registerMethods(); }
-
-    struct MethodKey {
-        std::type_index type;
-        std::string name;
-        bool operator<(const MethodKey &other) const { return type == other.type ? name < other.name : type < other.type; }
-    };
-    struct BoundMethod {
-        std::function<void(const std::vector<float> &)> call;
-    };
-
     struct FileEntry {
         std::string path;
         std::string name; // optional
@@ -77,67 +66,10 @@ class AudioSceneManager {
         return result;
     }
 
-    void callMethod(const std::string &command, const std::vector<float> &args) { selectCall(command)->call(args); }
-    std::optional<BoundMethod> selectCall(const std::string &command) {
-        size_t dot = command.find('.');
-        if (dot == std::string::npos)
-            return std::nullopt;
 
-        std::string objName = command.substr(0, dot);
-        std::string method = command.substr(dot + 1);
-
-        // lookup object
-        auto it = loadedSoundGenerators.find(objName);
-        if (it == loadedSoundGenerators.end())
-            return std::nullopt;
-
-        SoundGenerator *obj = it->second.get();
-        std::type_index type = typeid(*obj);
-
-        // lookup method in registry
-        MethodKey mk{type, method};
-        auto mit = methodRegistry.find(mk);
-        if (mit == methodRegistry.end()) {
-            mk = {typeid(SoundGenerator), method};
-            mit = methodRegistry.find(mk);
-            if (mit == methodRegistry.end())
-                return std::nullopt;
-        }
-
-        auto fn = mit->second; // function(SoundGenerator*, const vector<float>&)
-
-        BoundMethod bound;
-        // Pre-allocate vector outside lambda to avoid allocation each call
-        std::vector<float> argsBuffer;
-
-        bound.call = [obj, fn, argsBuffer = std::move(argsBuffer)](const std::vector<float> &values) mutable {
-            argsBuffer = values; // copy values into pre-allocated buffer
-            fn(obj, argsBuffer);
-        };
-
-        return bound;
-    }
-
-    std::unordered_map<std::string, float> vehicle_input;
+    std::unordered_map<std::string, float> vehicleInput;
 
     std::unordered_map<std::string, std::unique_ptr<Map2D>> loadedMap2Ds;
-
-    void applyMap2D(const std::string &map2d_id) {
-        std::string xKey = loadedMap2Ds[map2d_id]->xString;
-        std::string yKey = loadedMap2Ds[map2d_id]->yString;
-        std::string callCommand = loadedMap2Ds[map2d_id]->zString;
-        std::vector<float> callArgs(1);
-        std::cout << "ApplyMap: X: " << vehicle_input[xKey] << " Y: " << vehicle_input[yKey] << "\n";
-        callArgs[0] = (loadedMap2Ds[map2d_id]->getValue(vehicle_input[xKey], vehicle_input[yKey]));
-        std::cout << "Apply map: " << callArgs[0] << "\n";
-        callMethod(callCommand, callArgs);
-    }
-    void applyAll2DMaps() {
-        for (const auto &[key, value] : loadedMap2Ds) {
-            applyMap2D(key);
-        }
-    }
-
     std::unordered_map<std::string, std::unique_ptr<SoundBank>> loadedSoundBanks;
     std::unordered_map<std::string, std::unique_ptr<Engine>> engineDefinitions;
     std::unordered_map<std::string, std::unique_ptr<SoundGenerator>> loadedSoundGenerators;
@@ -176,7 +108,6 @@ class AudioSceneManager {
             std::cout << f.path << " | " << f.name << "\n";
         }
     }
-
     void addToMainCtx(const std::string &generator_id) { mainCtx.addGenerator(loadedSoundGenerators[generator_id].get()); }
     void newAudioCtx(const std::string &name, float amplitude = 1.0f) { loadedSoundGenerators.emplace(name, std::make_unique<AudioContext>(amplitude)); }
     void addToAudioCtx(const std::string &ctx_id, const std::string &generator_id) {
@@ -188,86 +119,5 @@ class AudioSceneManager {
                 std::cerr << "Warning: audio context not found.\n";
             }
         }
-    }
-
-  private:
-    // maps (type, methodName) → callable(SoundGenerator*, args)
-    std::map<MethodKey, std::function<void(SoundGenerator *, const std::vector<float> &)>> methodRegistry;
-    void registerMethods() {
-        methodRegistry[{typeid(SoundGenerator), "setAmplitude"}] = [](SoundGenerator *obj, const std::vector<float> &args) {
-            if (args.empty()) {
-                return;
-            }
-            obj->setAmplitude(args[0]);
-            std::cout << "Dynamically set amplitude to " << args[0] << "\n";
-        };
-        methodRegistry[{typeid(EngineSoundGenerator), "setRPM"}] = [](SoundGenerator *obj, const std::vector<float> &args) {
-            auto *d = dynamic_cast<EngineSoundGenerator *>(obj);
-            if (!d || args.empty()) {
-                return;
-            }
-            d->setRPM(args[0]);
-        };
-        methodRegistry[{typeid(EngineSoundGenerator), "setNoteOffset"}] = [](SoundGenerator *obj, const std::vector<float> &args) {
-            auto *d = dynamic_cast<EngineSoundGenerator *>(obj);
-            if (!d || args.empty()) {
-                return;
-            }
-            d->setNoteOffset(args[0]);
-        };
-        // New biquad filter command
-        methodRegistry[{typeid(AudioContext), "addBiquad"}] = [](SoundGenerator *obj, const std::vector<float> &args) {
-            auto *ctx = dynamic_cast<AudioContext *>(obj);
-            if (!ctx || args.size() < 5) {
-                std::cerr << "Invalid addBiquad args.\n";
-                return;
-            }
-
-            int type = static_cast<int>(args[0]); // your Biquad type enum
-            float freq = args[1];
-            float q = args[2];
-            float db = args[3];
-            float sample_rate = args[4];
-
-            ctx->addFilter(std::make_unique<Biquad>(type, freq / sample_rate, q, db));
-        };
-        methodRegistry[{typeid(AudioContext), "addSineClipper"}] = [](SoundGenerator *obj, const std::vector<float> &args) {
-            auto *ctx = dynamic_cast<AudioContext *>(obj);
-            if (!ctx || args.size() != 0) {
-                std::cerr << "Invalid addSineClipper args.\n";
-                return;
-            }
-
-            ctx->addFilter(std::make_unique<SineClipper>());
-        };
-        methodRegistry[{typeid(AudioContext), "setBiquadParam"}] = [](SoundGenerator *obj, const std::vector<float> &args) {
-            auto *ctx = dynamic_cast<AudioContext *>(obj);
-            if (!ctx || (args.size() < 3 || (args.size() < 4 && (int)args[1]==0)))
-                return;
-
-            size_t index = (size_t)args[0];
-            int paramId = (int)args[1]; // 0=freq, 1=Q, 2=dB
-            float value = args[2];
-            float sample_rate=48000;
-            if (paramId==0) {sample_rate = args[3];}
-
-            auto *biquad = ctx->getFilterAs<Biquad>(index);
-            if (!biquad)
-                return;
-
-            switch (paramId) {
-            case 0:
-                biquad->setFc(value/sample_rate);
-                break;
-            case 1:
-                biquad->setQ(value);
-                break;
-            case 2:
-                biquad->setPeakGain(value);
-                break;
-            default:
-                break;
-            }
-        };
     }
 };
