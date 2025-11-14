@@ -77,10 +77,10 @@ class CarTriBlendScene : public CarBlendScene {
             backfire.setIntensity(backfire_intensity->getValue(rpm, load) * backfire_intensity_falloff->getValue(ticks_since_backfire_start, 0.0f));
         }
         // Backfire cut logic
-        if (ticks_since_backfire_start >= cfg.getFloat("backfire_duration_ticks", 250.0f)) {
+        if (ticks_since_backfire_start >= cfg.getFloat("backfire_duration_ticks", 50.0f)) {
             is_backfiring = false;
             ticks_since_backfire_start = 0.0f;
-            //backfire.setIntensity(0.0f);
+            backfire.setIntensity(0.0f); // In case the falloff map falls to 0.0 too late
         }
         // Trigger new backfire timer, only if we've gone on the gas before letting off again (to prevent constant restarting of the backfiring timer)
         if (load <= cfg.getFloat("backfire_trigger_load", 10.0f) && !is_backfiring && is_loaded) {

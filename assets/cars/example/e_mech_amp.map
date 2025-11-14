@@ -1,7 +1,0 @@
-# Example engine map
-# xString yString zString
-rpm load engine_mech_note.setAmplitude
-\       0.0     3000.0  6000.0  9000.0
-0.0     0.00    0.02    0.03    0.05
-100.0   0.00    0.02    0.03    0.05
-200.0   0.00    0.02    0.03    0.05
