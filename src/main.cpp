@@ -41,7 +41,7 @@ constexpr int WINDOW_X = 1080;
 constexpr int WINDOW_Y = 720;
 
 constexpr int DOWNSHIFT_DELAY = 150;
-constexpr int UPSHIFT_DELAY = 120;
+constexpr int UPSHIFT_DELAY = 150;
 
 constexpr float THROTTLE_BLIP_DOWN = 0.021f;
 
@@ -83,7 +83,7 @@ int main() {
     bool showDebug = false;
 
     CarTriBlendScene example;
-    example.buildFromCfg("assets/cars/murci_sv/vehicle.cfg");
+    example.buildFromCfg("assets/cars/lfa/vehicle.cfg");
 
     // ==== THE ENGINE
     SoundBank mainSamples;
@@ -189,7 +189,7 @@ int main() {
     float carRpm = 0;    // Processed RPM
     float carTorque = 0; // Processed Torque
     Biquad torqueFilter(bq_type_lowpass, 25.0f / 100.0f, 0.707f, 0.0f);
-    SecondOrderFilter rpmFilter(5.0f, 0.25f, 0.01);
+    SecondOrderFilter rpmFilter(5.0f, 0.2f, 0.01);
     bool isStarting = false;
     bool blowoff = false;
     bool lifted = false;
