@@ -189,7 +189,7 @@ int main() {
     float carRpm = 0;    // Processed RPM
     float carTorque = 0; // Processed Torque
     Biquad torqueFilter(bq_type_lowpass, 25.0f / 100.0f, 0.707f, 0.0f);
-    SecondOrderFilter rpmFilter(5.0f, 0.2f, 0.01);
+    SecondOrderFilter rpmFilter(5.0f, 0.25f, 0.01);
     bool isStarting = false;
     bool blowoff = false;
     bool lifted = false;
