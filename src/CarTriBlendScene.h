@@ -26,8 +26,11 @@ class CarTriBlendScene : public CarBlendScene {
     std::unordered_map<std::string, float> input_values;
 
     TurboWhooshGenerator whoosh{sample_rate};
+    BackfireSoundGenerator backfire{sample_rate};
     std::unique_ptr<Map2D> whoosh_am;
     std::unique_ptr<Map2D> whoosh_intensity;
+    std::unique_ptr<Map2D> backfire_intensity;
+    std::unique_ptr<Map2D> backfire_intensity_falloff;
 
     std::unique_ptr<EngineSoundGenerator> engine_lo_note;
     std::unique_ptr<EngineSoundGenerator> engine_hi_note;
@@ -44,11 +47,18 @@ class CarTriBlendScene : public CarBlendScene {
     std::unique_ptr<Map2D> engine_mech_am;
 
     std::unique_ptr<AudioContext> engine_ctx;
+    std::unique_ptr<AudioContext> backfire_ctx;
     std::unique_ptr<AudioContext> main_ctx;
 
     std::string base_dir;
 
+    int tick_count = 0;
+    int ticks_since_backfire_start = 0.0;
+    bool is_backfiring = false;
+    bool is_loaded = false;
+
     void tick() {
+        tick_count++;
         float rpm = input_values["rpm"];
         float load = input_values["load"];
         float boost = input_values["boost"];
@@ -60,6 +70,27 @@ class CarTriBlendScene : public CarBlendScene {
         turbo_shaft->setAmplitude(turbo_shaft_am->getValue(boost, rpm));
         whoosh.setIntensity(whoosh_intensity->getValue(boost, rpm));
         whoosh.setAmplitude(whoosh_am->getValue(boost, rpm));
+
+        // Backfire on logic
+        if (is_backfiring) {
+            ticks_since_backfire_start++;
+            backfire.setIntensity(backfire_intensity->getValue(rpm, load) * backfire_intensity_falloff->getValue(ticks_since_backfire_start, 0.0f));
+        }
+        // Backfire cut logic
+        if (ticks_since_backfire_start >= cfg.getFloat("backfire_duration_ticks", 250.0f)) {
+            is_backfiring = false;
+            ticks_since_backfire_start = 0.0f;
+            //backfire.setIntensity(0.0f);
+        }
+        // Trigger new backfire timer, only if we've gone on the gas before letting off again (to prevent constant restarting of the backfiring timer)
+        if (load <= cfg.getFloat("backfire_trigger_load", 10.0f) && !is_backfiring && is_loaded) {
+            is_backfiring = true;
+            is_loaded = false;
+            ticks_since_backfire_start = 0.0f;
+        }
+        if (load >= cfg.getFloat("backfire_reset_load", 25.0f)) {
+            is_loaded = true;
+        }
 
         engine_lo_note->setAmplitude(engine_lo_am->getValue(rpm, load));
         engine_hi_note->setAmplitude(engine_hi_am->getValue(rpm, load));
@@ -116,6 +147,8 @@ class CarTriBlendScene : public CarBlendScene {
         // Turbo
         turbo_shaft = std::make_unique<EngineSoundGenerator>(engine_samples, superchargerEngine, 1000.0f, 0.0f);
         turbo_shaft->setNoteOffset(cfg.getInt("note_offset_turbo"));
+        // Backfire fixed amplitude for now
+        backfire.setAmplitude(0.4f);
     }
     void map2dInit() {
         // Tri engines mapping
@@ -128,10 +161,13 @@ class CarTriBlendScene : public CarBlendScene {
         turbo_shaft_rpm = std::make_unique<Map2D>(base_dir + "/turbo_shaft_rpm.map");
         whoosh_am = std::make_unique<Map2D>(base_dir + "/whoosh_amp.map");
         whoosh_intensity = std::make_unique<Map2D>(base_dir + "/whoosh_intensity.map");
+        backfire_intensity = std::make_unique<Map2D>(base_dir + "/backfire_intensity.map");
+        backfire_intensity_falloff = std::make_unique<Map2D>(base_dir + "/backfire_intensity_falloff.map");
     }
     void audioCtxInit() {
         engine_ctx = std::make_unique<AudioContext>(std::vector<SoundGenerator *>{engine_lo_note.get(), engine_hi_note.get(), engine_mech_note.get()});
-        main_ctx = std::make_unique<AudioContext>(std::vector<SoundGenerator *>{engine_ctx.get()});
+        backfire_ctx = std::make_unique<AudioContext>(std::vector<SoundGenerator *>{&backfire});
+        main_ctx = std::make_unique<AudioContext>(std::vector<SoundGenerator *>{engine_ctx.get(), backfire_ctx.get()});
         if (cfg.getBool("enable_turbo", false)) {
             main_ctx->addGenerator(turbo_shaft.get());
             main_ctx->addGenerator(&whoosh);
@@ -169,5 +205,16 @@ class CarTriBlendScene : public CarBlendScene {
         engine_ctx->addFilter(std::make_unique<SecondOrderFilter>(200.0f, 0.3f, 1.0f / 48000.0f));
         engine_ctx->addFilter(std::make_unique<SineClipper>());
         engine_ctx->addFilter(std::make_unique<CubicClipper>());
+
+        // Backfire Context
+        backfire_ctx->addFilter(makeBiquad(bq_type_lowshelf, 150.0f, 0.707f, 12.0f));
+        backfire_ctx->addFilter(makeBiquad(bq_type_highshelf, 3000.0f, 0.707f, -12.0f));
+        // backfire_ctx->addFilter(makeBiquad(bq_type_peak, 4500.0f, 0.3f, -12.0f));
+        backfire_ctx->addFilter(makeBiquad(bq_type_peak, 2100.0f, 4.36f, 2.0f));
+        backfire_ctx->addFilter(makeBiquad(bq_type_peak, 1500.0f, 1.0f, 3.0f));
+        backfire_ctx->addFilter(makeBiquad(bq_type_peak, 14600.0f, 4.36f, -14.0f));
+        backfire_ctx->addFilter(makeBiquad(bq_type_lowshelf, 54.0f, 0.707f, 5.0f)); // GT-R
+        backfire_ctx->addFilter(std::make_unique<SecondOrderFilter>(350.0f, 0.5f, 1.0f / 48000.0f));
+        backfire_ctx->addFilter(std::make_unique<SecondOrderFilter>(2050.0f, 0.3f, 1.0f / 48000.0f));
     }
 };
