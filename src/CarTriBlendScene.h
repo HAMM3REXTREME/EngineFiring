@@ -8,6 +8,7 @@
 #include "SecondOrderFilter.h"
 #include "SimpleConfig.h"
 #include "SineClipper.h"
+#include "TanhClipper.h"
 #include "SoundBank.h"
 #include <memory>
 
@@ -205,6 +206,7 @@ class CarTriBlendScene : public CarBlendScene {
         engine_ctx->addFilter(std::make_unique<SecondOrderFilter>(200.0f, 0.3f, 1.0f / 48000.0f));
         engine_ctx->addFilter(std::make_unique<SineClipper>());
         engine_ctx->addFilter(std::make_unique<CubicClipper>());
+        engine_ctx->addFilter(std::make_unique<TanhClipper>());
 
         // Backfire Context
         backfire_ctx->addFilter(makeBiquad(bq_type_lowshelf, 150.0f, 0.707f, 12.0f));
