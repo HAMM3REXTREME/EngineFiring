@@ -78,12 +78,11 @@ void carStarter(Car *car, bool *m_isStarting) {
 
 int main() {
 
-    sf::RenderWindow window(sf::VideoMode({WINDOW_X, WINDOW_Y}), "Engine Firing Simulator");
-    sf::Clock deltaClock;
-    bool showDebug = false;
-
     CarTriBlendScene example;
-    example.buildFromCfg("assets/cars/lfa/vehicle.cfg");
+    std::string userReq;
+    std::cout << "Enter car id to load: ";
+    std::cin >> userReq;
+    example.buildFromCfg("assets/cars/" + userReq + "/vehicle.cfg");
 
     // Car simulator stuff
     Car car;
@@ -111,6 +110,8 @@ int main() {
     DerivativeFilter turboDrop(100);
 
     // SFML stuff for UI + input
+    sf::RenderWindow window(sf::VideoMode({WINDOW_X, WINDOW_Y}), "Engine Firing Simulator");
+    sf::Clock deltaClock;
     // Map user keyboard input to differen levels of throttle
     std::map<sf::Keyboard::Scancode, int> userThrottleMap;
     userThrottleMap[sf::Keyboard::Scancode::Q] = 30;
@@ -118,7 +119,6 @@ int main() {
     userThrottleMap[sf::Keyboard::Scancode::E] = 80;
     userThrottleMap[sf::Keyboard::Scancode::R] = 130;
     userThrottleMap[sf::Keyboard::Scancode::T] = 150;
-
     // Tachometer needle
     sf::RectangleShape tach(sf::Vector2f(250.f, 6.f));  // Size of the tach
     tach.setFillColor(sf::Color::Red);                  // Color of the tach
@@ -146,7 +146,6 @@ int main() {
     spriteMiddle.setOrigin({500, 500});
     spriteMiddle.setPosition({WINDOW_X / 2.f, WINDOW_Y / 2.f});
     spriteMiddle.setScale({0.07, 0.07});
-
     // Text Information
     sf::Font font;
     if (!font.openFromFile("assets/fonts/Aldrich-Regular.ttf")) {
@@ -156,6 +155,7 @@ int main() {
     sf::Text gaugeValue(font, "Text", 24);
     gaugeValue.setFillColor(sf::Color::White);
     gaugeValue.setPosition({WINDOW_X / 2.f + 25.f, WINDOW_Y / 2.f + 25.f});
+
 
     // PortAudio for live audio playback
     Pa_Initialize();
@@ -182,9 +182,6 @@ int main() {
                 }
                 if (keyPressed->scancode == sf::Keyboard::Scancode::Escape) {
                     window.close();
-                }
-                if (keyPressed->scancode == sf::Keyboard::Scancode::D) {
-                    showDebug = !showDebug;
                 }
                 if (keyPressed->scancode == sf::Keyboard::Scancode::Up && !shiftLock) {
                     std::cout << "Upshift\n";
