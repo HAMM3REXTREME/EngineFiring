@@ -1,5 +1,5 @@
 # Backfire intensity falloff for BlendCar
 ticks_since_trigger constant_0  intensity_scalar
-\ 0    25   50       250
-0 1.0  0.4  0.0      0.0
-1 1.0  0.4  0.0      0.0
+\ 0    35   50       250
+0 1.0  0.5  0.0      0.0
+1 1.0  0.5  0.0      0.0
