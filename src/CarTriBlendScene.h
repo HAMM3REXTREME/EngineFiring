@@ -173,6 +173,7 @@ class CarTriBlendScene : public CarBlendScene {
             main_ctx->addGenerator(turbo_shaft.get());
             main_ctx->addGenerator(&whoosh);
         }
+        engine_ctx->setAmplitude(cfg.getFloat("engine_ctx_amp", 1.0f));
     }
 
     void filtersInit() {
