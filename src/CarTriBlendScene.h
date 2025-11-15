@@ -8,28 +8,28 @@
 #include "SecondOrderFilter.h"
 #include "SimpleConfig.h"
 #include "SineClipper.h"
-#include "TanhClipper.h"
 #include "SoundBank.h"
+#include "TanhClipper.h"
 #include <memory>
 
 class CarTriBlendScene : public CarBlendScene {
   public:
-    CarTriBlendScene() {}
+    float sample_rate;
+    CarTriBlendScene(float s_rate = 48000) : sample_rate(s_rate) {}
     ~CarTriBlendScene() {}
     SimpleConfig cfg;
 
     SoundBank engine_samples;
     std::unique_ptr<Engine> main_engine_def;
 
-    float sample_rate = 48000;
     Engine superchargerEngine;
 
     std::unordered_map<std::string, float> input_values;
 
-    TurboWhooshGenerator whoosh{sample_rate};
+    TurboWhooshGenerator turbo_whoosh{sample_rate};
     BackfireSoundGenerator backfire{sample_rate};
-    std::unique_ptr<Map2D> whoosh_am;
-    std::unique_ptr<Map2D> whoosh_intensity;
+    std::unique_ptr<Map2D> turbo_whoosh_am;
+    std::unique_ptr<Map2D> turbo_whoosh_intensity;
     std::unique_ptr<Map2D> backfire_intensity;
     std::unique_ptr<Map2D> backfire_intensity_falloff;
 
@@ -38,6 +38,7 @@ class CarTriBlendScene : public CarBlendScene {
     std::unique_ptr<EngineSoundGenerator> engine_mech_note;
 
     std::unique_ptr<EngineSoundGenerator> supercharger;
+    std::unique_ptr<Map2D> supercharger_am;
     std::unique_ptr<EngineSoundGenerator> turbo_shaft;
     std::unique_ptr<Map2D> turbo_shaft_am;
     std::unique_ptr<Map2D> turbo_shaft_rpm;
@@ -48,10 +49,14 @@ class CarTriBlendScene : public CarBlendScene {
     std::unique_ptr<Map2D> engine_mech_am;
 
     std::unique_ptr<AudioContext> engine_ctx;
+    std::unique_ptr<AudioContext> supercharger_ctx;
     std::unique_ptr<AudioContext> backfire_ctx;
     std::unique_ptr<AudioContext> main_ctx;
 
     std::string base_dir;
+
+    bool turbo_enabled = false;
+    bool supercharger_enabled = false;
 
     int tick_count = 0;
     int ticks_since_backfire_start = 0.0;
@@ -67,10 +72,18 @@ class CarTriBlendScene : public CarBlendScene {
         engine_hi_note->setRPM(rpm);
         engine_mech_note->setRPM(rpm);
 
-        turbo_shaft->setRPM(turbo_shaft_rpm->getValue(boost, rpm));
-        turbo_shaft->setAmplitude(turbo_shaft_am->getValue(boost, rpm));
-        whoosh.setIntensity(whoosh_intensity->getValue(boost, rpm));
-        whoosh.setAmplitude(whoosh_am->getValue(boost, rpm));
+        if (turbo_enabled) {
+            turbo_shaft->setRPM(turbo_shaft_rpm->getValue(boost, rpm));
+            turbo_shaft->setAmplitude(turbo_shaft_am->getValue(boost, rpm));
+            turbo_whoosh.setIntensity(turbo_whoosh_intensity->getValue(boost, rpm));
+            turbo_whoosh.setAmplitude(turbo_whoosh_am->getValue(boost, rpm));
+        }
+        if (supercharger_enabled) {
+            supercharger->setRPM(rpm * cfg.getInt("supercharger_rpm_ratio", 8));
+            supercharger->setAmplitude(supercharger_am->getValue(rpm, load));
+            supercharger->setNoteOffset(cfg.getFloat("supercharger_active_load") >= load ? cfg.getInt("supercharger_active_note_offset", 20)
+                                                                                         : cfg.getInt("supercharger_inactive_note_offset", 10));
+        }
 
         // Backfire on logic
         if (is_backfiring) {
@@ -157,11 +170,20 @@ class CarTriBlendScene : public CarBlendScene {
         engine_hi_am = std::make_unique<Map2D>(base_dir + "/e_hi_amp.map");
         engine_mech_am = std::make_unique<Map2D>(base_dir + "/e_mech_amp.map");
 
-        // TurboShaft mapping
-        turbo_shaft_am = std::make_unique<Map2D>(base_dir + "/turbo_shaft_amp.map");
-        turbo_shaft_rpm = std::make_unique<Map2D>(base_dir + "/turbo_shaft_rpm.map");
-        whoosh_am = std::make_unique<Map2D>(base_dir + "/whoosh_amp.map");
-        whoosh_intensity = std::make_unique<Map2D>(base_dir + "/whoosh_intensity.map");
+        // Supercharger mapping
+        if (cfg.getBool("enable_supercharger", false)) {
+            supercharger_am = std::make_unique<Map2D>(base_dir + "/supercharger_amp.map");
+            supercharger_enabled = true;
+        }
+        // turbo shaft + turbo whoosh mapping
+        if (cfg.getBool("enable_turbo", false)) {
+            turbo_shaft_am = std::make_unique<Map2D>(base_dir + "/turbo_shaft_amp.map");
+            turbo_shaft_rpm = std::make_unique<Map2D>(base_dir + "/turbo_shaft_rpm.map");
+            turbo_whoosh_am = std::make_unique<Map2D>(base_dir + "/whoosh_amp.map");
+            turbo_whoosh_intensity = std::make_unique<Map2D>(base_dir + "/whoosh_intensity.map");
+            turbo_enabled = true;
+        }
+        // Backfire
         backfire_intensity = std::make_unique<Map2D>(base_dir + "/backfire_intensity.map");
         backfire_intensity_falloff = std::make_unique<Map2D>(base_dir + "/backfire_intensity_falloff.map");
     }
@@ -169,9 +191,13 @@ class CarTriBlendScene : public CarBlendScene {
         engine_ctx = std::make_unique<AudioContext>(std::vector<SoundGenerator *>{engine_lo_note.get(), engine_hi_note.get(), engine_mech_note.get()});
         backfire_ctx = std::make_unique<AudioContext>(std::vector<SoundGenerator *>{&backfire});
         main_ctx = std::make_unique<AudioContext>(std::vector<SoundGenerator *>{engine_ctx.get(), backfire_ctx.get()});
-        if (cfg.getBool("enable_turbo", false)) {
+        supercharger_ctx = std::make_unique<AudioContext>(std::vector<SoundGenerator *>{supercharger.get()});
+        if (turbo_enabled) {
             main_ctx->addGenerator(turbo_shaft.get());
-            main_ctx->addGenerator(&whoosh);
+            main_ctx->addGenerator(&turbo_whoosh);
+        }
+        if (supercharger_enabled) {
+            main_ctx->addGenerator(supercharger_ctx.get());
         }
         engine_ctx->setAmplitude(cfg.getFloat("engine_ctx_amp", 1.0f));
     }
@@ -219,5 +245,13 @@ class CarTriBlendScene : public CarBlendScene {
         backfire_ctx->addFilter(makeBiquad(bq_type_lowshelf, 54.0f, 0.707f, 5.0f)); // GT-R
         backfire_ctx->addFilter(std::make_unique<SecondOrderFilter>(350.0f, 0.5f, 1.0f / 48000.0f));
         backfire_ctx->addFilter(std::make_unique<SecondOrderFilter>(2050.0f, 0.3f, 1.0f / 48000.0f));
+
+        // Supercharger
+        supercharger_ctx->addFilter(makeBiquad(bq_type_peak, 80.0f, 0.5f, 10.1f));  // rumble boost
+        supercharger_ctx->addFilter(makeBiquad(bq_type_peak, 1500.0f, 1.0f, 3.0f)); // mid boost
+        supercharger_ctx->addFilter(makeBiquad(bq_type_peak, 22.0f, 4.36f, -36.0f));
+        supercharger_ctx->addFilter(makeBiquad(bq_type_peak, 28.0f, 4.36f, -16.0f));
+        supercharger_ctx->addFilter(makeBiquad(bq_type_peak, 18100.0f, 4.36f, -26.0f));
+        supercharger_ctx->addFilter(std::make_unique<SecondOrderFilter>(3050.0f, 0.4f, 1.0f / 48000.0f));
     }
 };
